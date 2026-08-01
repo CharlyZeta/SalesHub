@@ -1,0 +1,68 @@
+# CHANGELOG
+
+Todas las mejoras y fixes notables del proyecto.
+
+El formato se basa en Keep a Changelog, y el proyecto respeta Versionado Semántico.
+
+## [0.0.1] - 2026-08-01
+
+### Commit inicial - Lanzamiento del Sistema de Gestión Comercial
+
+Primera versión estable del sistema de gestión comercial omnicanal de DUAL S.R.L.,
+herramienta de front-office complementaria al ERP de la firma. Registro de ventas,
+presupuestos AFIP, remitos y despacho en el punto de venta.
+
+#### Añadido (características)
+
+- **Planilla interactiva de ventas** (`SpreadsheetGrid`): edición inline, filtros por
+  mes de emisión y canal (Local, WhatsApp, WooCommerce, MercadoLibre), acceso a remitos.
+- **Gestor de presupuestos AFIP** (`BudgetModal`): numeración correlativa PRES-XXXX,
+  IVA 21%, percepciones de Ingresos Brutos, bonificaciones, buscador autocompletable de
+  catálogo/clientes, impresión PDF/A4 y **conversión a venta en 1 clic**.
+- **Envíos omnicanal** (`SendBudgetModal` + `budgetDelivery`): WhatsApp `wa.me` con
+  normalización de numeración argentina (+54 9) y plantilla de correo `mailto:`.
+- **Remitos de transporte** (`RemitoModal`): Remito X - documento no válido como factura,
+  con datos de flete, dirección de entrega y firma de conformidad.
+- **Sincronizador WooCommerce** (`WooCommerceModal` + `wooCommerceApi`): sync bidireccional
+  de catálogo (precios, stock, SKUs) y clientes, con paginación y CORS proxy.
+- **Panel de analítica** (`AnalyticsModal` + `KpiSummary`): facturación mensual, ticket
+  promedio, ventas por canal y gráficos Recharts.
+- **Directorio de clientes** (`CustomerDirectoryModal`): historial de compras, totales y
+  alta automática al registrar ventas.
+- **Import/Export** (`ImportModal` / `ExportModal`): CSV y JSON de ventas y datos.
+- **Auditoría completa** (`SystemLogsModal` + `logger`): niveles INFO/WARN/ERROR/SYNC/API/
+  SALE/BUDGET, filtros dinámicos y exportación JSON/CSV.
+- **Seguridad** (`AuthModal`): Auth Gate con PIN, perfiles RBAC (Operador/Administrador)
+  y auto-bloqueo por inactividad configurable (5-60 min).
+- **Persistencia local**: caché completa en `localStorage` (ventas, catálogo, presupuestos,
+  clientes, config, tema) sin dependencia de servidor.
+
+#### Arquitectura
+
+- Modular Clean Architecture basada en SOLID; `App.tsx` como orquestador de estado.
+- Strict Typing Layer en `src/types.ts` (Sale, Budget, Customer, CatalogProduct, LogEntry...).
+- Helpers funcionales puros y 100% testeados (`numberToWords`, `formatters`, `budgetDelivery`).
+- Fail-safe & graceful degradation en la integración WooCommerce (simulador de catálogo
+  ante fallos de red).
+
+#### Calidad
+
+- 38 tests unitarios en 6 suites Vitest, cobertura promedio >91%.
+- `npm run lint` (tsc --noEmit) sin errores.
+- `npm run build` (Vite producción) correcto.
+
+#### Documentación
+
+- README ampliado con visión de complemento al ERP, modelo de datos y flujo de integración
+  front-office -> ERP.
+
+---
+
+### Notas de mantenimiento
+
+- `graphify-out/` (salida generada por la herramienta de análisis de grafos) está excluido
+  del repositorio vía `.gitignore`.
+- Dependencias `express`, `dotenv` y `@google/genai` presentes en `package.json` pero sin
+  uso en el código actual (restos de la plantilla AI Studio); candidatas a limpieza.
+- La sincronización WooCommerce depende de proxies CORS de terceros
+  (`corsproxy.io`, `api.allorigins.win`) como estrategia de respaldo del navegador.
