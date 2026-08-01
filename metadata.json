@@ -1,0 +1,6 @@
+{
+  "name": "Sistema de Registro de Ventas",
+  "description": "Dashboard y planilla interactiva de registro de ventas, facturación, envíos y clientes para tienda física y MercadoLibre/WooCommerce.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
