@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   X, 
   FileText, 
@@ -103,6 +103,29 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({
 
   const [percepciones, setPercepciones] = useState<number>(0);
   const [observaciones, setObservaciones] = useState<string>('');
+
+  const customerDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (customerDropdownRef.current && !customerDropdownRef.current.contains(event.target as Node)) {
+        setShowCustomerDropdown(false);
+      }
+    };
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setShowCustomerDropdown(false);
+      }
+    };
+    if (showCustomerDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleEscape);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [showCustomerDropdown]);
 
   if (!isOpen) return null;
 
@@ -311,43 +334,116 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({
     setBudgetToConvert(null);
   };
 
-  // PDF Generation function
+  // PDF Generation function (html-to-image + jsPDF directo)
   const handleDownloadPdf = async () => {
     const element = document.getElementById('budget-pdf-content');
-    if (!element) {
-      window.print();
+    if (!element || !selectedBudget) {
+      setFormError('No se encontró el contenido del presupuesto para generar el PDF.');
       return;
     }
 
     setIsGeneratingPdf(true);
     setSuccessMessage(null);
+    setFormError(null);
     try {
-      // @ts-ignore
-      const html2pdfModule = await import('html2pdf.js');
-      const html2pdf = html2pdfModule.default || html2pdfModule;
+      const { toPng } = await import('html-to-image');
+      const { jsPDF } = await import('jspdf');
 
-      const filename = `Presupuesto_${selectedBudget?.numeroPresupuesto || 'DUAL'}.pdf`;
-      const opt = {
-        margin: [5, 5, 5, 5],
-        filename,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, logging: false },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-      };
+      const numero = selectedBudget.numeroPresupuesto || 'DUAL';
+      const clienteRaw = `${selectedBudget.razonSocialNombre || ''} ${selectedBudget.apellido || ''}`.trim() || 'SIN_CLIENTE';
+      const cliente = clienteRaw.replace(/\s+/g, '_').replace(/[^\w\-áéíóúÁÉÍÓÚñÑ]/g, '');
+      const fecha = (selectedBudget.fechaEmision || new Date().toISOString().split('T')[0]).replace(/-/g, '');
+      const filename = `Presupuesto_${numero}_${cliente}_${fecha}.pdf`;
 
-      await (html2pdf as any)().set(opt).from(element).save();
-      setSuccessMessage(`¡Documento PDF de "${selectedBudget?.numeroPresupuesto}" generado y descargado con éxito!`);
+      // Mismo mecanismo que la impresión: clonar la hoja dentro del contenedor
+      // #print-area-budget (en el flujo normal del documento, a ancho A4) y
+      // capturar ESE nodo con html-to-image, que sí se renderiza.
+      let printArea = document.getElementById('print-area-budget');
+      if (!printArea) {
+        printArea = document.createElement('div');
+        printArea.id = 'print-area-budget';
+        document.body.appendChild(printArea);
+      }
+      printArea.innerHTML = '';
+      printArea.appendChild(element.cloneNode(true));
+
+      let dataUrl = '';
+      try {
+        dataUrl = await toPng(printArea, {
+          cacheBust: true,
+          backgroundColor: '#ffffff',
+          pixelRatio: 2
+        });
+      } finally {
+        printArea.innerHTML = '';
+      }
+
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      // Ajuste "contener": escala el PNG dentro de la página A4, centrado,
+      // con margen de 5mm. Nunca puede desbordar los bordes de la hoja.
+      const imgProps = pdf.getImageProperties(dataUrl);
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 5;
+      const maxW = pageWidth - margin * 2;
+      const maxH = pageHeight - margin * 2;
+      const imgW = Math.max(imgProps.width, 1);
+      const imgH = Math.max(imgProps.height, 1);
+
+      let w = maxW;
+      let h = (imgH / imgW) * w;
+      if (h > maxH) {
+        h = maxH;
+        w = (imgW / imgH) * h;
+      }
+      const x = (pageWidth - w) / 2;
+      const y = (pageHeight - h) / 2;
+
+      pdf.addImage(dataUrl, 'PNG', x, y, w, h);
+      pdf.save(filename);
+      setSuccessMessage(`¡Documento PDF "${filename}" generado y descargado con éxito!`);
     } catch (err) {
-      console.error('Error al generar PDF con html2pdf:', err);
-      window.print();
+      console.error('Error al generar PDF:', err);
+      setFormError('No se pudo generar el PDF automáticamente. Usá el botón "Imprimir" y en el diálogo elegí "Guardar como PDF".');
     } finally {
       setIsGeneratingPdf(false);
     }
   };
 
-  // Print function
+  // Print function: clone the sheet into a dedicated print-only container
+  // (hides the app/overlay and avoids fixed/overflow ancestors clipping the sheet)
   const handlePrint = () => {
-    window.print();
+    const element = document.getElementById('budget-pdf-content');
+    if (!element) {
+      setFormError('No se encontró el contenido del presupuesto para imprimir.');
+      return;
+    }
+    setFormError(null);
+
+    let printArea = document.getElementById('print-area-budget');
+    if (!printArea) {
+      printArea = document.createElement('div');
+      printArea.id = 'print-area-budget';
+      document.body.appendChild(printArea);
+    }
+    printArea.innerHTML = '';
+    printArea.appendChild(element.cloneNode(true));
+
+    const cleanup = () => {
+      document.body.classList.remove('printing-budget');
+      window.removeEventListener('afterprint', cleanup);
+      const area = document.getElementById('print-area-budget');
+      if (area) area.remove();
+    };
+    document.body.classList.add('printing-budget');
+    window.addEventListener('afterprint', cleanup);
+    try {
+      window.print();
+    } catch (err) {
+      console.error('Error al abrir el diálogo de impresión:', err);
+    } finally {
+      setTimeout(cleanup, 500);
+    }
   };
 
   return (
@@ -521,7 +617,7 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({
 
                 {/* Cliente Agendado Autocomplete */}
                 {esClienteAgendado && (
-                  <div className="relative">
+                  <div className="relative" ref={customerDropdownRef}>
                     <label className="block text-slate-500 dark:text-slate-400 mb-1">Buscar Cliente en Directorio</label>
                     <div className="relative">
                       <input

@@ -12,13 +12,13 @@ interface SystemLogsModalProps {
 }
 
 export const SystemLogsModal: React.FC<SystemLogsModalProps> = ({ isOpen, onClose, currentRole = 'OPERADOR' }) => {
-  if (!isOpen) return null;
-
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [levelFilter, setLevelFilter] = useState<string>('ALL');
   const [categoryFilter, setCategoryFilter] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedLog, setSelectedLog] = useState<LogEntry | null>(null);
+  const [clearConfirmOpen, setClearConfirmOpen] = useState<boolean>(false);
+  const [restrictionMsg, setRestrictionMsg] = useState<string | null>(null);
 
   const loadLogs = () => {
     setLogs(getSystemLogs());
@@ -42,15 +42,21 @@ export const SystemLogsModal: React.FC<SystemLogsModalProps> = ({ isOpen, onClos
     };
   }, []);
 
-  const handleClear = () => {
+  if (!isOpen) return null;
+
+  const handleClearRequest = () => {
     if (currentRole !== 'ADMIN') {
-      alert('🔒 Restricción de Seguridad: Solamente los usuarios con perfil de ADMINISTRADOR pueden purgar los logs de auditoría.');
+      setRestrictionMsg('🔒 Restricción de Seguridad: Solamente los usuarios con perfil de ADMINISTRADOR pueden purgar los logs de auditoría.');
       return;
     }
-    if (confirm('¿Estás seguro de borrar todo el historial de logs del sistema?')) {
-      clearSystemLogs();
-      loadLogs();
-    }
+    setRestrictionMsg(null);
+    setClearConfirmOpen(true);
+  };
+
+  const handleConfirmClear = () => {
+    clearSystemLogs();
+    setClearConfirmOpen(false);
+    setRestrictionMsg(null);
   };
 
   const handleDownloadJSON = () => {
@@ -197,7 +203,7 @@ export const SystemLogsModal: React.FC<SystemLogsModalProps> = ({ isOpen, onClos
             </button>
 
             <button
-              onClick={handleClear}
+              onClick={handleClearRequest}
               className="bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-500/30 px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer font-medium"
             >
               <Trash2 className="w-3.5 h-3.5" />
@@ -206,6 +212,21 @@ export const SystemLogsModal: React.FC<SystemLogsModalProps> = ({ isOpen, onClos
           </div>
 
         </div>
+
+        {/* Restriction / Status Message */}
+        {restrictionMsg && (
+          <div className="bg-amber-50 dark:bg-amber-500/10 border-b border-amber-200 dark:border-amber-500/30 px-5 py-3 flex items-center gap-2.5">
+            <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+            <span className="text-xs text-amber-800 dark:text-amber-300">{restrictionMsg}</span>
+            <button
+              onClick={() => setRestrictionMsg(null)}
+              className="ml-auto text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-200 p-1 rounded transition-colors cursor-pointer"
+              title="Cerrar aviso"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
 
         {/* Body Content - Dual Pane */}
         <div className="grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-slate-200 dark:divide-slate-800 overflow-hidden flex-1">
@@ -297,6 +318,50 @@ export const SystemLogsModal: React.FC<SystemLogsModalProps> = ({ isOpen, onClos
         </div>
 
       </div>
+
+      {/* Confirm Clear Dialog */}
+      {clearConfirmOpen && (
+        <div className="fixed inset-0 z-[60] bg-slate-900/70 dark:bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-md rounded-xl shadow-2xl overflow-hidden">
+            <div className="bg-red-50 dark:bg-red-500/10 border-b border-red-200 dark:border-red-500/30 px-5 py-3.5 flex items-center gap-3">
+              <div className="bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400 p-2 rounded-lg">
+                <Trash2 className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-red-800 dark:text-red-300">Purgar Logs de Auditoría</h3>
+                <p className="text-xs text-red-600/80 dark:text-red-400/80">Esta acción es irreversible</p>
+              </div>
+              <button
+                onClick={() => setClearConfirmOpen(false)}
+                className="ml-auto text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 p-1 rounded-md hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="p-5 space-y-4">
+              <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+                Se eliminarán de forma permanente <strong>todos los registros de auditoría</strong> almacenados en este dispositivo
+                (<span className="font-mono text-xs">{filtered.length} visibles</span>). Esta operación no se puede deshacer.
+              </p>
+              <div className="flex items-center justify-end gap-2">
+                <button
+                  onClick={() => setClearConfirmOpen(false)}
+                  className="px-4 py-2 rounded-lg text-xs font-medium border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleConfirmClear}
+                  className="px-4 py-2 rounded-lg text-xs font-bold bg-red-600 hover:bg-red-700 text-white transition-colors cursor-pointer flex items-center gap-1.5"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  Sí, purgar todo
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

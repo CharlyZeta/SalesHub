@@ -1,3 +1,45 @@
 @import "tailwindcss";
 
 @variant dark (&:where(.dark, .dark *));
+
+/* The cloned sheet inside the print container is laid out at full A4 width,
+   both when printing and when capturing the PDF (html-to-image renders this
+   node, so it must keep its on-screen layout). */
+#print-area-budget,
+#print-area-remito {
+  width: 794px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+#print-area-budget #budget-pdf-content,
+#print-area-remito #remito-pdf-content {
+  max-width: none;
+  width: 100%;
+  margin: 0;
+  padding: 6mm;
+  border: none;
+  box-shadow: none;
+}
+#print-area-budget #budget-pdf-content *,
+#print-area-remito #remito-pdf-content * {
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+/* Print isolation: only the cloned active sheet is rendered (app, overlays and
+   the original modal are hidden; a dedicated print-only container is used so
+   fixed/overflow/backdrop ancestors cannot clip the sheet). */
+@media print {
+  body.printing-budget > *:not(#print-area-budget),
+  body.printing-remito > *:not(#print-area-remito) {
+    display: none !important;
+  }
+  body.printing-budget #print-area-budget,
+  body.printing-remito #print-area-remito {
+    display: block !important;
+    width: auto;
+    margin: 0;
+    padding: 0;
+  }
+}
+

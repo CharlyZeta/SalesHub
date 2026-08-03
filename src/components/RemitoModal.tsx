@@ -18,6 +18,7 @@ export const RemitoModal: React.FC<RemitoModalProps> = ({
 }) => {
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [copiedMessage, setCopiedMessage] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   if (!isOpen || !sale) return null;
 
@@ -29,35 +30,81 @@ export const RemitoModal: React.FC<RemitoModalProps> = ({
   const hasTracking = Boolean(sale.numeroSeguimiento && sale.numeroSeguimiento.trim() !== '');
 
   const handlePrint = () => {
-    window.print();
+    const element = document.getElementById('remito-pdf-content');
+    if (!element) {
+      setErrorMsg('No se encontró el contenido del remito para imprimir.');
+      return;
+    }
+    let printArea = document.getElementById('print-area-remito');
+    if (!printArea) {
+      printArea = document.createElement('div');
+      printArea.id = 'print-area-remito';
+      document.body.appendChild(printArea);
+    }
+    printArea.innerHTML = '';
+    printArea.appendChild(element.cloneNode(true));
+
+    const cleanup = () => {
+      document.body.classList.remove('printing-remito');
+      window.removeEventListener('afterprint', cleanup);
+      const area = document.getElementById('print-area-remito');
+      if (area) area.remove();
+    };
+    document.body.classList.add('printing-remito');
+    window.addEventListener('afterprint', cleanup);
+    try {
+      window.print();
+    } catch (err) {
+      console.error('Error al abrir el diálogo de impresión:', err);
+    } finally {
+      setTimeout(cleanup, 500);
+    }
   };
 
   const handleDownloadPdf = async () => {
     const element = document.getElementById('remito-pdf-content');
     if (!element) {
-      window.print();
+      setErrorMsg('No se encontró el contenido del remito para generar el PDF.');
       return;
     }
 
     setIsGeneratingPdf(true);
     try {
-      // @ts-ignore
-      const html2pdfModule = await import('html2pdf.js');
-      const html2pdf = html2pdfModule.default || html2pdfModule;
+      const { toPng } = await import('html-to-image');
+      const { jsPDF } = await import('jspdf');
 
       const filename = `Remito_${sale.id}.pdf`;
-      const opt = {
-        margin: [5, 5, 5, 5],
-        filename,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, logging: false },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-      };
 
-      await (html2pdf as any)().set(opt).from(element).save();
+      const dataUrl = await toPng(element, {
+        cacheBust: true,
+        backgroundColor: '#ffffff',
+        pixelRatio: 2
+      });
+
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const imgProps = pdf.getImageProperties(dataUrl);
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = pageWidth;
+      const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
+
+      let heightLeft = imgHeight;
+      let position = 0;
+      pdf.addImage(dataUrl, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft > 0) {
+        position -= pageHeight;
+        pdf.addPage();
+        pdf.addImage(dataUrl, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      pdf.save(filename);
+      setErrorMsg(null);
     } catch (err) {
       console.error('Error al generar PDF del remito:', err);
-      window.print();
+      setErrorMsg('No se pudo generar el PDF automáticamente. Usá el botón "Imprimir" y en el diálogo elegí "Guardar como PDF".');
     } finally {
       setIsGeneratingPdf(false);
     }
@@ -134,6 +181,21 @@ export const RemitoModal: React.FC<RemitoModalProps> = ({
         {/* Modal Scroll Content */}
         <div className="p-4 sm:p-6 overflow-y-auto print:p-0 print:overflow-visible">
           
+          {/* Error Message */}
+          {errorMsg && (
+            <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-3 flex items-center justify-between gap-2 print:hidden">
+              <span className="text-xs text-red-800">{errorMsg}</span>
+              <button
+                type="button"
+                onClick={() => setErrorMsg(null)}
+                className="text-red-600 hover:text-red-800 p-1 rounded hover:bg-red-100 cursor-pointer"
+                title="Cerrar aviso"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
           {/* Andreani Tracking Highlight Banner (Screen only if Andreani) */}
           {isAndreani && (
             <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-3 flex flex-wrap items-center justify-between gap-2 print:hidden">
