@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Settings, Plus, Trash2, Check, Edit2, Sliders, ShieldCheck, Lock, Server, KeyRound, Globe, FileCode, FileSpreadsheet } from 'lucide-react';
 import { AppConfig, SecurityConfig } from '../types';
+import { hashPin } from '../utils/security';
 
 interface ConfigModalProps {
   isOpen: boolean;
@@ -35,7 +36,8 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
   };
 
   const [secConfig, setSecConfig] = useState<SecurityConfig>(config.seguridad || defaultSec);
-  const [pinChangeInput, setPinChangeInput] = useState(secConfig.pinAcceso || '1234');
+  // PIN field starts empty; the stored value is a hash and is never shown.
+  const [pinChangeInput, setPinChangeInput] = useState('');
 
   // New items state
   const [newChannel, setNewChannel] = useState('');
@@ -114,7 +116,13 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
     setEditingPaymentIdx(null);
   };
 
-  const handleSaveAll = () => {
+  const handleSaveAll = async () => {
+    const newPin = pinChangeInput.trim();
+    // Persist only a hash of the PIN, never the plain value. Empty input keeps
+    // the already-stored hash untouched.
+    const pinAcceso = newPin
+      ? await hashPin(newPin)
+      : (secConfig.pinAcceso || await hashPin('1234'));
     onSaveConfig({
       canales,
       metodosPago,
@@ -122,7 +130,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
       ultimoNumeroPresupuesto: Number(ultimoNumero) || 1,
       seguridad: {
         ...secConfig,
-        pinAcceso: pinChangeInput.trim() || '1234'
+        pinAcceso
       }
     });
     onClose();
@@ -448,14 +456,14 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
                       Clave / PIN de Administrador
                     </label>
                     <input
-                      type="text"
+                      type="password"
                       value={pinChangeInput}
                       onChange={(e) => setPinChangeInput(e.target.value)}
-                      placeholder="Ej: 1234"
+                      placeholder="Nuevo PIN (dejar vacío conserva el actual)"
                       className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-1.5 font-mono text-slate-900 dark:text-slate-100 font-bold focus:outline-none focus:border-purple-600"
                     />
                     <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                      Requerido para acceder como Administrador o modificar configuraciones críticas.
+                      Requerido para acceder al sistema. Si deja el campo vacío se conserva el PIN actual. Se almacena en forma cifrada (hash).
                     </p>
                   </div>
 

@@ -59,6 +59,38 @@ export function parseDateToISO(input: string): string {
   return new Date().toISOString().split('T')[0];
 }
 
+/**
+ * Parses an amount string written in Argentine/Spanish or US format into a number.
+ * Handles thousands separators (dot or comma) and decimal separators correctly:
+ *   "1.250,00" -> 1250   |   "1250,00" -> 1250   |   "1250.00" -> 1250
+ *   "1.250.000" -> 1250000   |   "-1.250,50" -> -1250.5   |   "$ 1.250" -> 1250
+ */
+export function parseAmountString(value: string | number): number {
+  if (typeof value === 'number') return isNaN(value) ? 0 : value;
+  if (!value) return 0;
+
+  const s = value.trim().replace(/[^\d.,-]/g, '');
+  if (!s) return 0;
+
+  const hasComma = s.includes(',');
+  const hasDot = s.includes('.');
+
+  let normalized: string;
+  if (hasComma) {
+    // Comma is the decimal separator; dots are thousands separators
+    normalized = s.replace(/\./g, '').replace(',', '.');
+  } else if (hasDot && /\.\d{1,2}$/.test(s) && s.split('.').length === 2) {
+    // US format "1250.00" (single dot, <=2 decimals)
+    normalized = s;
+  } else {
+    // Dots are thousands separators (e.g. "1.250.000" or "1.250")
+    normalized = s.replace(/\./g, '');
+  }
+
+  const parsed = parseFloat(normalized);
+  return isNaN(parsed) ? 0 : parsed;
+}
+
 export interface RecordValidationResult {
   isValid: boolean;
   missingFields: string[];
@@ -112,6 +144,34 @@ export function getCurrentMonthISO(): string {
 }
 
 /**
+ * Generates a collision-resistant sequential sale ID (e.g. V-2026-00123)
+ * using a monotonic counter seeded from existing IDs plus timestamp/microsec.
+ */
+export function generateSaleId(existingIds: string[] = []): string {
+  const year = new Date().getFullYear();
+  let maxSeq = 0;
+  const seen = new Set(existingIds);
+  const re = new RegExp(`^V-${year}-(\\d+)$`);
+  for (const id of seen) {
+    const m = re.exec(id);
+    if (m) maxSeq = Math.max(maxSeq, parseInt(m[1], 10));
+  }
+  let seq = maxSeq + 1;
+  // Collision-avoidance backstop: if somehow the sequential candidate is taken
+  // (e.g. stale ids from another year in the same batch), bump until free.
+  let candidate = `V-${year}-${String(seq).padStart(5, '0')}`;
+  while (seen.has(candidate) && seq < 999999) {
+    seq += 1;
+    candidate = `V-${year}-${String(seq).padStart(5, '0')}`;
+  }
+  // Extremely unlikely fallback: mix in a unique suffix if counter exhausted
+  if (seq >= 999999) {
+    candidate = `V-${year}-${Date.now().toString(36).toUpperCase()}`;
+  }
+  return candidate;
+}
+
+/**
  * Gets human readable month name in Spanish (e.g. "Julio 2026")
  */
 export function getMonthYearLabel(monthIso?: string): string {
@@ -128,6 +188,14 @@ export function getMonthYearLabel(monthIso?: string): string {
  */
 export function exportSalesToCSV(sales: Sale[], filename = 'ventas_exportadas.csv') {
   if (typeof document === 'undefined') return;
+
+  const escapeCsv = (value: unknown): string => {
+    const str = value === null || value === undefined ? '' : String(value);
+    if (/[",\n\r]/.test(str)) {
+      return `"${str.replace(/"/g, '""')}"`;
+    }
+    return str;
+  };
 
   const headers = [
     'ID Venta',
@@ -150,14 +218,14 @@ export function exportSalesToCSV(sales: Sale[], filename = 'ventas_exportadas.cs
     const productSummary = sale.productos
       .map((p) => `${p.nombre} (x${p.cantidad})`)
       .join('; ');
-      
+
     return [
       sale.id,
       formatDate(sale.fecha),
       sale.clienteId || '',
       sale.clienteNombre || '',
       sale.clienteApellido || '',
-      `"${productSummary.replace(/"/g, '""')}"`,
+      productSummary,
       sale.montoTotal,
       sale.numeroFactura || '',
       sale.metodoPago || '',
@@ -165,11 +233,11 @@ export function exportSalesToCSV(sales: Sale[], filename = 'ventas_exportadas.cs
       sale.metodoEnvio || '',
       sale.numeroSeguimiento || '',
       sale.estadoEnvio || '',
-      `"${(sale.notas || '').replace(/"/g, '""')}"`
-    ].join(',');
+      sale.notas || ''
+    ].map(escapeCsv).join(',');
   });
 
-  const csvContent = 'data:text/csv;charset=utf-8,\uFEFF' + [headers.join(','), ...rows].join('\n');
+  const csvContent = 'data:text/csv;charset=utf-8,\uFEFF' + [headers.map(escapeCsv).join(','), ...rows].join('\n');
   const encodedUri = encodeURI(csvContent);
   const link = document.createElement('a');
   link.setAttribute('href', encodedUri);

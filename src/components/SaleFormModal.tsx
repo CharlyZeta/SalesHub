@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Plus, Trash2, Search, UserCheck, ShoppingCart, FileText, CheckCircle, Printer } from 'lucide-react';
 import { Sale, SaleProductItem, Customer, CatalogProduct, SaleChannel, PaymentMethod, ShippingMethod, ShippingStatus, InvoiceType } from '../types';
-import { formatCurrency, parseDateToISO, validateRequiredSaleFields } from '../utils/formatters';
+import { formatCurrency, parseDateToISO, validateRequiredSaleFields, generateSaleId } from '../utils/formatters';
 import { ProductSearchPicker } from './ProductSearchPicker';
 
 interface SaleFormModalProps {
@@ -9,6 +9,7 @@ interface SaleFormModalProps {
   onClose: () => void;
   onSave: (sale: Sale) => void;
   existingSale?: Sale | null;
+  existingSaleIds?: string[];
   customers: Customer[];
   catalog: CatalogProduct[];
   canales?: string[];
@@ -21,6 +22,7 @@ export const SaleFormModal: React.FC<SaleFormModalProps> = ({
   onClose,
   onSave,
   existingSale,
+  existingSaleIds = [],
   customers,
   catalog,
   canales = ['Local', 'MercadoLibre', 'WooCommerce', 'WhatsApp', 'Otro'],
@@ -117,7 +119,7 @@ export const SaleFormModal: React.FC<SaleFormModalProps> = ({
     const finalClienteId = clienteId.trim() || `CLI-${Math.floor(1000 + Math.random() * 9000)}`;
 
     const candidateSale: Sale = {
-      id: existingSale ? existingSale.id : `V-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`,
+      id: existingSale ? existingSale.id : generateSaleId(existingSaleIds),
       fecha,
       clienteId: finalClienteId,
       clienteNombre: clienteNombre.trim() || 'Cliente Sin Nombre',

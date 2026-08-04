@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { formatCurrency, formatDate, parseDateToISO, getCurrentMonthISO, getMonthYearLabel, exportSalesToCSV, validateRequiredSaleFields } from '../utils/formatters';
+import { formatCurrency, formatDate, parseDateToISO, parseAmountString, generateSaleId, getCurrentMonthISO, getMonthYearLabel, exportSalesToCSV, validateRequiredSaleFields } from '../utils/formatters';
 import { Sale } from '../types';
 
 describe('Formatters Utilities', () => {
@@ -81,10 +81,58 @@ describe('Formatters Utilities', () => {
     });
   });
 
+  describe('parseAmountString', () => {
+    it('parses Argentine format with thousands dots and decimal comma', () => {
+      expect(parseAmountString('1.250,00')).toBe(1250);
+      expect(parseAmountString('1.250,50')).toBe(1250.5);
+      expect(parseAmountString('$ 1.250,00')).toBe(1250);
+    });
+
+    it('parses Argentine thousands separators without decimals', () => {
+      expect(parseAmountString('1.250')).toBe(1250);
+      expect(parseAmountString('1.250.000')).toBe(1250000);
+    });
+
+    it('parses US format and plain numbers', () => {
+      expect(parseAmountString('1250.00')).toBe(1250);
+      expect(parseAmountString('1250')).toBe(1250);
+      expect(parseAmountString(1250)).toBe(1250);
+      expect(parseAmountString('1250,00')).toBe(1250);
+    });
+
+    it('handles negative values and invalid input', () => {
+      expect(parseAmountString('-1.250,50')).toBe(-1250.5);
+      expect(parseAmountString('')).toBe(0);
+      expect(parseAmountString('abc')).toBe(0);
+      expect(parseAmountString(NaN)).toBe(0);
+    });
+  });
+
   describe('getCurrentMonthISO', () => {
     it('returns current year and month in YYYY-MM format', () => {
       const result = getCurrentMonthISO();
       expect(result).toMatch(/^\d{4}-\d{2}$/);
+    });
+  });
+
+  describe('generateSaleId', () => {
+    it('generates sequential ids after the max existing id of the current year', () => {
+      const year = new Date().getFullYear();
+      expect(generateSaleId([])).toBe(`V-${year}-00001`);
+      expect(generateSaleId([`V-${year}-00003`, `V-${year}-00001`])).toBe(`V-${year}-00004`);
+    });
+
+    it('ignores ids from other years when computing the next sequence', () => {
+      const year = new Date().getFullYear();
+      expect(generateSaleId([`V-${year - 1}-00099`])).toBe(`V-${year}-00001`);
+    });
+
+    it('never returns an id that already exists', () => {
+      const year = new Date().getFullYear();
+      const existing = [`V-${year}-00001`, `V-${year}-00002`];
+      const generated = generateSaleId(existing);
+      expect(existing).not.toContain(generated);
+      expect(generated).toMatch(new RegExp(`^V-${year}-`));
     });
   });
 

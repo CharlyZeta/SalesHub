@@ -59,6 +59,55 @@ describe('WooCommerce API Utility', () => {
     expect(transformed.email).toBe('marta@gastronomia.com');
     expect(transformed.direccion).toContain('San Martin 500');
     expect(transformed.canalHabitual).toBe('WooCommerce');
+    expect(transformed.dniCuit).toBe('');
+  });
+
+  it('transforms WooCommerce customer with minimal data without fabricating fields', () => {
+    const dto: WooCustomerDTO = { id: 7, email: 'c7@shop.com', first_name: '', last_name: '' };
+
+    const transformed = transformWooCustomer(dto);
+    expect(transformed.dniCuit).toBe('');
+    expect(transformed.telefono).toBe('');
+    expect(transformed.direccion).toBe('');
+  });
+
+  it('uses direct fetch only and never routes credentials through third-party CORS proxies', async () => {
+    const mockProducts: WooProductDTO[] = [{ id: 1, name: 'Prod 1', sku: 'SKU1', price: '100' }];
+    const globalFetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+      ok: true,
+      json: async () => mockProducts
+    } as any);
+
+    const result = await fetchWooCommerceProducts({
+      url: 'https://test-shop.com',
+      consumerKey: 'ck_1',
+      consumerSecret: 'cs_1',
+      autoSync: false,
+      conectado: true
+    });
+
+    expect(result.length).toBe(1);
+    // Credentials must go to the WooCommerce origin, never to a third-party proxy host.
+    const fetchedUrl = globalFetchSpy.mock.calls[0][0] as string;
+    expect(fetchedUrl.startsWith('https://test-shop.com')).toBe(true);
+    expect(fetchedUrl).not.toContain('corsproxy.io');
+    expect(fetchedUrl).not.toContain('allorigins');
+    globalFetchSpy.mockRestore();
+  });
+
+  it('returns fallback demo catalog when credentials are placeholders and fetch fails', async () => {
+    vi.spyOn(globalThis, 'fetch').mockRejectedValue(new TypeError('Failed to fetch'));
+
+    const result = await fetchWooCommerceProducts({
+      url: 'https://ejemplo.tienda.com',
+      consumerKey: '',
+      consumerSecret: '',
+      autoSync: false,
+      conectado: false
+    });
+    expect(result.length).toBeGreaterThan(0);
+    expect(result[0].origen).toBe('WooCommerce');
+    (globalThis.fetch as any).mockRestore();
   });
 
   it('fetches products via WooCommerce API or fallback simulation', async () => {

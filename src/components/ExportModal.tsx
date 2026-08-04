@@ -15,6 +15,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, sales
 
   const [exportRange, setExportRange] = useState<'este_mes' | 'todos'>('este_mes');
   const [exportChannel, setExportChannel] = useState<string>('TODOS');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleDownload = () => {
     let salesToExport = [...sales];
@@ -28,10 +29,11 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, sales
     }
 
     if (salesToExport.length === 0) {
-      alert('No hay ventas que coincidan con los criterios seleccionados.');
+      setErrorMessage('No hay ventas que coincidan con los criterios seleccionados.');
       return;
     }
 
+    setErrorMessage(null);
     const filename = `ventas_${exportRange}_${exportChannel.toLowerCase()}_${new Date().toISOString().split('T')[0]}.csv`;
     exportSalesToCSV(salesToExport, filename);
     onClose();
@@ -89,6 +91,12 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, sales
               <option value="WooCommerce">Sólo WooCommerce</option>
             </select>
           </div>
+
+          {errorMessage && (
+            <div className="bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 p-2.5 rounded-lg text-xs font-medium">
+              {errorMessage}
+            </div>
+          )}
 
           <div className="flex justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
             <button onClick={onClose} className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-md font-medium cursor-pointer transition-colors">

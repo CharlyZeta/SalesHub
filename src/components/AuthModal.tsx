@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Lock, KeyRound, ShieldAlert, ShieldCheck, UserCheck, Eye, EyeOff, Server, Globe } from 'lucide-react';
 import { SecurityConfig, UserRole } from '../types';
 import { addSystemLog } from '../utils/logger';
+import { hashPin } from '../utils/security';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -20,30 +21,37 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [selectedRole, setSelectedRole] = useState<UserRole>('OPERADOR');
   const [showPin, setShowPin] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [isVerifying, setIsVerifying] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleAttemptUnlock = (e: React.FormEvent) => {
+  const handleAttemptUnlock = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
+    if (isVerifying) return;
 
-    // If Operator role is chosen and security is set, operator can enter without PIN or with standard PIN
-    if (selectedRole === 'OPERADOR') {
-      addSystemLog('INFO', 'Seguridad', 'Acceso iniciado como OPERADOR');
-      onUnlock('OPERADOR');
-      setPinInput('');
-      return;
-    }
+    setIsVerifying(true);
+    try {
+      const storedPin = securityConfig.pinAcceso || '1234';
+      // Legacy plaintext PINs (pre-hash) are verified directly; hashed ones
+      // are compared against a freshly computed hash of the input.
+      const storedIsHashed = /^[a-f0-9]{64}$/i.test(storedPin.trim());
+      const inputHash = await hashPin(pinInput);
 
-    // Admin role requires PIN verification
-    const correctPin = securityConfig.pinAcceso || '1234';
-    if (pinInput.trim() === correctPin.trim()) {
-      addSystemLog('INFO', 'Seguridad', 'Autenticación exitosa como ADMINISTRADOR');
-      onUnlock('ADMIN');
-      setPinInput('');
-    } else {
-      setErrorMsg('PIN / Clave de Administrador incorrecta');
-      addSystemLog('WARN', 'Seguridad', 'Intento fallido de autenticación Administrador', { intento: pinInput.length });
+      const matches = storedIsHashed
+        ? inputHash === storedPin.trim().toLowerCase()
+        : pinInput.trim() === storedPin.trim();
+
+      if (matches) {
+        addSystemLog('INFO', 'Seguridad', `Autenticación exitosa como ${selectedRole}`);
+        onUnlock(selectedRole);
+        setPinInput('');
+      } else {
+        setErrorMsg('PIN / Clave incorrecta');
+        addSystemLog('WARN', 'Seguridad', `Intento fallido de autenticación (${selectedRole})`, { intento: pinInput.length });
+      }
+    } finally {
+      setIsVerifying(false);
     }
   };
 
@@ -113,38 +121,36 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             </div>
           </div>
 
-          {/* Admin PIN input if selected */}
-          {selectedRole === 'ADMIN' ? (
-            <div className="space-y-1.5 pt-1">
-              <label className="block font-bold text-slate-700 dark:text-slate-300">
-                Clave / PIN de Administrador:
-              </label>
-              <div className="relative">
-                <input
-                  type={showPin ? 'text' : 'password'}
-                  placeholder="Ingrese PIN (Predeterminado: 1234)"
-                  value={pinInput}
-                  onChange={(e) => setPinInput(e.target.value)}
-                  autoFocus
-                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg pl-3 pr-10 py-2 font-mono text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-purple-600 focus:bg-white dark:focus:bg-slate-900"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPin(!showPin)}
-                  className="absolute right-2.5 top-2.5 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 cursor-pointer"
-                >
-                  {showPin ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                💡 El PIN de administrador por defecto es <strong className="font-mono text-slate-700 dark:text-slate-200">1234</strong>. Puede cambiarlo en Configuración.
-              </p>
+          {/* PIN input — required for both roles */}
+          <div className="space-y-1.5 pt-1">
+            <label className="block font-bold text-slate-700 dark:text-slate-300">
+              Clave / PIN de acceso:
+            </label>
+            <div className="relative">
+              <input
+                type={showPin ? 'text' : 'password'}
+                placeholder="Ingrese PIN"
+                value={pinInput}
+                onChange={(e) => setPinInput(e.target.value)}
+                autoFocus
+                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg pl-3 pr-10 py-2 font-mono text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-purple-600 focus:bg-white dark:focus:bg-slate-900"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPin(!showPin)}
+                className="absolute right-2.5 top-2.5 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 cursor-pointer"
+              >
+                {showPin ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
             </div>
-          ) : (
-            <div className="bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 p-3 rounded-lg text-blue-900 dark:text-blue-200 text-[11px]">
-              ℹ️ Como <strong>Operador</strong> podrá registrar ventas, generar presupuestos y crear remitos. La edición de credenciales de WooCommerce y borrado de logs están reservadas para Administradores.
-            </div>
-          )}
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+              💡 El PIN por defecto es <strong className="font-mono text-slate-700 dark:text-slate-200">1234</strong>. Puede cambiarlo en Configuración.
+            </p>
+          </div>
+
+          <div className="bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 p-3 rounded-lg text-blue-900 dark:text-blue-200 text-[11px]">
+            ℹ️ Como <strong>Operador</strong> podrá registrar ventas, generar presupuestos y crear remitos. La edición de credenciales de WooCommerce y borrado de logs están reservadas para Administradores.
+          </div>
 
           {errorMsg && (
             <div className="bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 p-2.5 rounded-lg flex items-center gap-2 text-xs font-medium animate-shake">
@@ -156,14 +162,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           {/* Submit Action */}
           <button
             type="submit"
-            className={`w-full py-2.5 rounded-xl text-white font-bold text-sm flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer ${
+            disabled={isVerifying}
+            className={`w-full py-2.5 rounded-xl text-white font-bold text-sm flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed ${
               selectedRole === 'ADMIN'
                 ? 'bg-purple-600 hover:bg-purple-700 active:scale-98'
                 : 'bg-blue-600 hover:bg-blue-700 active:scale-98'
             }`}
           >
             <KeyRound className="w-4 h-4" />
-            <span>Ingresar al Sistema ({selectedRole})</span>
+            <span>{isVerifying ? 'Verificando...' : `Ingresar al Sistema (${selectedRole})`}</span>
           </button>
         </form>
 

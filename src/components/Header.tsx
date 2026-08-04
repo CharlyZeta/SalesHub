@@ -69,7 +69,7 @@ export const Header: React.FC<HeaderProps> = ({
           <div>
             <div className="flex items-center space-x-2">
               <h1 className="font-semibold text-base md:text-lg tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
-                SalesHub <span className="text-slate-400 dark:text-slate-500 font-normal">/ Subdominio Ecommerce</span>
+                DUAL S.R.L. <span className="text-slate-400 dark:text-slate-500 font-normal">/ Gestión Comercial</span>
               </h1>
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400 hidden sm:block">

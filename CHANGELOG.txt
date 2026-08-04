@@ -4,6 +4,54 @@ Todas las mejoras y fixes notables del proyecto.
 
 El formato se basa en Keep a Changelog, y el proyecto respeta Versionado Semántico.
 
+## [0.0.2] - 2026-08-03
+
+### Mejoras y fixes de robustez, seguridad y deuda técnica
+
+#### Corregido (bugs)
+
+- **`numberToWords.ts`**: `novecentos` → `novecientos` (error ortográfico en centenas,
+  no cubierto por tests). Se agregó cobertura para 900 y 950.
+- **`ImportModal`**: el parsing de montos argentinos (`$ 1.250,00`) perdía los miles
+  (daba `1.25`). Nuevo helper puro `parseAmountString` en `formatters.ts` que maneja
+  separadores de miles y decimales en formatos ARS/US, con tests.
+- **IDs de venta colisionables**: `Math.random()` en `App.tsx` y `SaleFormModal` se
+  reemplazó por `generateSaleId`, secuencial sin colisiones (`V-2026-00001`...).
+- **CSV**: `exportSalesToCSV` ahora escapa correctamente todos los campos (comas,
+  comillas y saltos de línea) en lugar de solo productos/notas.
+- **AuthGate (RBAC)**: antes se podía entrar como OPERADOR sin ingresar ningún PIN;
+  ahora ambos perfiles requieren verificación. El botón muestra estado "Verificando...".
+
+#### Seguridad
+
+- **WooCommerce API**: se eliminaron los proxies CORS de terceros (`corsproxy.io`,
+  `api.allorigins.win`) que recibían `consumer_key`/`consumer_secret` en la URL.
+  Ahora la sincronización usa fetch directo; si el navegador bloquea por CORS se
+  requiere un proxy reverso same-origin (Nginx) según el README.
+- **PIN persistido en texto plano**: `ConfigModal`/`AuthModal` ahora almacenan y
+  verifican un hash del PIN (`src/utils/security.ts`, SHA-256 con fallback síncrono).
+  Se conserva retrocompatibilidad con PINs legacy.
+- `transformWooCustomer` ya no fabrica DNI/teléfono/dirección falsos en clientes
+  reales importados de WooCommerce.
+
+#### Deuda técnica
+
+- Dependencias muertas eliminadas: `express`, `@types/express`, `dotenv`,
+  `@google/genai` y `html2pdf.js` (se importaba `jspdf` directo). Se agregó `jspdf`
+  como dependencia directa.
+- `vite.config.ts`: corregido comentario con encoding corrupto.
+- `package.json` renombrado a `sistema-gestion-comercial-dual` v1.0.0; Header ahora
+  muestra la marca DUAL S.R.L. en vez de "SalesHub / Subdominio Ecommerce".
+- `App.tsx`: handlers de ventas/presupuestos/catálogo migrados a functional setState
+  (evita stale closures).
+- `alert()` reemplazado por feedback inline en `ExportModal` e `ImportModal`.
+
+#### Calidad
+
+- 48 tests unitarios en 6 suites (antes 38), lint y build de producción OK.
+
+---
+
 ## [0.0.1] - 2026-08-01
 
 ### Commit inicial - Lanzamiento del Sistema de Gestión Comercial
@@ -62,7 +110,7 @@ presupuestos AFIP, remitos y despacho en el punto de venta.
 
 - `graphify-out/` (salida generada por la herramienta de análisis de grafos) está excluido
   del repositorio vía `.gitignore`.
-- Dependencias `express`, `dotenv` y `@google/genai` presentes en `package.json` pero sin
-  uso en el código actual (restos de la plantilla AI Studio); candidatas a limpieza.
-- La sincronización WooCommerce depende de proxies CORS de terceros
-  (`corsproxy.io`, `api.allorigins.win`) como estrategia de respaldo del navegador.
+- La sincronización WooCommerce depende de un proxy reverso same-origin (Nginx) para
+  operar desde el navegador; los proxies CORS de terceros fueron eliminados por seguridad.
+- `bun.lock` queda obsoleto (generado sin `bun` en el entorno); regenerar con `bun install`
+  si se usa Bun, o ignorar y usar `package-lock.json` (npm).

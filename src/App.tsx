@@ -16,7 +16,7 @@ import { AuthModal } from './components/AuthModal';
 
 import { Sale, Customer, CatalogProduct, WooCommerceConfig, AppConfig, Budget, UserRole, SecurityConfig } from './types';
 import { INITIAL_SALES, INITIAL_CATALOG, INITIAL_WOO_CONFIG, INITIAL_CONFIG, INITIAL_BUDGETS } from './data/initialData';
-import { getCurrentMonthISO } from './utils/formatters';
+import { getCurrentMonthISO, generateSaleId } from './utils/formatters';
 import { addSystemLog } from './utils/logger';
 import { fetchWooCommerceProducts, fetchWooCommerceCustomers } from './utils/wooCommerceApi';
 
@@ -262,30 +262,30 @@ export default function App() {
   const handleSaveBudget = (budgetToSave: Budget) => {
     const exists = budgets.some((b) => b.id === budgetToSave.id);
     if (exists) {
-      setBudgets(budgets.map((b) => (b.id === budgetToSave.id ? budgetToSave : b)));
+      setBudgets(prev => prev.map((b) => (b.id === budgetToSave.id ? budgetToSave : b)));
       addSystemLog('BUDGET', 'Presupuestos', `Presupuesto modificado: ${budgetToSave.numeroPresupuesto}`, { total: budgetToSave.importeTotal });
     } else {
-      setBudgets([budgetToSave, ...budgets]);
+      setBudgets(prev => [budgetToSave, ...prev]);
       addSystemLog('BUDGET', 'Presupuestos', `Nuevo presupuesto emitido: ${budgetToSave.numeroPresupuesto}`, { cliente: budgetToSave.razonSocialNombre, total: budgetToSave.importeTotal });
       // Update config last sequential budget number
       const numVal = parseInt(budgetToSave.comprobanteNumero) || config.ultimoNumeroPresupuesto;
       if (numVal > config.ultimoNumeroPresupuesto) {
-        setConfig({
-          ...config,
+        setConfig((prev) => ({
+          ...prev,
           ultimoNumeroPresupuesto: numVal
-        });
+        }));
       }
     }
   };
 
   const handleDeleteBudget = (budgetId: string) => {
-    setBudgets(budgets.filter((b) => b.id !== budgetId));
+    setBudgets(prev => prev.filter((b) => b.id !== budgetId));
     addSystemLog('WARN', 'Presupuestos', `Presupuesto eliminado ID: ${budgetId}`);
   };
 
   const handleConvertBudgetToSale = (budget: Budget) => {
     // Generate new Sale from Budget
-    const newSaleId = `V-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`;
+    const newSaleId = generateSaleId(sales.map(s => s.id));
     const newSale: Sale = {
       id: newSaleId,
       fecha: budget.fechaEmision || new Date().toISOString().split('T')[0],
@@ -312,11 +312,11 @@ export default function App() {
       creadoEn: new Date().toISOString()
     };
 
-    setSales([newSale, ...sales]);
+    setSales(prev => [newSale, ...prev]);
 
     // Mark budget as converted
-    setBudgets(
-      budgets.map((b) => {
+    setBudgets(prev =>
+      prev.map((b) => {
         if (b.id === budget.id) {
           return {
             ...b,
@@ -334,41 +334,44 @@ export default function App() {
   // Handlers for Sale operations
   const handleSaveSale = (saleToSave: Sale) => {
     if (editingSale) {
-      setSales(sales.map((s) => (s.id === saleToSave.id ? saleToSave : s)));
+      setSales(prev => prev.map((s) => (s.id === saleToSave.id ? saleToSave : s)));
       addSystemLog('SALE', 'Ventas', `Venta #${saleToSave.id} actualizada`, { cliente: saleToSave.clienteNombre, total: saleToSave.montoTotal });
     } else {
-      setSales([saleToSave, ...sales]);
+      setSales(prev => [saleToSave, ...prev]);
       addSystemLog('SALE', 'Ventas', `Nueva venta registrada #${saleToSave.id}`, { cliente: saleToSave.clienteNombre, total: saleToSave.montoTotal });
     }
 
     // Auto-update customer directory or add new customer if ID doesn't exist
-    const existingCust = customers.find((c) => c.clienteId === saleToSave.clienteId);
-    if (!existingCust && saleToSave.clienteNombre) {
-      const newCust: Customer = {
-        clienteId: saleToSave.clienteId,
-        nombre: saleToSave.clienteNombre,
-        apellido: saleToSave.clienteApellido || '',
-        dniCuit: saleToSave.clienteDniCuit || '',
-        telefono: saleToSave.clienteTelefono || '',
-        email: saleToSave.clienteEmail || '',
-        totalCompras: saleToSave.montoTotal,
-        cantidadPedidos: 1,
-        ultimaCompra: saleToSave.fecha
-      };
-      setCustomers([...customers, newCust]);
-    }
+    setCustomers(prevCustomers => {
+      const existingCust = prevCustomers.find((c) => c.clienteId === saleToSave.clienteId);
+      if (!existingCust && saleToSave.clienteNombre) {
+        const newCust: Customer = {
+          clienteId: saleToSave.clienteId,
+          nombre: saleToSave.clienteNombre,
+          apellido: saleToSave.clienteApellido || '',
+          dniCuit: saleToSave.clienteDniCuit || '',
+          telefono: saleToSave.clienteTelefono || '',
+          email: saleToSave.clienteEmail || '',
+          totalCompras: saleToSave.montoTotal,
+          cantidadPedidos: 1,
+          ultimaCompra: saleToSave.fecha
+        };
+        return [newCust, ...prevCustomers];
+      }
+      return prevCustomers;
+    });
 
     setEditingSale(null);
   };
 
   const handleDeleteSale = (saleId: string) => {
-    setSales(sales.filter((s) => s.id !== saleId));
+    setSales(prev => prev.filter((s) => s.id !== saleId));
     addSystemLog('WARN', 'Ventas', `Venta eliminada #${saleId}`);
   };
 
   const handleUpdateInlineSale = (saleId: string, updatedFields: Partial<Sale>) => {
-    setSales(
-      sales.map((s) => {
+    setSales(prev =>
+      prev.map((s) => {
         if (s.id === saleId) {
           return { ...s, ...updatedFields };
         }
@@ -378,15 +381,15 @@ export default function App() {
   };
 
   const handleImportSales = (importedSales: Sale[]) => {
-    setSales([...importedSales, ...sales]);
+    setSales(prev => [...importedSales, ...prev]);
   };
 
   const handleAddCustomer = (newCust: Customer) => {
-    setCustomers([newCust, ...customers]);
+    setCustomers(prev => [newCust, ...prev]);
   };
 
   const handleAddCatalogProduct = (newProduct: CatalogProduct) => {
-    setCatalog([newProduct, ...catalog]);
+    setCatalog(prev => [newProduct, ...prev]);
   };
 
   // Quick Row Add
@@ -460,6 +463,7 @@ export default function App() {
         }}
         onSave={handleSaveSale}
         existingSale={editingSale}
+        existingSaleIds={sales.map(s => s.id)}
         customers={customers}
         catalog={catalog}
         canales={config.canales}

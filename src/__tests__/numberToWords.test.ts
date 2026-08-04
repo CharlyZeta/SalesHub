@@ -13,6 +13,8 @@ describe('numberToWordsSpanish Utility', () => {
     expect(numberToWordsSpanish(42)).toBe('cuarenta y dos con 00/100.-');
     expect(numberToWordsSpanish(100)).toBe('cien con 00/100.-');
     expect(numberToWordsSpanish(150)).toBe('ciento cincuenta con 00/100.-');
+    expect(numberToWordsSpanish(900)).toBe('novecientos con 00/100.-');
+    expect(numberToWordsSpanish(950)).toBe('novecientos cincuenta con 00/100.-');
   });
 
   it('converts thousands and tens of thousands', () => {

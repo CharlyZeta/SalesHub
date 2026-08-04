@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Papa from 'papaparse';
 import { X, FileSpreadsheet, Upload, Clipboard, CheckCircle2, ArrowRight, AlertTriangle, Sparkles } from 'lucide-react';
 import { Sale, SaleChannel, PaymentMethod, ShippingMethod, ShippingStatus } from '../types';
-import { parseDateToISO } from '../utils/formatters';
+import { parseDateToISO, parseAmountString } from '../utils/formatters';
 
 interface ImportModalProps {
   isOpen: boolean;
@@ -18,6 +18,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
   const [parsedRawData, setParsedRawData] = useState<any[]>([]);
   const [headers, setHeaders] = useState<string[]>([]);
   const [step, setStep] = useState<1 | 2>(1); // 1: Input & Mapping, 2: Preview
+  const [feedback, setFeedback] = useState<{ type: 'error' | 'success'; message: string } | null>(null);
 
   // Column Mapping State
   const [mapping, setMapping] = useState({
@@ -57,7 +58,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
   // Handle Parse Raw Text / CSV / TSV
   const handleParseText = () => {
     if (!pastedText.trim()) {
-      alert('Por favor, pega las filas copiadas de tu planilla de Google Sheets.');
+      setFeedback({ type: 'error', message: 'Por favor, pega las filas copiadas de tu planilla de Google Sheets.' });
       return;
     }
 
@@ -71,13 +72,14 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
           setHeaders(detectedHeaders);
           setParsedRawData(results.data);
           autoMapHeaders(detectedHeaders);
+          setFeedback(null);
           setStep(2);
         } else {
-          alert('No se pudieron detectar filas válidas en el texto pegado.');
+          setFeedback({ type: 'error', message: 'No se pudieron detectar filas válidas en el texto pegado.' });
         }
       },
       error: (err) => {
-        alert(`Error al procesar el texto: ${err.message}`);
+        setFeedback({ type: 'error', message: `Error al procesar el texto: ${err.message}` });
       }
     });
   };
@@ -97,9 +99,10 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
           setHeaders(detectedHeaders);
           setParsedRawData(results.data);
           autoMapHeaders(detectedHeaders);
+          setFeedback(null);
           setStep(2);
         } else {
-          alert('El archivo CSV seleccionado está vacío o no tiene formato válido.');
+          setFeedback({ type: 'error', message: 'El archivo CSV seleccionado está vacío o no tiene formato válido.' });
         }
       }
     });
@@ -116,14 +119,8 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
       const rawPago = mapping.metodoPago ? row[mapping.metodoPago] : 'Efectivo';
       const rawEnvio = mapping.metodoEnvio ? row[mapping.metodoEnvio] : 'Retiro en Local';
 
-      // Clean amount string ($ 1.250,00 or 1250.00 -> float)
-      let cleanedMonto = 0;
-      if (typeof rawMonto === 'number') {
-        cleanedMonto = rawMonto;
-      } else if (typeof rawMonto === 'string') {
-        const numeric = rawMonto.replace(/[^\d,\.-]/g, '').replace(',', '.');
-        cleanedMonto = parseFloat(numeric) || 0;
-      }
+      // Clean amount string ($ 1.250,00 or 1250.00 or 1.250.000 -> number)
+      const cleanedMonto = parseAmountString(rawMonto);
 
       // Infer Channel
       let canalFinal: SaleChannel = 'Local';
@@ -181,12 +178,12 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
   const handleFinalImport = () => {
     const finalSales = processMappedSales();
     if (finalSales.length === 0) {
-      alert('No hay ventas para importar.');
+      setFeedback({ type: 'error', message: 'No hay ventas para importar.' });
       return;
     }
 
     onImportSales(finalSales);
-    alert(`¡Éxito! Se importaron ${finalSales.length} ventas correctamente a la planilla.`);
+    setFeedback({ type: 'success', message: `¡Éxito! Se importaron ${finalSales.length} ventas correctamente a la planilla.` });
     onClose();
   };
 
@@ -217,6 +214,17 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
         {/* Modal Body */}
         <div className="p-5 overflow-y-auto space-y-5 text-xs text-slate-800 dark:text-slate-200">
           
+          {feedback && (
+            <div className={`p-2.5 rounded-lg text-xs font-medium flex items-center gap-2 ${
+              feedback.type === 'error'
+                ? 'bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300'
+                : 'bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200'
+            }`}>
+              {feedback.type === 'error' ? <AlertTriangle className="w-4 h-4 shrink-0" /> : <CheckCircle2 className="w-4 h-4 shrink-0" />}
+              <span>{feedback.message}</span>
+            </div>
+          )}
+
           {step === 1 && (
             <div className="space-y-4">
               

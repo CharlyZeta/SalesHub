@@ -77,42 +77,28 @@ export const transformWooCustomer = (item: WooCustomerDTO): Customer => {
     nombre: nombre,
     apellido: apellido,
     razonSocialNombre: razonSocial,
-    dniCuit: '20-00000000-9',
-    telefono: billing.phone || '0342-154000000',
+    dniCuit: '',
+    telefono: billing.phone || '',
     email: item.email || billing.email || `cliente${item.id}@tienda.com`,
-    direccion: address || 'Dirección de WooCommerce',
+    direccion: address || '',
     canalHabitual: 'WooCommerce',
     origen: 'WooCommerce'
   };
 };
 
 export const fetchWithCorsProxy = async (targetUrl: string): Promise<Response> => {
-  // Strategy 1: Direct fetch
+  // Security: third-party CORS proxies (corsproxy.io, allorigins.win) are NOT
+  // used because the WooCommerce consumer_key/consumer_secret travel as URL
+  // query params and would be exposed to those third parties. The API is only
+  // reachable via direct fetch. If the browser blocks it (CORS), the caller
+  // must route through a same-origin reverse proxy (Nginx) — see README.
   try {
     const response = await fetch(targetUrl, { headers: { Accept: 'application/json' } });
     if (response.ok) return response;
     // If response was received but not OK (e.g., 401, 403, 404), return it so caller can read status
     if (response.status >= 400 && response.status < 500) return response;
   } catch (err) {
-    addSystemLog('WARN', 'WooCommerce', `Direct browser fetch blocked (CORS/Network). Trying CORS Proxy 1...`);
-  }
-
-  // Strategy 2: corsproxy.io
-  try {
-    const proxy1 = `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`;
-    const response = await fetch(proxy1, { headers: { Accept: 'application/json' } });
-    if (response.ok || (response.status >= 400 && response.status < 500)) return response;
-  } catch (err) {
-    addSystemLog('WARN', 'WooCommerce', `CORS Proxy 1 failed. Trying CORS Proxy 2...`);
-  }
-
-  // Strategy 3: allorigins.win
-  try {
-    const proxy2 = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
-    const response = await fetch(proxy2, { headers: { Accept: 'application/json' } });
-    if (response.ok) return response;
-  } catch (err) {
-    addSystemLog('WARN', 'WooCommerce', `CORS Proxy 2 failed.`);
+    addSystemLog('WARN', 'WooCommerce', 'Bloqueo de red/CORS en fetch directo. Configura un proxy reverso same-origin (Nginx) para sincronizar desde el navegador.');
   }
 
   // Final fallback: attempt direct fetch to return/throw exact error
