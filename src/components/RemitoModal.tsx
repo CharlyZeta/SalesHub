@@ -75,11 +75,27 @@ export const RemitoModal: React.FC<RemitoModalProps> = ({
 
       const filename = `Remito_${sale.id}.pdf`;
 
-      const dataUrl = await toPng(element, {
-        cacheBust: true,
-        backgroundColor: '#ffffff',
-        pixelRatio: 2
-      });
+      // Mismo mecanismo que el presupuesto para evitar problemas de viewport/márgenes
+      let printArea = document.getElementById('print-area-remito');
+      if (!printArea) {
+        printArea = document.createElement('div');
+        printArea.id = 'print-area-remito';
+        document.body.appendChild(printArea);
+      }
+      printArea.innerHTML = '';
+      printArea.appendChild(element.cloneNode(true));
+
+      let dataUrl = '';
+      try {
+        dataUrl = await toPng(printArea, {
+          cacheBust: true,
+          backgroundColor: '#ffffff',
+          pixelRatio: 2,
+          width: 794
+        });
+      } finally {
+        printArea.innerHTML = '';
+      }
 
       const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
       const imgProps = pdf.getImageProperties(dataUrl);

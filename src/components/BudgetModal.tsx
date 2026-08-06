@@ -372,7 +372,8 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({
         dataUrl = await toPng(printArea, {
           cacheBust: true,
           backgroundColor: '#ffffff',
-          pixelRatio: 2
+          pixelRatio: 2,
+          width: 794
         });
       } finally {
         printArea.innerHTML = '';
@@ -397,7 +398,7 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({
         w = (imgW / imgH) * h;
       }
       const x = (pageWidth - w) / 2;
-      const y = (pageHeight - h) / 2;
+      const y = margin;
 
       pdf.addImage(dataUrl, 'PNG', x, y, w, h);
       pdf.save(filename);

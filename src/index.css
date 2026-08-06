@@ -7,9 +7,16 @@
    node, so it must keep its on-screen layout). */
 #print-area-budget,
 #print-area-remito {
+  position: fixed;
+  left: 0;
+  top: 0;
   width: 794px;
-  margin: 0 auto;
+  margin: 0;
+  padding: 0;
   box-sizing: border-box;
+  background: white;
+  z-index: -9999;
+  pointer-events: none;
 }
 #print-area-budget #budget-pdf-content,
 #print-area-remito #remito-pdf-content {
@@ -37,6 +44,7 @@
   body.printing-budget #print-area-budget,
   body.printing-remito #print-area-remito {
     display: block !important;
+    position: static !important;
     width: auto;
     margin: 0;
     padding: 0;
