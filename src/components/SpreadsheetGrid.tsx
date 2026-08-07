@@ -454,6 +454,12 @@ export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
                 </th>
               )}
 
+              {visibleColumns.canal && (
+                <th className="p-2.5 whitespace-nowrap min-w-[120px]">
+                  <span>Canal de Venta</span>
+                </th>
+              )}
+
               {visibleColumns.metodoPago && (
                 <th className="p-2.5 whitespace-nowrap min-w-[120px]">
                   <span>Met. Pago</span>
@@ -462,19 +468,13 @@ export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
 
               {visibleColumns.metodoEnvio && (
                 <th className="p-2.5 whitespace-nowrap min-w-[150px]">
-                  <span>CLIENTE TRANSPORTE</span>
+                  <span>Método de Envío</span>
                 </th>
               )}
 
               {visibleColumns.numeroSeguimiento && (
                 <th className="p-2.5 whitespace-nowrap min-w-[140px]">
-                  <span>Nº ENVIO</span>
-                </th>
-              )}
-
-              {visibleColumns.canal && (
-                <th className="p-2.5 whitespace-nowrap min-w-[120px]">
-                  <span>CANAL venta</span>
+                  <span>Nº de Envío</span>
                 </th>
               )}
 
