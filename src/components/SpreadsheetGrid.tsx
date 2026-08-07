@@ -711,40 +711,48 @@ export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
                           />
                         ) : (
                           <div className="flex items-center gap-1.5 group/track">
-                            <span 
-                              onClick={() => startInlineEdit(sale, 'numeroSeguimiento')}
-                              className="text-slate-700 dark:text-slate-300 font-medium cursor-pointer hover:underline hover:text-blue-600 dark:hover:text-blue-400"
-                              title="Haz clic para editar nº de seguimiento"
-                            >
-                              {sale.numeroSeguimiento || 'Sin tracking'}
-                            </span>
-
-                            {/* Direct Andreani link if method is Andreani and tracking present */}
-                            {isAndreani && hasTracking && (
+                            {isAndreani && hasTracking ? (
                               <a
                                 href={`https://www.andreani.com/envio/${encodeURIComponent(sale.numeroSeguimiento!.trim())}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 text-[11px] bg-red-600 hover:bg-red-700 text-white px-2 py-0.5 rounded font-sans font-medium transition-colors shadow-2xs"
+                                className="inline-flex items-center gap-1.5 text-[11px] bg-red-600 hover:bg-red-700 text-white px-2.5 py-0.5 rounded font-sans font-medium transition-colors shadow-2xs"
                                 title={`Abrir www.andreani.com/envio/${sale.numeroSeguimiento} en nueva ventana`}
                               >
-                                <span>Ver envío</span>
+                                <span>{sale.numeroSeguimiento}</span>
                                 <ExternalLink className="w-3 h-3" />
                               </a>
+                            ) : (
+                              <span 
+                                onClick={() => startInlineEdit(sale, 'numeroSeguimiento')}
+                                className="text-slate-700 dark:text-slate-300 font-medium cursor-pointer hover:underline hover:text-blue-600 dark:hover:text-blue-400"
+                                title="Haz clic para editar nº de seguimiento"
+                              >
+                                {sale.numeroSeguimiento || 'Sin tracking'}
+                              </span>
                             )}
 
                             {sale.numeroSeguimiento && (
-                              <button
-                                onClick={() => handleCopyText(sale.numeroSeguimiento!, `tr-${sale.id}`)}
-                                className="opacity-0 group-hover/track:opacity-100 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5"
-                                title="Copiar nº seguimiento"
-                              >
-                                {copiedId === `tr-${sale.id}` ? (
-                                  <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                                ) : (
-                                  <Copy className="w-3 h-3" />
-                                )}
-                              </button>
+                              <div className="flex items-center gap-0.5">
+                                <button
+                                  onClick={() => startInlineEdit(sale, 'numeroSeguimiento')}
+                                  className="opacity-0 group-hover/track:opacity-100 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5 transition-opacity"
+                                  title="Editar nº seguimiento"
+                                >
+                                  <Edit3 className="w-3 h-3" />
+                                </button>
+                                <button
+                                  onClick={() => handleCopyText(sale.numeroSeguimiento!, `tr-${sale.id}`)}
+                                  className="opacity-0 group-hover/track:opacity-100 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5 transition-opacity"
+                                  title="Copiar nº seguimiento"
+                                >
+                                  {copiedId === `tr-${sale.id}` ? (
+                                    <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                                  ) : (
+                                    <Copy className="w-3 h-3" />
+                                  )}
+                                </button>
+                              </div>
                             )}
                           </div>
                         )}
