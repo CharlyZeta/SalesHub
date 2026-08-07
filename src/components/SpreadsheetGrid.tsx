@@ -679,20 +679,7 @@ export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
                     {/* Método Envío */}
                     {visibleColumns.metodoEnvio && (
                       <td className="p-2.5 font-sans text-slate-700 dark:text-slate-300 whitespace-nowrap">
-                        <div className="flex items-center gap-1.5">
-                          <span>{sale.metodoEnvio}</span>
-                          {isAndreani && hasTracking && (
-                            <a
-                              href={`https://www.andreani.com/envio/${encodeURIComponent(sale.numeroSeguimiento!.trim())}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-0.5 text-[10px] bg-red-50 dark:bg-red-950/60 text-red-700 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/60 border border-red-200 dark:border-red-800 px-1.5 py-0.5 rounded font-bold transition-colors"
-                              title={`Visitar www.andreani.com/envio/${sale.numeroSeguimiento} en otra ventana`}
-                            >
-                              <span>Andreani ↗</span>
-                            </a>
-                          )}
-                        </div>
+                        <span>{sale.metodoEnvio}</span>
                       </td>
                     )}
 
