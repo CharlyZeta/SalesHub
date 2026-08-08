@@ -4,6 +4,22 @@ Todas las mejoras y fixes notables del proyecto.
 
 El formato se basa en Keep a Changelog, y el proyecto respeta Versionado Semántico.
 
+## [0.0.3] - 2026-08-08
+
+### Mejoras en panel principal, exportación PDF y personalización de KPIs
+
+#### Corregido (bugs)
+- **Desalineación de Columnas**: Corregida la desalineación en el panel principal de ventas (`SpreadsheetGrid.tsx`), alineando correctamente las cabeceras con los datos en el orden de: Canal -> Met. Pago -> Método de Envío -> Nº de Envío.
+- **Márgenes en Descarga PDF**: Corregido el desplazamiento y recorte lateral en los PDFs generados (`BudgetModal.tsx`, `RemitoModal.tsx`, `index.css`). Se aisló el área de renderizado en `position: fixed` a coordenadas `(0,0)` para evitar la influencia del viewport o scroll, y se fijó el ancho de exportación en `794px` en `html-to-image`.
+- **Alineación Vertical de Presupuestos**: Se cambió la alineación vertical del PDF de Presupuesto a la parte superior de la hoja A4 (`y = margin`) en lugar de centrado vertical.
+- **Redundancia de Enlaces Andreani**: Removido el enlace redundante de la columna "Método de Envío" y unificado dentro del número de seguimiento en la columna "Nº de Envío".
+
+#### Añadido (características)
+- **KPIs Personalizables**: Se agregó un configurador de indicadores (ícono de engranaje ⚙) en `KpiSummary.tsx` que permite activar/desactivar individualmente cada tarjeta métrica (Acumulado Mensual, Ticket Prom., etc.), persistiendo la selección del usuario en `localStorage` y auto-ajustando dinámicamente el layout de columnas.
+- **Título de la Pestaña**: Actualizado el título del sitio en `index.html` a "SalesHub Dual".
+
+---
+
 ## [0.0.2] - 2026-08-03
 
 ### Mejoras y fixes de robustez, seguridad y deuda técnica
