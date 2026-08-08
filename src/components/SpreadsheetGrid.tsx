@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Search, 
   Filter, 
@@ -39,6 +39,8 @@ interface SpreadsheetGridProps {
   onChannelFilterChange: (channel: string) => void;
   canales?: string[];
   metodosPago?: string[];
+  selectedMonth: string;
+  showAllMonths: boolean;
 }
 
 export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
@@ -51,7 +53,9 @@ export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
   selectedChannelFilter,
   onChannelFilterChange,
   canales = ['Local', 'MercadoLibre', 'WooCommerce', 'WhatsApp', 'Otro'],
-  metodosPago = ['Efectivo', 'Transferencia', 'Tarjeta de Débito', 'Tarjeta de Crédito', 'MercadoPago', 'Efectivo contra entrega', 'Otro']
+  metodosPago = ['Efectivo', 'Transferencia', 'Tarjeta de Débito', 'Tarjeta de Crédito', 'MercadoPago', 'Efectivo contra entrega', 'Otro'],
+  selectedMonth,
+  showAllMonths
 }) => {
   // Search & Filters state
   const [searchTerm, setSearchTerm] = useState('');
@@ -83,6 +87,15 @@ export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
   // Copy feedback
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [recordsPerPage, setRecordsPerPage] = useState(20);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedChannelFilter, paymentFilter, shippingStatusFilter, searchTerm, selectedMonth, showAllMonths]);
+
   // Inline editing state
   const [editingCell, setEditingCell] = useState<{ id: string; field: keyof Sale } | null>(null);
   const [inlineValue, setInlineValue] = useState<string>('');
@@ -101,6 +114,10 @@ export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
   const filteredSales = useMemo(() => {
     return sales
       .filter((s) => {
+        // Month filter
+        if (!showAllMonths && !s.fecha.startsWith(selectedMonth)) {
+          return false;
+        }
         // Channel filter
         if (selectedChannelFilter !== 'TODOS' && s.canal !== selectedChannelFilter) {
           return false;
@@ -146,7 +163,14 @@ export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
         }
         return 0;
       });
-  }, [sales, selectedChannelFilter, paymentFilter, shippingStatusFilter, searchTerm, sortField, sortDirection]);
+  }, [sales, selectedChannelFilter, paymentFilter, shippingStatusFilter, searchTerm, sortField, sortDirection, selectedMonth, showAllMonths]);
+
+  const totalPages = Math.ceil(filteredSales.length / recordsPerPage);
+
+  const paginatedSales = useMemo(() => {
+    const startIndex = (currentPage - 1) * recordsPerPage;
+    return filteredSales.slice(startIndex, startIndex + recordsPerPage);
+  }, [filteredSales, currentPage, recordsPerPage]);
 
   // Handle Copy text to clipboard
   const handleCopyText = (text: string, id: string) => {
@@ -494,7 +518,7 @@ export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
 
           {/* Table Body */}
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-mono text-[12px]">
-            {filteredSales.length === 0 ? (
+            {paginatedSales.length === 0 ? (
               <tr>
                 <td colSpan={13} className="text-center py-12 text-slate-500 dark:text-slate-400 font-sans">
                   <div className="max-w-sm mx-auto flex flex-col items-center gap-2">
@@ -513,7 +537,7 @@ export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
                 </td>
               </tr>
             ) : (
-              filteredSales.map((sale, idx) => {
+              paginatedSales.map((sale, idx) => {
                 const isSelected = selectedIds.includes(sale.id);
                 const firstProduct = sale.productos[0];
                 const productCount = sale.productos.length;
@@ -806,11 +830,53 @@ export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
         </table>
       </div>
 
+      {/* Pagination Controls */}
+      <div className="bg-slate-50 dark:bg-slate-800/80 border-t border-slate-200 dark:border-slate-700 px-4 py-2 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-600 dark:text-slate-400 select-none">
+        <div className="flex items-center gap-2">
+          <span>Registros por página:</span>
+          <select
+            value={recordsPerPage}
+            onChange={(e) => {
+              setRecordsPerPage(Number(e.target.value));
+              setCurrentPage(1);
+            }}
+            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded px-2 py-1 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer font-mono font-medium"
+          >
+            {[20, 30, 40, 50, 60, 70, 80, 90, 100].map((val) => (
+              <option key={val} value={val}>{val}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="flex items-center gap-2 font-mono text-[11px]">
+          <span>Página:</span>
+          <button
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+            className="px-2 py-0.5 rounded bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed font-medium transition-colors cursor-pointer"
+          >
+            &lt; Anterior
+          </button>
+          
+          <span className="font-semibold text-slate-900 dark:text-slate-100 px-1">
+            {currentPage} / {totalPages || 1}
+          </span>
+
+          <button
+            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+            disabled={currentPage === totalPages || totalPages === 0}
+            className="px-2 py-0.5 rounded bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed font-medium transition-colors cursor-pointer"
+          >
+            Siguiente &gt;
+          </button>
+        </div>
+      </div>
+
       {/* Spreadsheet Status Footer */}
       <div className="bg-slate-900 border-t border-slate-800 px-4 py-2.5 text-xs text-slate-300 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-4">
           <span>
-            MOSTRANDO <strong className="text-white font-mono">{filteredSales.length}</strong> DE <strong className="text-white font-mono">{sales.length}</strong> VENTAS
+            MOSTRANDO <strong className="text-white font-mono">{paginatedSales.length}</strong> DE <strong className="text-white font-mono">{filteredSales.length}</strong> FILTRADAS (TOTAL: <strong className="text-white font-mono">{sales.length}</strong>)
           </span>
           <span className="hidden sm:inline border-l border-slate-700 pl-4 text-slate-400">
             Haz clic en el monto o número de factura para editar celdas directamente

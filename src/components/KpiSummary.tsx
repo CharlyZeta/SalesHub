@@ -19,6 +19,8 @@ interface KpiSummaryProps {
   onMonthChange: (monthIso: string) => void;
   selectedChannelFilter: string;
   onChannelFilterChange: (channel: string) => void;
+  showAllMonths: boolean;
+  onShowAllMonthsChange: (showAll: boolean) => void;
 }
 
 export const KpiSummary: React.FC<KpiSummaryProps> = ({
@@ -26,7 +28,9 @@ export const KpiSummary: React.FC<KpiSummaryProps> = ({
   selectedMonth,
   onMonthChange,
   selectedChannelFilter,
-  onChannelFilterChange
+  onChannelFilterChange,
+  showAllMonths,
+  onShowAllMonthsChange
 }) => {
   const [showSettings, setShowSettings] = useState(false);
   const [visibleKpis, setVisibleKpis] = useState(() => {
@@ -57,8 +61,10 @@ export const KpiSummary: React.FC<KpiSummaryProps> = ({
     localStorage.setItem('saleshub_visible_kpis', JSON.stringify(updated));
   };
 
-  // Filter sales for the selected month
-  const monthSales = sales.filter((s) => s.fecha.startsWith(selectedMonth));
+  // Filter sales: either all or only for the selected month
+  const monthSales = showAllMonths 
+    ? sales 
+    : sales.filter((s) => s.fecha.startsWith(selectedMonth));
 
   // Cumulative Totals
   const totalAmount = monthSales.reduce((sum, s) => sum + s.montoTotal, 0);
@@ -108,18 +114,18 @@ export const KpiSummary: React.FC<KpiSummaryProps> = ({
       <div className="max-w-[1920px] mx-auto">
         <div className={`grid grid-cols-2 ${smGridColsClass} ${gridColsClass} gap-3 items-stretch`}>
           
-          {/* Metric 1: Total Acumulado Mensual */}
+          {/* Metric 1: Total Acumulado Mensual/Total */}
           {visibleKpis.acumuladoMensual && (
             <div className="bg-white dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700/80 rounded-lg p-3 shadow-xs flex items-center justify-between">
               <div>
                 <div className="flex items-center justify-between text-[11px] font-semibold text-slate-400 dark:text-slate-400 uppercase tracking-wider">
-                  <span>Acumulado Mensual</span>
+                  <span>{showAllMonths ? 'Acumulado Total' : 'Acumulado Mensual'}</span>
                 </div>
                 <div className="text-lg md:text-xl font-bold font-mono text-emerald-600 dark:text-emerald-400 tracking-tight mt-0.5">
                   {formatCurrency(totalAmount, false)}
                 </div>
                 <div className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5 font-medium">
-                  {getMonthYearLabel(selectedMonth)}
+                  {showAllMonths ? 'Historial Completo' : getMonthYearLabel(selectedMonth)}
                 </div>
               </div>
               <div className="p-2 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 rounded-md border border-emerald-100 dark:border-emerald-800">
@@ -241,7 +247,8 @@ export const KpiSummary: React.FC<KpiSummaryProps> = ({
                   type="month"
                   value={selectedMonth}
                   onChange={(e) => onMonthChange(e.target.value)}
-                  className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs text-slate-800 dark:text-slate-200 rounded px-1.5 py-0.5 focus:outline-none focus:border-blue-500 cursor-pointer font-mono font-medium w-[115px]"
+                  disabled={showAllMonths}
+                  className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs text-slate-800 dark:text-slate-200 rounded px-1.5 py-0.5 focus:outline-none focus:border-blue-500 cursor-pointer font-mono font-medium w-[115px] disabled:opacity-50 disabled:cursor-not-allowed"
                 />
                 <div className="relative">
                   <button
@@ -290,17 +297,28 @@ export const KpiSummary: React.FC<KpiSummaryProps> = ({
               </div>
             </div>
             
-            {visibleKpis.enviosPendientes && (
-              <div className="flex items-center justify-between mt-1 text-xs border-t border-slate-100 dark:border-slate-800/80 pt-1.5">
-                <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1 font-medium">
-                  <Truck className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-                  Envíos pend:
-                </span>
-                <span className={`font-bold px-1.5 py-0.2 rounded text-xs ${pendingShipments > 0 ? 'bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300' : 'text-slate-400 dark:text-slate-500'}`}>
-                  {pendingShipments}
-                </span>
-              </div>
-            )}
+            <div className="flex items-center justify-between mt-1 text-xs border-t border-slate-100 dark:border-slate-800/80 pt-1.5">
+              <label className="flex items-center gap-1 cursor-pointer text-slate-500 dark:text-slate-400 font-medium">
+                <input
+                  type="checkbox"
+                  checked={showAllMonths}
+                  onChange={(e) => onShowAllMonthsChange(e.target.checked)}
+                  className="rounded border-slate-300 dark:border-slate-600 text-blue-600 focus:ring-0 cursor-pointer w-3.5 h-3.5"
+                />
+                <span>Mostrar todos</span>
+              </label>
+              {visibleKpis.enviosPendientes && (
+                <div className="flex items-center gap-1.5">
+                  <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1 font-medium">
+                    <Truck className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                    Env:
+                  </span>
+                  <span className={`font-bold px-1.5 py-0.2 rounded text-[11px] ${pendingShipments > 0 ? 'bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300' : 'text-slate-400 dark:text-slate-500'}`}>
+                    {pendingShipments}
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
 
         </div>

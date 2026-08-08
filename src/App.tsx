@@ -80,6 +80,7 @@ export default function App() {
   // Current Month ISO
   const [selectedMonth, setSelectedMonth] = useState<string>(getCurrentMonthISO());
   const [selectedChannelFilter, setSelectedChannelFilter] = useState<string>('TODOS');
+  const [showAllMonths, setShowAllMonths] = useState<boolean>(false);
 
   // Modals state
   const [isSaleModalOpen, setIsSaleModalOpen] = useState(false);
@@ -432,6 +433,8 @@ export default function App() {
         onMonthChange={setSelectedMonth}
         selectedChannelFilter={selectedChannelFilter}
         onChannelFilterChange={setSelectedChannelFilter}
+        showAllMonths={showAllMonths}
+        onShowAllMonthsChange={setShowAllMonths}
       />
 
       {/* 3. Main Interactive High-Density Spreadsheet Table */}
@@ -452,6 +455,8 @@ export default function App() {
         onChannelFilterChange={setSelectedChannelFilter}
         canales={config.canales}
         metodosPago={config.metodosPago}
+        selectedMonth={selectedMonth}
+        showAllMonths={showAllMonths}
       />
 
       {/* 4. Modals & Drawers */}
