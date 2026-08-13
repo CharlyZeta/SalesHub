@@ -4,6 +4,18 @@ Todas las mejoras y fixes notables del proyecto.
 
 El formato se basa en Keep a Changelog, y el proyecto respeta Versionado Semántico.
 
+## [0.0.4] - 2026-08-13
+
+### Sistema de Copias de Seguridad y Mejoras en Paginación
+
+#### Añadido (características)
+- **Copias de Seguridad Automáticas**: Implementación de un sistema de doble respaldo de datos (ventas, catálogo, clientes, configuración). Guarda copias de seguridad tanto en archivos físicos `.json` en disco (carpeta `./backups/` mediante backend de Vite) como de forma redundante en el navegador (`IndexedDB`).
+- **Configurador de Backups**: Nueva pestaña en `ConfigModal.tsx` para habilitar el guardado automático, seleccionar periodicidades (arranque, diario, semanal, cada 20 o 50 ventas), generar copias manuales en el acto y ver una tabla interactiva con la fecha, origen y tamaño de cada copia para restaurarla con un clic.
+- **Banner de Recuperación por Pérdida de Datos**: Banner de alerta parpadeante en la cabecera que se despliega si `localStorage` se encuentra vacío pero existen copias en disco o IndexedDB, facilitando la restauración inmediata de la base de datos.
+- **Mostrar Todo en Planilla**: Checkbox "Mostrar todos" incorporado en la barra de controles de paginación de `SpreadsheetGrid.tsx`. Al activarlo, muestra todas las filas en una sola página y deshabilita el selector de cantidad de registros.
+
+---
+
 ## [0.0.3] - 2026-08-08
 
 ### Mejoras en panel principal, exportación PDF y personalización de KPIs

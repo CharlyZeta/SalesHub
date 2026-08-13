@@ -19,6 +19,7 @@ import { INITIAL_SALES, INITIAL_CATALOG, INITIAL_WOO_CONFIG, INITIAL_CONFIG, INI
 import { getCurrentMonthISO, generateSaleId } from './utils/formatters';
 import { addSystemLog } from './utils/logger';
 import { fetchWooCommerceProducts, fetchWooCommerceCustomers } from './utils/wooCommerceApi';
+import { BackupItem, listAllBackups, restoreBackup, runBackup, checkAndTriggerAutoBackup } from './utils/backupService';
 
 export default function App() {
   // Load initial data from localStorage or default
@@ -102,6 +103,11 @@ export default function App() {
   const [currentRole, setCurrentRole] = useState<UserRole>('OPERADOR');
   const [isAuthLocked, setIsAuthLocked] = useState<boolean>(false);
 
+  // Backup & Recovery States
+  const [operationsCount, setOperationsCount] = useState(0);
+  const [availableBackup, setAvailableBackup] = useState<BackupItem | null>(null);
+  const [showRecoveryBanner, setShowRecoveryBanner] = useState(false);
+
   // Theme state ('light' | 'dark')
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const saved = localStorage.getItem('app_theme');
@@ -120,6 +126,130 @@ export default function App() {
 
   const toggleTheme = () => {
     setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
+  };
+
+  // Recovery banner and automatic startup backup checks
+  useEffect(() => {
+    const initBackupChecks = async () => {
+      // 1. Check if sales is empty AND there is no custom configuration (i.e. localStorage was cleared)
+      const salesInLocalStorage = localStorage.getItem('app_sales_v1');
+      if (!salesInLocalStorage || JSON.parse(salesInLocalStorage).length === 0) {
+        try {
+          const list = await listAllBackups();
+          if (list.length > 0) {
+            setAvailableBackup(list[0]);
+            setShowRecoveryBanner(true);
+          }
+        } catch (e) {
+          console.error('Error al buscar backups para recuperación:', e);
+        }
+      }
+
+      // 2. Run startup auto-backup if enabled
+      const savedConfig = localStorage.getItem('app_config_v1');
+      if (savedConfig) {
+        try {
+          const parsedConfig = JSON.parse(savedConfig);
+          if (parsedConfig.backup?.autoBackup && parsedConfig.backup?.periodicity === 'startup') {
+            const currentSales = JSON.parse(localStorage.getItem('app_sales_v1') || '[]');
+            const currentCatalog = JSON.parse(localStorage.getItem('app_catalog_v1') || '[]');
+            const currentBudgets = JSON.parse(localStorage.getItem('app_budgets_v1') || '[]');
+            const currentCustomers = JSON.parse(localStorage.getItem('app_customers_v1') || '[]');
+            const currentWoo = JSON.parse(localStorage.getItem('app_woo_config_v1') || 'null') || INITIAL_WOO_CONFIG;
+            
+            const fullState = {
+              sales: currentSales,
+              catalog: currentCatalog,
+              budgets: currentBudgets,
+              customers: currentCustomers,
+              config: parsedConfig,
+              wooConfig: currentWoo
+            };
+            
+            const res = await runBackup(fullState);
+            if (res.successServer || res.successIndexedDb) {
+              const updatedConfig = {
+                ...parsedConfig,
+                backup: {
+                  ...parsedConfig.backup,
+                  lastBackupDate: new Date().toISOString(),
+                  lastBackupFilename: res.filename
+                }
+              };
+              setConfig(updatedConfig);
+              localStorage.setItem('app_config_v1', JSON.stringify(updatedConfig));
+            }
+          }
+        } catch (e) {
+          console.error('Error en backup automático al inicio:', e);
+        }
+      }
+    };
+    
+    initBackupChecks();
+  }, []);
+
+  const handleRestoreState = (restoredState: any) => {
+    if (!restoredState) return;
+    
+    if (restoredState.sales) setSales(restoredState.sales);
+    if (restoredState.catalog) setCatalog(restoredState.catalog);
+    if (restoredState.budgets) setBudgets(restoredState.budgets);
+    if (restoredState.customers) setCustomers(restoredState.customers);
+    if (restoredState.config) setConfig(restoredState.config);
+    if (restoredState.wooConfig) setWooConfig(restoredState.wooConfig);
+    
+    if (restoredState.sales) localStorage.setItem('app_sales_v1', JSON.stringify(restoredState.sales));
+    if (restoredState.catalog) localStorage.setItem('app_catalog_v1', JSON.stringify(restoredState.catalog));
+    if (restoredState.budgets) localStorage.setItem('app_budgets_v1', JSON.stringify(restoredState.budgets));
+    if (restoredState.customers) localStorage.setItem('app_customers_v1', JSON.stringify(restoredState.customers));
+    if (restoredState.config) localStorage.setItem('app_config_v1', JSON.stringify(restoredState.config));
+    if (restoredState.wooConfig) localStorage.setItem('app_woo_config_v1', JSON.stringify(restoredState.wooConfig));
+    
+    setShowRecoveryBanner(false);
+    setAvailableBackup(null);
+    
+    addSystemLog('INFO', 'RESTORE', `Base de datos restaurada de copia de seguridad.`);
+  };
+
+  const handleRestoreStateFromBanner = async () => {
+    if (availableBackup) {
+      try {
+        const restoredState = await restoreBackup(availableBackup);
+        handleRestoreState(restoredState);
+      } catch (e: any) {
+        alert(`Error al restaurar copia: ${e.message}`);
+      }
+    }
+  };
+
+  const checkAutoBackupAfterOp = async (updatedSales: Sale[]) => {
+    const newOpsCount = operationsCount + 1;
+    setOperationsCount(newOpsCount);
+    
+    const fullState = {
+      sales: updatedSales,
+      catalog,
+      budgets,
+      customers,
+      config,
+      wooConfig
+    };
+    
+    const res = await checkAndTriggerAutoBackup(newOpsCount, config, fullState);
+    if (res.triggered && res.filename) {
+      const updatedConfig = {
+        ...config,
+        backup: {
+          ...config.backup!,
+          lastBackupDate: new Date().toISOString(),
+          lastBackupFilename: res.filename
+        }
+      };
+      setConfig(updatedConfig);
+      localStorage.setItem('app_config_v1', JSON.stringify(updatedConfig));
+      addSystemLog('INFO', 'BACKUP', `Copia de seguridad automática creada: ${res.filename}`);
+    }
   };
 
   // Inactivity Timer for Auto-Lock
@@ -313,7 +443,8 @@ export default function App() {
       creadoEn: new Date().toISOString()
     };
 
-    setSales(prev => [newSale, ...prev]);
+    const updatedSales = [newSale, ...sales];
+    setSales(updatedSales);
 
     // Mark budget as converted
     setBudgets(prev =>
@@ -330,15 +461,19 @@ export default function App() {
     );
 
     addSystemLog('SALE', 'Ventas', `Presupuesto ${budget.numeroPresupuesto} convertido a Venta #${newSaleId}`, { montoTotal: budget.importeTotal });
+    checkAutoBackupAfterOp(updatedSales);
   };
 
   // Handlers for Sale operations
   const handleSaveSale = (saleToSave: Sale) => {
+    let updatedSales: Sale[] = [];
     if (editingSale) {
-      setSales(prev => prev.map((s) => (s.id === saleToSave.id ? saleToSave : s)));
+      updatedSales = sales.map((s) => (s.id === saleToSave.id ? saleToSave : s));
+      setSales(updatedSales);
       addSystemLog('SALE', 'Ventas', `Venta #${saleToSave.id} actualizada`, { cliente: saleToSave.clienteNombre, total: saleToSave.montoTotal });
     } else {
-      setSales(prev => [saleToSave, ...prev]);
+      updatedSales = [saleToSave, ...sales];
+      setSales(updatedSales);
       addSystemLog('SALE', 'Ventas', `Nueva venta registrada #${saleToSave.id}`, { cliente: saleToSave.clienteNombre, total: saleToSave.montoTotal });
     }
 
@@ -363,6 +498,7 @@ export default function App() {
     });
 
     setEditingSale(null);
+    checkAutoBackupAfterOp(updatedSales);
   };
 
   const handleDeleteSale = (saleId: string) => {
@@ -425,6 +561,30 @@ export default function App() {
         theme={theme}
         onToggleTheme={toggleTheme}
       />
+
+      {/* Recovery Banner */}
+      {showRecoveryBanner && availableBackup && (
+        <div className="bg-amber-500 text-white px-4 py-2 flex items-center justify-between text-xs font-semibold shadow-md shrink-0 border-b border-amber-600 select-none animate-pulse">
+          <div className="flex items-center gap-2">
+            <span className="text-sm">⚠️</span>
+            <span>Se detectó que la base de datos local está vacía. Sin embargo, hay una copia de seguridad disponible del {new Date(availableBackup.date).toLocaleString()} ({availableBackup.filename}).</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleRestoreStateFromBanner}
+              className="bg-white hover:bg-slate-100 text-amber-900 font-bold px-3 py-1 rounded shadow-xs transition-colors cursor-pointer"
+            >
+              Restaurar Copia
+            </button>
+            <button
+              onClick={() => setShowRecoveryBanner(false)}
+              className="text-white/80 hover:text-white font-bold px-2 py-1 cursor-pointer"
+            >
+              Ignorar
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* 2. Monthly Cumulative KPI Banner */}
       <KpiSummary
@@ -525,6 +685,15 @@ export default function App() {
         config={config}
         onSaveConfig={handleSaveConfig}
         onOpenImport={() => setIsImportOpen(true)}
+        onRestoreBackup={handleRestoreState}
+        fullAppState={{
+          sales,
+          catalog,
+          budgets,
+          customers,
+          config,
+          wooConfig
+        }}
       />
 
       <BudgetModal

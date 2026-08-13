@@ -166,11 +166,19 @@ export interface SecurityConfig {
   rolActual?: UserRole;
 }
 
+export interface BackupConfig {
+  autoBackup: boolean;
+  periodicity: 'startup' | 'daily' | 'weekly' | 'ops_20' | 'ops_50';
+  lastBackupDate?: string;
+  lastBackupFilename?: string;
+}
+
 export interface AppConfig {
   canales: string[];
   metodosPago: string[];
   ultimoNumeroPresupuesto: number; // e.g. 311 for P0001-00000311
   puntoVentaPresupuesto: string; // e.g. "0001"
   seguridad?: SecurityConfig;
+  backup?: BackupConfig;
 }
 

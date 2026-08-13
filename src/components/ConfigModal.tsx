@@ -1,7 +1,28 @@
-import React, { useState } from 'react';
-import { X, Settings, Plus, Trash2, Check, Edit2, Sliders, ShieldCheck, Lock, Server, KeyRound, Globe, FileCode, FileSpreadsheet } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { 
+  X, 
+  Settings, 
+  Plus, 
+  Trash2, 
+  Check, 
+  Edit2, 
+  Sliders, 
+  ShieldCheck, 
+  Lock, 
+  Server, 
+  KeyRound, 
+  Globe, 
+  FileCode, 
+  FileSpreadsheet,
+  Database,
+  Save,
+  Cloud,
+  RefreshCw,
+  AlertCircle
+} from 'lucide-react';
 import { AppConfig, SecurityConfig } from '../types';
 import { hashPin } from '../utils/security';
+import { BackupItem, listAllBackups, runBackup, restoreBackup, deleteFromIndexedDb } from '../utils/backupService';
 
 interface ConfigModalProps {
   isOpen: boolean;
@@ -9,6 +30,8 @@ interface ConfigModalProps {
   config: AppConfig;
   onSaveConfig: (newConfig: AppConfig) => void;
   onOpenImport?: () => void;
+  onRestoreBackup: (state: any) => void;
+  fullAppState: any;
 }
 
 export const ConfigModal: React.FC<ConfigModalProps> = ({
@@ -16,9 +39,11 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
   onClose,
   config,
   onSaveConfig,
-  onOpenImport
+  onOpenImport,
+  onRestoreBackup,
+  fullAppState
 }) => {
-  const [activeTab, setActiveTab] = useState<'general' | 'security'>('general');
+  const [activeTab, setActiveTab] = useState<'general' | 'security' | 'backups'>('general');
 
   const [canales, setCanales] = useState<string[]>(config.canales || []);
   const [metodosPago, setMetodosPago] = useState<string[]>(config.metodosPago || []);
@@ -39,6 +64,13 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
   // PIN field starts empty; the stored value is a hash and is never shown.
   const [pinChangeInput, setPinChangeInput] = useState('');
 
+  // Backups config state
+  const [autoBackup, setAutoBackup] = useState(config.backup?.autoBackup ?? false);
+  const [periodicity, setPeriodicity] = useState(config.backup?.periodicity ?? 'daily');
+  const [backups, setBackups] = useState<BackupItem[]>([]);
+  const [isLoadingBackups, setIsLoadingBackups] = useState(false);
+  const [backupStatus, setBackupStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
   // New items state
   const [newChannel, setNewChannel] = useState('');
   const [newPaymentMethod, setNewPaymentMethod] = useState('');
@@ -49,6 +81,24 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
 
   const [editingPaymentIdx, setEditingPaymentIdx] = useState<number | null>(null);
   const [editingPaymentText, setEditingPaymentText] = useState('');
+
+  const loadBackups = async () => {
+    setIsLoadingBackups(true);
+    try {
+      const list = await listAllBackups();
+      setBackups(list);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsLoadingBackups(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen && activeTab === 'backups') {
+      loadBackups();
+    }
+  }, [isOpen, activeTab]);
 
   if (!isOpen) return null;
 
@@ -116,6 +166,54 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
     setEditingPaymentIdx(null);
   };
 
+  const handleManualBackup = async () => {
+    setBackupStatus(null);
+    try {
+      const res = await runBackup(fullAppState);
+      if (res.successServer || res.successIndexedDb) {
+        setBackupStatus({
+          type: 'success',
+          message: `Copia manual creada con éxito: ${res.filename} (${res.successServer ? 'Disco' : ''} ${res.successIndexedDb ? 'IndexedDB' : ''})`
+        });
+        loadBackups();
+      } else {
+        setBackupStatus({
+          type: 'error',
+          message: 'No se pudo guardar la copia en el disco local ni en el navegador.'
+        });
+      }
+    } catch (e: any) {
+      setBackupStatus({
+        type: 'error',
+        message: `Error al generar copia: ${e.message}`
+      });
+    }
+  };
+
+  const handleRestore = async (item: BackupItem) => {
+    if (confirm(`¿ATENCIÓN: Confirma restaurar la copia de seguridad "${item.filename}"?\n\nEsto reemplazará todas las ventas, clientes, catálogo y configuración actuales de forma irreversible.`)) {
+      try {
+        const restoredState = await restoreBackup(item);
+        onRestoreBackup(restoredState);
+        alert('¡Copia de seguridad restaurada correctamente! La aplicación se recargará con los nuevos datos.');
+        onClose();
+      } catch (e: any) {
+        alert(`Error al restaurar: ${e.message}`);
+      }
+    }
+  };
+
+  const handleDeleteIndexedDbBackup = async (filename: string) => {
+    if (confirm(`¿Confirma eliminar la copia de seguridad del navegador "${filename}"?`)) {
+      try {
+        await deleteFromIndexedDb(filename);
+        loadBackups();
+      } catch (e: any) {
+        alert(`Error al eliminar: ${e.message}`);
+      }
+    }
+  };
+
   const handleSaveAll = async () => {
     const newPin = pinChangeInput.trim();
     // Persist only a hash of the PIN, never the plain value. Empty input keeps
@@ -131,6 +229,12 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
       seguridad: {
         ...secConfig,
         pinAcceso
+      },
+      backup: {
+        autoBackup,
+        periodicity,
+        lastBackupDate: config.backup?.lastBackupDate,
+        lastBackupFilename: config.backup?.lastBackupFilename
       }
     });
     onClose();
@@ -151,7 +255,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
                 Configuración del Sistema
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Personaliza Canales de Venta, Métodos de Pago y Secuencia de Presupuestos
+                Personaliza Canales, Métodos de Pago, Seguridad y Copias de Seguridad
               </p>
             </div>
           </div>
@@ -176,24 +280,36 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
             <Sliders className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
             <span>General & Ventas</span>
           </button>
-
+          
           <button
             onClick={() => setActiveTab('security')}
             className={`py-1.5 px-3.5 rounded-md text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
               activeTab === 'security'
-                ? 'bg-slate-900 dark:bg-blue-600 text-white shadow-2xs'
+                ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-2xs border border-slate-200 dark:border-slate-700'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
             }`}
           >
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Seguridad & VPS Subdominio</span>
+            <ShieldCheck className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+            <span>Seguridad & PIN</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('backups')}
+            className={`py-1.5 px-3.5 rounded-md text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+              activeTab === 'backups'
+                ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-2xs border border-slate-200 dark:border-slate-700'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
+            }`}
+          >
+            <Database className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+            <span>Copias de Seguridad</span>
           </button>
         </div>
 
         {/* Content */}
         <div className="p-5 overflow-y-auto space-y-6 text-xs text-slate-800 dark:text-slate-200">
           
-          {activeTab === 'general' ? (
+          {activeTab === 'general' && (
             <>
               {/* 1. Canales de Venta */}
               <div className="bg-slate-50/70 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-lg p-4 space-y-3">
@@ -224,54 +340,48 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
                   </button>
                 </form>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-                  {canales.map((canal, idx) => (
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {canales.map((c, index) => (
                     <div
-                      key={idx}
-                      className="flex items-center justify-between bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-2 rounded-md shadow-2xs"
+                      key={index}
+                      className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1.5 flex items-center gap-2 text-slate-700 dark:text-slate-300"
                     >
-                      {editingChannelIdx === idx ? (
-                        <div className="flex items-center gap-1.5 w-full">
+                      {editingChannelIdx === index ? (
+                        <div className="flex items-center gap-1.5">
                           <input
                             type="text"
                             value={editingChannelText}
                             onChange={(e) => setEditingChannelText(e.target.value)}
-                            className="flex-1 bg-slate-50 dark:bg-slate-800 border border-blue-500 rounded px-2 py-1 text-xs text-slate-900 dark:text-slate-100 focus:outline-none"
-                            autoFocus
+                            className="bg-slate-50 dark:bg-slate-950 border border-slate-350 dark:border-slate-650 rounded px-1.5 py-0.5 text-xs focus:outline-none text-slate-900 dark:text-slate-100 font-medium"
                           />
                           <button
                             type="button"
-                            onClick={() => handleSaveChannelEdit(idx)}
-                            className="text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950 p-1 rounded"
-                            title="Guardar"
+                            onClick={() => handleSaveChannelEdit(index)}
+                            className="text-emerald-600 hover:text-emerald-800 p-0.5"
                           >
                             <Check className="w-4 h-4" />
                           </button>
                         </div>
                       ) : (
                         <>
-                          <span className="font-medium text-slate-800 dark:text-slate-200">{canal}</span>
-                          <div className="flex items-center gap-1">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setEditingChannelIdx(idx);
-                                setEditingChannelText(canal);
-                              }}
-                              className="text-slate-400 dark:text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                              title="Editar nombre"
-                            >
-                              <Edit2 className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveChannel(idx)}
-                              className="text-slate-400 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-400 p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                              title="Eliminar canal"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
+                          <span className="font-medium">{c}</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingChannelIdx(index);
+                              setEditingChannelText(c);
+                            }}
+                            className="text-slate-400 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800 p-0.5 rounded transition-all"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveChannel(index)}
+                            className="text-slate-400 hover:text-red-600 hover:bg-slate-100 dark:hover:bg-slate-800 p-0.5 rounded transition-all"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
                         </>
                       )}
                     </div>
@@ -283,7 +393,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
               <div className="bg-slate-50/70 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-lg p-4 space-y-3">
                 <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-2">
                   <span className="font-semibold text-slate-900 dark:text-slate-100 text-xs flex items-center gap-2">
-                    <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                    <Globe className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                     Métodos de Pago
                   </span>
                   <span className="text-[11px] text-slate-500 dark:text-slate-400">
@@ -294,68 +404,62 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
                 <form onSubmit={handleAddPaymentMethod} className="flex gap-2">
                   <input
                     type="text"
-                    placeholder="Agregar nuevo método de pago (Ej: Cheque 30 días, Ualá, USD Cash...)..."
+                    placeholder="Agregar nuevo método de pago (Ej: Tarjeta Naranja, Bitcoin, etc.)..."
                     value={newPaymentMethod}
                     onChange={(e) => setNewPaymentMethod(e.target.value)}
-                    className="flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-md px-3 py-1.5 text-xs focus:outline-none focus:border-blue-500 shadow-2xs"
+                    className="flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-md px-3 py-1.5 text-xs focus:outline-none focus:border-emerald-600 shadow-2xs"
                   />
                   <button
                     type="submit"
-                    className="bg-slate-900 dark:bg-blue-600 hover:bg-slate-800 dark:hover:bg-blue-500 text-white font-medium px-3 py-1.5 rounded-md flex items-center gap-1 transition-colors cursor-pointer shrink-0"
+                    className="bg-slate-900 dark:bg-emerald-600 hover:bg-slate-800 dark:hover:bg-emerald-500 text-white font-medium px-3 py-1.5 rounded-md flex items-center gap-1 transition-colors cursor-pointer shrink-0"
                   >
                     <Plus className="w-4 h-4" />
                     <span>Agregar</span>
                   </button>
                 </form>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-                  {metodosPago.map((metodo, idx) => (
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {metodosPago.map((m, index) => (
                     <div
-                      key={idx}
-                      className="flex items-center justify-between bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-2 rounded-md shadow-2xs"
+                      key={index}
+                      className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1.5 flex items-center gap-2 text-slate-700 dark:text-slate-300"
                     >
-                      {editingPaymentIdx === idx ? (
-                        <div className="flex items-center gap-1.5 w-full">
+                      {editingPaymentIdx === index ? (
+                        <div className="flex items-center gap-1.5">
                           <input
                             type="text"
                             value={editingPaymentText}
                             onChange={(e) => setEditingPaymentText(e.target.value)}
-                            className="flex-1 bg-slate-50 dark:bg-slate-800 border border-blue-500 rounded px-2 py-1 text-xs text-slate-900 dark:text-slate-100 focus:outline-none"
-                            autoFocus
+                            className="bg-slate-50 dark:bg-slate-950 border border-slate-350 dark:border-slate-650 rounded px-1.5 py-0.5 text-xs focus:outline-none text-slate-900 dark:text-slate-100 font-medium"
                           />
                           <button
                             type="button"
-                            onClick={() => handleSavePaymentEdit(idx)}
-                            className="text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950 p-1 rounded"
-                            title="Guardar"
+                            onClick={() => handleSavePaymentEdit(index)}
+                            className="text-emerald-600 hover:text-emerald-800 p-0.5"
                           >
                             <Check className="w-4 h-4" />
                           </button>
                         </div>
                       ) : (
                         <>
-                          <span className="font-medium text-slate-800 dark:text-slate-200">{metodo}</span>
-                          <div className="flex items-center gap-1">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setEditingPaymentIdx(idx);
-                                setEditingPaymentText(metodo);
-                              }}
-                              className="text-slate-400 dark:text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                              title="Editar nombre"
-                            >
-                              <Edit2 className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleRemovePaymentMethod(idx)}
-                              className="text-slate-400 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-400 p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                              title="Eliminar método"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
+                          <span className="font-medium">{m}</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingPaymentIdx(index);
+                              setEditingPaymentText(m);
+                            }}
+                            className="text-slate-400 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800 p-0.5 rounded transition-all"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleRemovePaymentMethod(index)}
+                            className="text-slate-400 hover:text-red-600 hover:bg-slate-100 dark:hover:bg-slate-800 p-0.5 rounded transition-all"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
                         </>
                       )}
                     </div>
@@ -363,14 +467,18 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
                 </div>
               </div>
 
-              {/* 3. Secuencia de Presupuesto */}
+              {/* 3. Secuencia de Presupuestos */}
               <div className="bg-slate-50/70 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-lg p-4 space-y-3">
-                <div className="font-semibold text-slate-900 dark:text-slate-100 text-xs border-b border-slate-200 dark:border-slate-700 pb-2">
-                  Numeración Secuencial de Presupuestos
+                <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-2">
+                  <span className="font-semibold text-slate-900 dark:text-slate-100 text-xs flex items-center gap-2">
+                    <FileCode className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                    Correlatividad y Secuencia de Presupuestos
+                  </span>
                 </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-slate-500 dark:text-slate-400 mb-1">Punto de Venta (PV)</label>
+                    <label className="block text-slate-500 dark:text-slate-400 mb-1">Punto de Venta Presupuestos</label>
                     <input
                       type="text"
                       maxLength={4}
@@ -399,7 +507,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
                 </p>
               </div>
 
-              {/* 4. Importación Inicial de Datos (Google Sheets / CSV) */}
+              {/* 4. Importación Inicial de Datos */}
               <div className="bg-slate-50/70 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-lg p-4 space-y-3">
                 <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-2">
                   <div className="flex items-center gap-2 font-semibold text-slate-900 dark:text-slate-100 text-xs">
@@ -428,10 +536,10 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
                 )}
               </div>
             </>
-          ) : (
-            /* TAB 2: Seguridad & VPS Subdominio */
+          )}
+
+          {activeTab === 'security' && (
             <div className="space-y-4">
-              
               {/* App Lock Toggle & PIN */}
               <div className="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-3">
                 <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-2">
@@ -453,50 +561,55 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                   <div>
                     <label className="block text-slate-600 dark:text-slate-400 font-medium mb-1">
-                      Clave / PIN de Administrador
+                      Cambiar PIN de Acceso (4 dígitos)
                     </label>
                     <input
                       type="password"
+                      maxLength={4}
                       value={pinChangeInput}
-                      onChange={(e) => setPinChangeInput(e.target.value)}
-                      placeholder="Nuevo PIN (dejar vacío conserva el actual)"
-                      className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-1.5 font-mono text-slate-900 dark:text-slate-100 font-bold focus:outline-none focus:border-purple-600"
+                      onChange={(e) => setPinChangeInput(e.target.value.replace(/\D/g, ''))}
+                      placeholder="**** (Dejar vacío para no cambiar)"
+                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-3 py-1.5 text-xs text-slate-950 dark:text-slate-50 focus:outline-none focus:border-purple-500 shadow-2xs font-mono font-bold"
                     />
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                      Requerido para acceder al sistema. Si deja el campo vacío se conserva el PIN actual. Se almacena en forma cifrada (hash).
-                    </p>
                   </div>
-
                   <div>
                     <label className="block text-slate-600 dark:text-slate-400 font-medium mb-1">
-                      Auto-Bloqueo por Inactividad
+                      Tiempo de Auto-Bloqueo por Inactividad
                     </label>
                     <select
                       value={secConfig.tiempoInactividadMinutos}
                       onChange={(e) => setSecConfig({ ...secConfig, tiempoInactividadMinutos: Number(e.target.value) })}
-                      className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-1.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-purple-600"
+                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-3 py-1.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-purple-500 shadow-2xs cursor-pointer font-medium"
                     >
-                      <option value={0} className="dark:bg-slate-900">Desactivado (Sin bloqueo automático)</option>
-                      <option value={5} className="dark:bg-slate-900">5 minutos de inactividad</option>
-                      <option value={15} className="dark:bg-slate-900">15 minutos de inactividad (Recomendado)</option>
-                      <option value={30} className="dark:bg-slate-900">30 minutos de inactividad</option>
-                      <option value={60} className="dark:bg-slate-900">60 minutos de inactividad</option>
+                      <option value={5}>5 Minutos</option>
+                      <option value={10}>10 Minutos</option>
+                      <option value={15}>15 Minutos</option>
+                      <option value={30}>30 Minutos</option>
+                      <option value={60}>1 Hora</option>
+                      <option value={0}>Nunca bloquear (Desactivado)</option>
                     </select>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                      Bloquea la pantalla automáticamente tras un tiempo sin actividad del ratón/teclado.
-                    </p>
                   </div>
                 </div>
               </div>
 
-              {/* Role Restrictions */}
+              {/* Roles configuration settings */}
               <div className="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-3">
-                <div className="font-bold text-slate-900 dark:text-slate-100 border-b border-slate-200 dark:border-slate-700 pb-2 flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                  <span>Restricciones de Perfil de Operador (RBAC)</span>
+                <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-slate-100 border-b border-slate-200 dark:border-slate-700 pb-2">
+                  <KeyRound className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                  <span>Restricciones del Rol de Operador</span>
                 </div>
 
-                <div className="space-y-2 text-xs text-slate-700 dark:text-slate-300">
+                <div className="space-y-2 pt-1 font-semibold text-slate-700 dark:text-slate-300">
+                  <label className="flex items-center gap-2.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={secConfig.modoProduccionVPS}
+                      onChange={(e) => setSecConfig({ ...secConfig, modoProduccionVPS: e.target.checked })}
+                      className="w-4 h-4 text-purple-600 rounded"
+                    />
+                    <span>Ocultar Consola de Logs e Importador/Exportador a Operadores</span>
+                  </label>
+
                   <label className="flex items-center gap-2.5 cursor-pointer">
                     <input
                       type="checkbox"
@@ -535,7 +648,175 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
                   <li><strong>Opción 3 (Filtro por IP):</strong> Limitar el acceso en Nginx a las direcciones IP del local/oficina de DUAL S.R.L.</li>
                 </ul>
               </div>
+            </div>
+          )}
 
+          {activeTab === 'backups' && (
+            <div className="space-y-4">
+              <div className="bg-slate-50 dark:bg-slate-800/40 p-4 border border-slate-200 dark:border-slate-800 rounded-xl space-y-3">
+                <div className="flex items-center gap-2 text-slate-800 dark:text-slate-200 font-bold text-xs">
+                  <Database className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                  <span>Configuración de Copias de Seguridad Automáticas</span>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-center">
+                    <label className="flex items-center gap-2.5 cursor-pointer text-slate-700 dark:text-slate-300 font-medium">
+                      <input
+                        type="checkbox"
+                        checked={autoBackup}
+                        onChange={(e) => setAutoBackup(e.target.checked)}
+                        className="w-4 h-4 text-emerald-600 rounded cursor-pointer"
+                      />
+                      <span>Habilitar copia de seguridad automática</span>
+                    </label>
+                  </div>
+                  
+                  {autoBackup && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-slate-500 dark:text-slate-400 text-xs font-semibold">Periodicidad:</span>
+                      <select
+                        value={periodicity}
+                        onChange={(e: any) => setPeriodicity(e.target.value)}
+                        className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded px-2.5 py-1 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer font-medium"
+                      >
+                        <option value="startup">Al iniciar la aplicación</option>
+                        <option value="daily">Una vez al día (Diario)</option>
+                        <option value="weekly">Una vez a la semana (Semanal)</option>
+                        <option value="ops_20">Cada 20 registros de venta</option>
+                        <option value="ops_50">Cada 50 registros de venta</option>
+                      </select>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="pt-3 flex flex-wrap items-center justify-between border-t border-slate-200 dark:border-slate-800 gap-2">
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                    {config.backup?.lastBackupDate ? (
+                      <>Último backup: <strong>{new Date(config.backup.lastBackupDate).toLocaleString()}</strong> ({config.backup.lastBackupFilename})</>
+                    ) : (
+                      'Aún no se han realizado copias de seguridad.'
+                    )}
+                  </span>
+                  
+                  <button
+                    type="button"
+                    onClick={handleManualBackup}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-4 py-1.5 rounded text-xs transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs"
+                  >
+                    <Save className="w-3.5 h-3.5" />
+                    <span>Generar Copia Manual Ahora</span>
+                  </button>
+                </div>
+                
+                {backupStatus && (
+                  <div className={`p-2.5 rounded-lg text-xs font-medium flex items-center gap-2 ${
+                    backupStatus.type === 'error'
+                      ? 'bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300'
+                      : 'bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-950 dark:text-emerald-200'
+                  }`}>
+                    {backupStatus.type === 'error' ? <AlertCircle className="w-4 h-4 shrink-0 text-red-500" /> : <Check className="w-4 h-4 shrink-0 text-emerald-500" />}
+                    <span>{backupStatus.message}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Google Drive alert block */}
+              <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 rounded-lg flex gap-2.5 text-[11px] text-slate-650 dark:text-slate-400">
+                <Cloud className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
+                <div>
+                  <span className="font-semibold text-slate-800 dark:text-slate-200">Sincronización en la Nube (Google Drive / OneDrive):</span>
+                  <p className="mt-0.5 leading-relaxed">
+                    Las copias marcadas como 💻 Disco se guardan en la carpeta <code className="bg-slate-100 dark:bg-slate-850 px-1 py-0.2 rounded font-mono font-bold text-blue-600 dark:text-blue-400">./backups</code> de este proyecto. Si instalas la aplicación oficial de Google Drive en tu computadora y configuras la sincronización de esta carpeta, tus backups locales se subirán a la nube de manera 100% transparente y segura.
+                  </p>
+                </div>
+              </div>
+
+              {/* Backups List Table */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-xs text-slate-800 dark:text-slate-200">Copias de Seguridad Disponibles ({backups.length})</span>
+                  <button
+                    type="button"
+                    onClick={loadBackups}
+                    className="text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-1 transition-all cursor-pointer text-[10px]"
+                    title="Actualizar listado"
+                  >
+                    <RefreshCw className={`w-3 h-3 ${isLoadingBackups ? 'animate-spin' : ''}`} />
+                    <span>Actualizar</span>
+                  </button>
+                </div>
+                
+                <div className="border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden bg-white dark:bg-slate-900 shadow-2xs">
+                  <div className="overflow-y-auto max-h-[200px]">
+                    <table className="w-full text-left border-collapse text-[11px]">
+                      <thead className="bg-slate-50 dark:bg-slate-950 text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800 font-semibold select-none sticky top-0 z-10">
+                        <tr>
+                          <th className="p-2.5">Fecha y Hora</th>
+                          <th className="p-2.5">Origen</th>
+                          <th className="p-2.5">Archivo / ID</th>
+                          <th className="p-2.5 text-right">Tamaño</th>
+                          <th className="p-2.5 text-center">Acciones</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-mono">
+                        {isLoadingBackups ? (
+                          <tr>
+                            <td colSpan={5} className="text-center py-6 text-slate-400 font-sans">Cargando listado...</td>
+                          </tr>
+                        ) : backups.length === 0 ? (
+                          <tr>
+                            <td colSpan={5} className="text-center py-6 text-slate-400 font-sans">No se encontraron copias de seguridad. Genera una copia manual o activa el guardado automático.</td>
+                          </tr>
+                        ) : (
+                          backups.map((item) => (
+                            <tr key={`${item.source}-${item.filename}`} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                              <td className="p-2 text-slate-600 dark:text-slate-400 font-sans">
+                                {new Date(item.date).toLocaleString()}
+                              </td>
+                              <td className="p-2 font-sans select-none">
+                                <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                                  item.source === 'server'
+                                    ? 'bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 font-sans border border-blue-200 dark:border-blue-900'
+                                    : 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-sans border border-emerald-200 dark:border-emerald-900'
+                                }`}>
+                                  {item.source === 'server' ? '💻 Disco' : '🌐 Navegador'}
+                                </span>
+                              </td>
+                              <td className="p-2 text-slate-700 dark:text-slate-350 font-medium truncate max-w-[160px]" title={item.filename}>
+                                {item.filename}
+                              </td>
+                              <td className="p-2 text-right text-slate-500 dark:text-slate-400 font-medium">
+                                {(item.size / 1024).toFixed(1)} KB
+                              </td>
+                              <td className="p-2 text-center font-sans space-x-2">
+                                <button
+                                  type="button"
+                                  onClick={() => handleRestore(item)}
+                                  className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-bold hover:underline cursor-pointer"
+                                  title="Restaurar base de datos a esta copia"
+                                >
+                                  Restaurar
+                                </button>
+                                {item.source === 'indexedDB' && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteIndexedDbBackup(item.filename)}
+                                    className="text-red-500 hover:text-red-700 font-bold hover:underline cursor-pointer"
+                                    title="Eliminar esta copia local"
+                                  >
+                                    Eliminar
+                                  </button>
+                                )}
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 

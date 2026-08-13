@@ -90,11 +90,12 @@ export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const [recordsPerPage, setRecordsPerPage] = useState(20);
+  const [showAllRows, setShowAllRows] = useState(false);
 
   // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedChannelFilter, paymentFilter, shippingStatusFilter, searchTerm, selectedMonth, showAllMonths]);
+  }, [selectedChannelFilter, paymentFilter, shippingStatusFilter, searchTerm, selectedMonth, showAllMonths, showAllRows]);
 
   // Inline editing state
   const [editingCell, setEditingCell] = useState<{ id: string; field: keyof Sale } | null>(null);
@@ -165,12 +166,15 @@ export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
       });
   }, [sales, selectedChannelFilter, paymentFilter, shippingStatusFilter, searchTerm, sortField, sortDirection, selectedMonth, showAllMonths]);
 
-  const totalPages = Math.ceil(filteredSales.length / recordsPerPage);
+  const totalPages = showAllRows ? 1 : Math.ceil(filteredSales.length / recordsPerPage);
 
   const paginatedSales = useMemo(() => {
+    if (showAllRows) {
+      return filteredSales;
+    }
     const startIndex = (currentPage - 1) * recordsPerPage;
     return filteredSales.slice(startIndex, startIndex + recordsPerPage);
-  }, [filteredSales, currentPage, recordsPerPage]);
+  }, [filteredSales, currentPage, recordsPerPage, showAllRows]);
 
   // Handle Copy text to clipboard
   const handleCopyText = (text: string, id: string) => {
@@ -840,12 +844,25 @@ export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
               setRecordsPerPage(Number(e.target.value));
               setCurrentPage(1);
             }}
-            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded px-2 py-1 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer font-mono font-medium"
+            disabled={showAllRows}
+            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded px-2 py-1 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer font-mono font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {[20, 30, 40, 50, 60, 70, 80, 90, 100].map((val) => (
               <option key={val} value={val}>{val}</option>
             ))}
           </select>
+          <label className="flex items-center gap-1.5 ml-2 cursor-pointer font-sans text-[11px] text-slate-500 dark:text-slate-400 select-none">
+            <input
+              type="checkbox"
+              checked={showAllRows}
+              onChange={(e) => {
+                setShowAllRows(e.target.checked);
+                setCurrentPage(1);
+              }}
+              className="rounded border-slate-300 dark:border-slate-600 text-blue-600 focus:ring-0 cursor-pointer w-3.5 h-3.5"
+            />
+            <span>Mostrar todos</span>
+          </label>
         </div>
 
         <div className="flex items-center gap-2 font-mono text-[11px]">
