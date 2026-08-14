@@ -18,7 +18,9 @@ import {
   Save,
   Cloud,
   RefreshCw,
-  AlertCircle
+  AlertCircle,
+  Truck,
+  ClipboardList
 } from 'lucide-react';
 import { AppConfig, SecurityConfig } from '../types';
 import { hashPin } from '../utils/security';
@@ -47,6 +49,8 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
 
   const [canales, setCanales] = useState<string[]>(config.canales || []);
   const [metodosPago, setMetodosPago] = useState<string[]>(config.metodosPago || []);
+  const [metodosEnvio, setMetodosEnvio] = useState<string[]>(config.metodosEnvio || ['Retiro en Local', 'Correo Argentino', 'Andreani', 'OCA', 'Cadetería / Moto', 'Mercado Envíos', 'Otro']);
+  const [estadosEnvio, setEstadosEnvio] = useState<string[]>(config.estadosEnvio || ['Pendiente', 'Enviado', 'Entregado', 'No Requiere']);
   const [puntoVenta, setPuntoVenta] = useState<string>(config.puntoVentaPresupuesto || '0001');
   const [ultimoNumero, setUltimoNumero] = useState<number>(config.ultimoNumeroPresupuesto || 311);
 
@@ -74,6 +78,8 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
   // New items state
   const [newChannel, setNewChannel] = useState('');
   const [newPaymentMethod, setNewPaymentMethod] = useState('');
+  const [newShippingMethod, setNewShippingMethod] = useState('');
+  const [newShippingStatus, setNewShippingStatus] = useState('');
 
   // Editing items state
   const [editingChannelIdx, setEditingChannelIdx] = useState<number | null>(null);
@@ -81,6 +87,12 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
 
   const [editingPaymentIdx, setEditingPaymentIdx] = useState<number | null>(null);
   const [editingPaymentText, setEditingPaymentText] = useState('');
+
+  const [editingShippingMethodIdx, setEditingShippingMethodIdx] = useState<number | null>(null);
+  const [editingShippingMethodText, setEditingShippingMethodText] = useState('');
+
+  const [editingShippingStatusIdx, setEditingShippingStatusIdx] = useState<number | null>(null);
+  const [editingShippingStatusText, setEditingShippingStatusText] = useState('');
 
   const loadBackups = async () => {
     setIsLoadingBackups(true);
@@ -166,6 +178,70 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
     setEditingPaymentIdx(null);
   };
 
+  // Add Shipping Method
+  const handleAddShippingMethod = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newShippingMethod.trim()) return;
+    if (metodosEnvio.includes(newShippingMethod.trim())) {
+      alert('Este método de envío ya existe.');
+      return;
+    }
+    const updated = [...metodosEnvio, newShippingMethod.trim()];
+    setMetodosEnvio(updated);
+    setNewShippingMethod('');
+  };
+
+  // Remove Shipping Method
+  const handleRemoveShippingMethod = (index: number) => {
+    if (metodosEnvio.length <= 1) {
+      alert('Debe haber al menos un método de envío.');
+      return;
+    }
+    const updated = metodosEnvio.filter((_, i) => i !== index);
+    setMetodosEnvio(updated);
+  };
+
+  // Save Shipping Method Edit
+  const handleSaveShippingMethodEdit = (index: number) => {
+    if (!editingShippingMethodText.trim()) return;
+    const updated = [...metodosEnvio];
+    updated[index] = editingShippingMethodText.trim();
+    setMetodosEnvio(updated);
+    setEditingShippingMethodIdx(null);
+  };
+
+  // Add Shipping Status
+  const handleAddShippingStatus = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newShippingStatus.trim()) return;
+    if (estadosEnvio.includes(newShippingStatus.trim())) {
+      alert('Este estado de envío ya existe.');
+      return;
+    }
+    const updated = [...estadosEnvio, newShippingStatus.trim()];
+    setEstadosEnvio(updated);
+    setNewShippingStatus('');
+  };
+
+  // Remove Shipping Status
+  const handleRemoveShippingStatus = (index: number) => {
+    if (estadosEnvio.length <= 1) {
+      alert('Debe haber al menos un estado de envío.');
+      return;
+    }
+    const updated = estadosEnvio.filter((_, i) => i !== index);
+    setEstadosEnvio(updated);
+  };
+
+  // Save Shipping Status Edit
+  const handleSaveShippingStatusEdit = (index: number) => {
+    if (!editingShippingStatusText.trim()) return;
+    const updated = [...estadosEnvio];
+    updated[index] = editingShippingStatusText.trim();
+    setEstadosEnvio(updated);
+    setEditingShippingStatusIdx(null);
+  };
+
   const handleManualBackup = async () => {
     setBackupStatus(null);
     try {
@@ -224,6 +300,8 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
     onSaveConfig({
       canales,
       metodosPago,
+      metodosEnvio,
+      estadosEnvio,
       puntoVentaPresupuesto: puntoVenta || '0001',
       ultimoNumeroPresupuesto: Number(ultimoNumero) || 1,
       seguridad: {
@@ -456,6 +534,162 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
                           <button
                             type="button"
                             onClick={() => handleRemovePaymentMethod(index)}
+                            className="text-slate-400 hover:text-red-600 hover:bg-slate-100 dark:hover:bg-slate-800 p-0.5 rounded transition-all"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* 2b. Métodos de Envío */}
+              <div className="bg-slate-50/70 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-lg p-4 space-y-3">
+                <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-2">
+                  <span className="font-semibold text-slate-900 dark:text-slate-100 text-xs flex items-center gap-2">
+                    <Truck className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                    Métodos de Envío
+                  </span>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                    {metodosEnvio.length} configurados
+                  </span>
+                </div>
+
+                <form onSubmit={handleAddShippingMethod} className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Agregar nuevo método de envío (Ej: Motomensajería, Retiro en Depósito, etc.)..."
+                    value={newShippingMethod}
+                    onChange={(e) => setNewShippingMethod(e.target.value)}
+                    className="flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-md px-3 py-1.5 text-xs focus:outline-none focus:border-blue-500 shadow-2xs"
+                  />
+                  <button
+                    type="submit"
+                    className="bg-slate-900 dark:bg-blue-600 hover:bg-slate-800 dark:hover:bg-blue-500 text-white font-medium px-3 py-1.5 rounded-md flex items-center gap-1 transition-colors cursor-pointer shrink-0"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Agregar</span>
+                  </button>
+                </form>
+
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {metodosEnvio.map((m, index) => (
+                    <div
+                      key={index}
+                      className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1.5 flex items-center gap-2 text-slate-700 dark:text-slate-300"
+                    >
+                      {editingShippingMethodIdx === index ? (
+                        <div className="flex items-center gap-1.5">
+                          <input
+                            type="text"
+                            value={editingShippingMethodText}
+                            onChange={(e) => setEditingShippingMethodText(e.target.value)}
+                            className="bg-slate-50 dark:bg-slate-950 border border-slate-350 dark:border-slate-650 rounded px-1.5 py-0.5 text-xs focus:outline-none text-slate-900 dark:text-slate-100 font-medium"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleSaveShippingMethodEdit(index)}
+                            className="text-emerald-600 hover:text-emerald-800 p-0.5"
+                          >
+                            <Check className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                          <span className="font-medium">{m}</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingShippingMethodIdx(index);
+                              setEditingShippingMethodText(m);
+                            }}
+                            className="text-slate-400 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800 p-0.5 rounded transition-all"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveShippingMethod(index)}
+                            className="text-slate-400 hover:text-red-600 hover:bg-slate-100 dark:hover:bg-slate-800 p-0.5 rounded transition-all"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* 2c. Estados de Envío */}
+              <div className="bg-slate-50/70 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-lg p-4 space-y-3">
+                <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-2">
+                  <span className="font-semibold text-slate-900 dark:text-slate-100 text-xs flex items-center gap-2">
+                    <ClipboardList className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                    Estados de Envío
+                  </span>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                    {estadosEnvio.length} configurados
+                  </span>
+                </div>
+
+                <form onSubmit={handleAddShippingStatus} className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Agregar nuevo estado de envío (Ej: Empaquetado, Preparando, etc.)...."
+                    value={newShippingStatus}
+                    onChange={(e) => setNewShippingStatus(e.target.value)}
+                    className="flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-md px-3 py-1.5 text-xs focus:outline-none focus:border-purple-500 shadow-2xs"
+                  />
+                  <button
+                    type="submit"
+                    className="bg-slate-900 dark:bg-purple-600 hover:bg-slate-800 dark:hover:bg-purple-500 text-white font-medium px-3 py-1.5 rounded-md flex items-center gap-1 transition-colors cursor-pointer shrink-0"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Agregar</span>
+                  </button>
+                </form>
+
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {estadosEnvio.map((status, index) => (
+                    <div
+                      key={index}
+                      className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1.5 flex items-center gap-2 text-slate-700 dark:text-slate-300"
+                    >
+                      {editingShippingStatusIdx === index ? (
+                        <div className="flex items-center gap-1.5">
+                          <input
+                            type="text"
+                            value={editingShippingStatusText}
+                            onChange={(e) => setEditingShippingStatusText(e.target.value)}
+                            className="bg-slate-50 dark:bg-slate-950 border border-slate-350 dark:border-slate-650 rounded px-1.5 py-0.5 text-xs focus:outline-none text-slate-900 dark:text-slate-100 font-medium"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleSaveShippingStatusEdit(index)}
+                            className="text-emerald-600 hover:text-emerald-800 p-0.5"
+                          >
+                            <Check className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                          <span className="font-medium">{status}</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingShippingStatusIdx(index);
+                              setEditingShippingStatusText(status);
+                            }}
+                            className="text-slate-400 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800 p-0.5 rounded transition-all"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveShippingStatus(index)}
                             className="text-slate-400 hover:text-red-600 hover:bg-slate-100 dark:hover:bg-slate-800 p-0.5 rounded transition-all"
                           >
                             <Trash2 className="w-3.5 h-3.5" />

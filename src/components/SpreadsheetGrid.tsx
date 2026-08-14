@@ -39,6 +39,7 @@ interface SpreadsheetGridProps {
   onChannelFilterChange: (channel: string) => void;
   canales?: string[];
   metodosPago?: string[];
+  estadosEnvio?: string[];
   selectedMonth: string;
   showAllMonths: boolean;
 }
@@ -52,8 +53,9 @@ export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
   onPrintRemito,
   selectedChannelFilter,
   onChannelFilterChange,
-  canales = ['Local', 'MercadoLibre', 'WooCommerce', 'WhatsApp', 'Otro'],
-  metodosPago = ['Efectivo', 'Transferencia', 'Tarjeta de Débito', 'Tarjeta de Crédito', 'MercadoPago', 'Efectivo contra entrega', 'Otro'],
+  canales = ['Local', 'MercadoLibre', 'WooCommerce', 'WhatsApp', 'Instagram', 'Venta Telefónica', 'Otro'],
+  metodosPago = ['Efectivo', 'Transferencia', 'Tarjeta de Débito', 'Tarjeta de Crédito', 'MercadoPago', 'Efectivo contra entrega', 'Cheque / eCheq', 'Otro'],
+  estadosEnvio = ['Pendiente', 'Enviado', 'Entregado', 'No Requiere'],
   selectedMonth,
   showAllMonths
 }) => {
@@ -318,9 +320,9 @@ export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
               className="bg-transparent text-slate-800 dark:text-slate-200 text-xs focus:outline-none cursor-pointer"
             >
               <option value="TODOS" className="dark:bg-slate-900">Todos los estados</option>
-              <option value="Pendiente" className="dark:bg-slate-900">Pendiente</option>
-              <option value="Enviado" className="dark:bg-slate-900">Enviado</option>
-              <option value="Entregado" className="dark:bg-slate-900">Entregado</option>
+              {estadosEnvio.map((status) => (
+                <option key={status} value={status} className="dark:bg-slate-900">{status}</option>
+              ))}
             </select>
           </div>
 
@@ -786,10 +788,17 @@ export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
                           }
                           className="bg-transparent border-none text-xs focus:ring-0 cursor-pointer py-0 font-sans dark:text-slate-200"
                         >
-                          <option value="Entregado" className="bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400">Entregado</option>
-                          <option value="Enviado" className="bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-400">Enviado</option>
-                          <option value="Pendiente" className="bg-white dark:bg-slate-900 text-amber-700 dark:text-amber-400">Pendiente</option>
-                          <option value="No Requiere" className="bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400">No Requiere</option>
+                          {estadosEnvio.map((status) => {
+                            let colorClass = "bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400";
+                            if (status === 'Entregado') colorClass = "bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 font-semibold";
+                            else if (status === 'Enviado') colorClass = "bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-400 font-semibold";
+                            else if (status === 'Pendiente') colorClass = "bg-white dark:bg-slate-900 text-amber-700 dark:text-amber-400 font-semibold";
+                            return (
+                              <option key={status} value={status} className={colorClass}>
+                                {status}
+                              </option>
+                            );
+                          })}
                         </select>
                       </td>
                     )}

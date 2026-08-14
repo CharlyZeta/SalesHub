@@ -14,6 +14,8 @@ interface SaleFormModalProps {
   catalog: CatalogProduct[];
   canales?: string[];
   metodosPago?: string[];
+  metodosEnvio?: string[];
+  estadosEnvio?: string[];
   onPrintRemito?: (sale: Sale) => void;
 }
 
@@ -25,8 +27,10 @@ export const SaleFormModal: React.FC<SaleFormModalProps> = ({
   existingSaleIds = [],
   customers,
   catalog,
-  canales = ['Local', 'MercadoLibre', 'WooCommerce', 'WhatsApp', 'Otro'],
-  metodosPago = ['Efectivo', 'Transferencia', 'Tarjeta de Débito', 'Tarjeta de Crédito', 'MercadoPago', 'Efectivo contra entrega', 'Otro'],
+  canales = ['Local', 'MercadoLibre', 'WooCommerce', 'WhatsApp', 'Instagram', 'Venta Telefónica', 'Otro'],
+  metodosPago = ['Efectivo', 'Transferencia', 'Tarjeta de Débito', 'Tarjeta de Crédito', 'MercadoPago', 'Efectivo contra entrega', 'Cheque / eCheq', 'Otro'],
+  metodosEnvio = ['Retiro en Local', 'Correo Argentino', 'Andreani', 'OCA', 'Cadetería / Moto', 'Mercado Envíos', 'Otro'],
+  estadosEnvio = ['Pendiente', 'Enviado', 'Entregado', 'No Requiere'],
   onPrintRemito
 }) => {
   if (!isOpen) return null;
@@ -470,13 +474,9 @@ export const SaleFormModal: React.FC<SaleFormModalProps> = ({
                   onChange={(e) => setMetodoEnvio(e.target.value as ShippingMethod)}
                   className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1.5 text-slate-900 dark:text-slate-100 focus:outline-none shadow-xs"
                 >
-                  <option value="Retiro en Local" className="dark:bg-slate-900">Retiro en Local / Mostrador</option>
-                  <option value="Mercado Envíos" className="dark:bg-slate-900">Mercado Envíos</option>
-                  <option value="Correo Argentino" className="dark:bg-slate-900">Correo Argentino</option>
-                  <option value="Andreani" className="dark:bg-slate-900">Andreani</option>
-                  <option value="OCA" className="dark:bg-slate-900">OCA</option>
-                  <option value="Cadetería / Moto" className="dark:bg-slate-900">Cadetería / Moto Propia</option>
-                  <option value="Otro" className="dark:bg-slate-900">Otro Transporte</option>
+                  {metodosEnvio.map((m) => (
+                    <option key={m} value={m} className="dark:bg-slate-900">{m}</option>
+                  ))}
                 </select>
               </div>
 
@@ -500,10 +500,9 @@ export const SaleFormModal: React.FC<SaleFormModalProps> = ({
                   onChange={(e) => setEstadoEnvio(e.target.value as ShippingStatus)}
                   className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1.5 text-slate-900 dark:text-slate-100 focus:outline-none shadow-xs"
                 >
-                  <option value="Entregado" className="dark:bg-slate-900">Entregado / Finalizado</option>
-                  <option value="Enviado" className="dark:bg-slate-900">En Tránsito / Enviado</option>
-                  <option value="Pendiente" className="dark:bg-slate-900">Pendiente de Despacho</option>
-                  <option value="No Requiere" className="dark:bg-slate-900">No Requiere Envío</option>
+                  {estadosEnvio.map((status) => (
+                    <option key={status} value={status} className="dark:bg-slate-900">{status}</option>
+                  ))}
                 </select>
               </div>
 

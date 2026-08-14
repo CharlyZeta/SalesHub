@@ -11,6 +11,8 @@ const formatDateIso = (daysAgo: number) => {
 export const INITIAL_CONFIG: AppConfig = {
   canales: ['Local', 'MercadoLibre', 'WooCommerce', 'WhatsApp', 'Instagram', 'Venta Telefónica', 'Otro'],
   metodosPago: ['Efectivo', 'Transferencia', 'Tarjeta de Débito', 'Tarjeta de Crédito', 'MercadoPago', 'Efectivo contra entrega', 'Cheque / eCheq', 'Otro'],
+  metodosEnvio: ['Retiro en Local', 'Correo Argentino', 'Andreani', 'OCA', 'Cadetería / Moto', 'Mercado Envíos', 'Otro'],
+  estadosEnvio: ['Pendiente', 'Enviado', 'Entregado', 'No Requiere'],
   ultimoNumeroPresupuesto: 311,
   puntoVentaPresupuesto: '0001',
   seguridad: {

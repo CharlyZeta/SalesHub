@@ -50,7 +50,20 @@ export default function App() {
   const [config, setConfig] = useState<AppConfig>(() => {
     const saved = localStorage.getItem('app_config_v1');
     if (saved) {
-      try { return JSON.parse(saved); } catch (e) { console.error(e); }
+      try {
+        const parsed = JSON.parse(saved);
+        if (!parsed.metodosEnvio || !parsed.estadosEnvio) {
+          return {
+            ...INITIAL_CONFIG,
+            ...parsed,
+            metodosEnvio: parsed.metodosEnvio || INITIAL_CONFIG.metodosEnvio,
+            estadosEnvio: parsed.estadosEnvio || INITIAL_CONFIG.estadosEnvio
+          };
+        }
+        return parsed;
+      } catch (e) {
+        console.error(e);
+      }
     }
     return INITIAL_CONFIG;
   });
@@ -615,6 +628,7 @@ export default function App() {
         onChannelFilterChange={setSelectedChannelFilter}
         canales={config.canales}
         metodosPago={config.metodosPago}
+        estadosEnvio={config.estadosEnvio}
         selectedMonth={selectedMonth}
         showAllMonths={showAllMonths}
       />
@@ -633,6 +647,8 @@ export default function App() {
         catalog={catalog}
         canales={config.canales}
         metodosPago={config.metodosPago}
+        metodosEnvio={config.metodosEnvio}
+        estadosEnvio={config.estadosEnvio}
         onPrintRemito={(sale) => {
           setRemitoSale(sale);
           setIsRemitoOpen(true);

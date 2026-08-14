@@ -176,6 +176,8 @@ export interface BackupConfig {
 export interface AppConfig {
   canales: string[];
   metodosPago: string[];
+  metodosEnvio?: string[];
+  estadosEnvio?: string[];
   ultimoNumeroPresupuesto: number; // e.g. 311 for P0001-00000311
   puntoVentaPresupuesto: string; // e.g. "0001"
   seguridad?: SecurityConfig;

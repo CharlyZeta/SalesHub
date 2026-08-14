@@ -4,6 +4,17 @@ Todas las mejoras y fixes notables del proyecto.
 
 El formato se basa en Keep a Changelog, y el proyecto respeta Versionado Semántico.
 
+## [0.0.5] - 2026-08-14
+
+### Configuración Personalizada de Envíos
+
+#### Añadido (características)
+- **Configurador de Envíos**: Añadidas las secciones "Métodos de Envío" y "Estados de Envío" en el configurador general (`ConfigModal.tsx`), con soporte CRUD (añadir, editar, eliminar) dinámico para personalizar las opciones operativas de logística del comercio.
+- **Selectores Dinámicos**: Los menús desplegables del registro de ventas (`SaleFormModal.tsx`), de edición directa de celdas y de filtros de la barra de herramientas (`SpreadsheetGrid.tsx`) leen dinámicamente las opciones desde la configuración guardada del sistema.
+- **Retrocompatibilidad**: Auto-migración al iniciar la aplicación para fusionar los nuevos arrays de configuración con los valores por defecto si se detectan configuraciones previas en el navegador.
+
+---
+
 ## [0.0.4] - 2026-08-13
 
 ### Sistema de Copias de Seguridad y Mejoras en Paginación
