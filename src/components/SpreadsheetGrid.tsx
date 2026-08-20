@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { 
   Search, 
   Filter, 
@@ -18,6 +18,7 @@ import {
   Clock,
   AlertCircle,
   ChevronDown,
+  RefreshCw,
   ShoppingBag,
   Store,
   CreditCard,
@@ -42,6 +43,8 @@ interface SpreadsheetGridProps {
   estadosEnvio?: string[];
   selectedMonth: string;
   showAllMonths: boolean;
+  andreaniHash?: string;
+  onSyncAndreaniTrackings?: (trackingNumbers: string[]) => Promise<void>;
 }
 
 export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
@@ -57,7 +60,9 @@ export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
   metodosPago = ['Efectivo', 'Transferencia', 'Tarjeta de Débito', 'Tarjeta de Crédito', 'MercadoPago', 'Efectivo contra entrega', 'Cheque / eCheq', 'Otro'],
   estadosEnvio = ['Pendiente', 'Enviado', 'Entregado', 'No Requiere'],
   selectedMonth,
-  showAllMonths
+  showAllMonths,
+  andreaniHash = '',
+  onSyncAndreaniTrackings
 }) => {
   // Search & Filters state
   const [searchTerm, setSearchTerm] = useState('');
@@ -88,6 +93,36 @@ export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
   
   // Copy feedback
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // Andreani Sync Handling
+  const [isSyncingAndreani, setIsSyncingAndreani] = useState(false);
+
+  const handleSyncAndreaniClick = async () => {
+    if (!andreaniHash) {
+      alert('Para utilizar el rastreo automático de Andreani, ingresa el Hash de tu cuenta en Ajustes (ícono ⚙).');
+      return;
+    }
+
+    const trackingNumbers = paginatedSales
+      .filter(s => s.metodoEnvio?.toLowerCase().includes('andreani') && s.numeroSeguimiento && s.numeroSeguimiento.trim() !== '' && s.estadoEnvio !== 'Entregado')
+      .map(s => s.numeroSeguimiento!.trim());
+
+    if (trackingNumbers.length === 0) {
+      alert('No hay envíos de Andreani pendientes de entrega en la página actual o que no estén marcados como Entregado.');
+      return;
+    }
+
+    setIsSyncingAndreani(true);
+    try {
+      if (onSyncAndreaniTrackings) {
+        await onSyncAndreaniTrackings(trackingNumbers);
+      }
+    } catch (e: any) {
+      alert(`Error al sincronizar tracking: ${e.message}`);
+    } finally {
+      setIsSyncingAndreani(false);
+    }
+  };
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -178,6 +213,34 @@ export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
     return filteredSales.slice(startIndex, startIndex + recordsPerPage);
   }, [filteredSales, currentPage, recordsPerPage, showAllRows]);
 
+  // Keep track of checked tracking numbers in this session to avoid duplicate auto requests
+  const autoCheckedRefs = useRef<Set<string>>(new Set());
+
+  // Automatic localized background sync for visible non-delivered Andreani shipments
+  useEffect(() => {
+    if (!andreaniHash || !onSyncAndreaniTrackings) return;
+
+    const pendingVisible = paginatedSales
+      .filter(s => {
+        const isAndreani = s.metodoEnvio?.toLowerCase().includes('andreani');
+        const hasTracking = s.numeroSeguimiento && s.numeroSeguimiento.trim() !== '';
+        const isNotDelivered = s.estadoEnvio !== 'Entregado';
+        const notYetChecked = !autoCheckedRefs.current.has(s.numeroSeguimiento!.trim());
+        return isAndreani && hasTracking && isNotDelivered && notYetChecked;
+      })
+      .map(s => s.numeroSeguimiento!.trim());
+
+    if (pendingVisible.length > 0) {
+      pendingVisible.forEach(num => autoCheckedRefs.current.add(num));
+      const timer = setTimeout(() => {
+        onSyncAndreaniTrackings(pendingVisible).catch(err => {
+          console.error("Auto visible tracking sync failed:", err);
+        });
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [paginatedSales, andreaniHash, onSyncAndreaniTrackings]);
+
   // Handle Copy text to clipboard
   const handleCopyText = (text: string, id: string) => {
     if (!text) return;
@@ -248,6 +311,59 @@ export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
       default:
         return <span className="text-slate-400 dark:text-slate-500 text-[11px] px-2 py-0.5">No Requiere</span>;
     }
+  };
+
+  // Helper badge color for Andreani tracked status
+  const getAndreaniStatusBadge = (statusText: string) => {
+    const text = statusText.toLowerCase();
+
+    // 1. Delivered (Green)
+    if (text.includes('entregado') || text.includes('finalizado') || text.includes('recibido') || text.includes('entregada')) {
+      return (
+        <span className="inline-flex items-center gap-1 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-[11px] px-2 py-0.5 rounded font-semibold border border-emerald-200 dark:border-emerald-850 dark:text-emerald-350 shadow-xs cursor-default" title={`Estado Andreani: ${statusText}`}>
+          <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+          {statusText}
+        </span>
+      );
+    }
+
+    // 2. In Transit / In Distribution (Blue)
+    if (text.includes('transito') || text.includes('viaje') || text.includes('camino') || text.includes('distribucion') || text.includes('despachado') || text.includes('sucursal')) {
+      // If it is ready to pick up at branch (Ready for pickup) -> Purple / Amber
+      if (text.includes('listo') || text.includes('retirar') || text.includes('disposición') || text.includes('espera')) {
+        return (
+          <span className="inline-flex items-center gap-1 bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 text-[11px] px-2 py-0.5 rounded font-semibold border border-purple-200 dark:border-purple-850 dark:text-purple-355 shadow-xs cursor-default" title={`Estado Andreani: ${statusText}`}>
+            <Clock className="w-3 h-3 text-purple-600 dark:text-purple-400" />
+            {statusText}
+          </span>
+        );
+      }
+
+      return (
+        <span className="inline-flex items-center gap-1 bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 text-[11px] px-2 py-0.5 rounded font-semibold border border-blue-200 dark:border-blue-850 dark:text-blue-355 shadow-xs cursor-default" title={`Estado Andreani: ${statusText}`}>
+          <Truck className="w-3 h-3 text-blue-600 dark:text-blue-400" />
+          {statusText}
+        </span>
+      );
+    }
+
+    // 3. Warning / Returned / Issue (Red)
+    if (text.includes('devuelto') || text.includes('problema') || text.includes('demorado') || text.includes('reclamado') || text.includes('siniestro') || text.includes('rechazado')) {
+      return (
+        <span className="inline-flex items-center gap-1 bg-red-50 dark:bg-red-950/60 text-red-700 dark:text-red-300 text-[11px] px-2 py-0.5 rounded font-semibold border border-red-200 dark:border-red-850 dark:text-red-355 shadow-xs cursor-default" title={`Estado Andreani: ${statusText}`}>
+          <AlertCircle className="w-3 h-3 text-red-650 dark:text-red-400" />
+          {statusText}
+        </span>
+      );
+    }
+
+    // 4. Pending / Preparing (Amber)
+    return (
+      <span className="inline-flex items-center gap-1 bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 text-[11px] px-2 py-0.5 rounded font-semibold border border-amber-200 dark:border-amber-850 dark:text-amber-355 shadow-xs cursor-default" title={`Estado Andreani: ${statusText}`}>
+        <Clock className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+        {statusText}
+      </span>
+    );
   };
 
   return (
@@ -362,10 +478,21 @@ export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
             )}
           </div>
 
+          {/* Andreani Sync Button */}
+          <button
+            onClick={handleSyncAndreaniClick}
+            disabled={isSyncingAndreani}
+            className="bg-red-600 hover:bg-red-700 dark:bg-red-800/80 dark:hover:bg-red-700 disabled:opacity-50 text-white font-medium px-3 py-1.5 rounded-md flex items-center gap-1.5 transition-colors cursor-pointer shrink-0 shadow-sm"
+            title="Sincronizar estados de envíos de Andreani con el servidor"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isSyncingAndreani ? 'animate-spin' : ''}`} />
+            <span>Rastrear Andreani</span>
+          </button>
+
           {/* Quick Add Row Button */}
           <button
             onClick={onQuickAddSale}
-            className="bg-slate-900 dark:bg-blue-600 hover:bg-slate-800 dark:hover:bg-blue-500 text-white font-medium px-3 py-1.5 rounded-md flex items-center gap-1 transition-colors cursor-pointer"
+            className="bg-slate-900 dark:bg-blue-600 hover:bg-slate-800 dark:hover:bg-blue-500 text-white font-medium px-3 py-1.5 rounded-md flex items-center gap-1 transition-colors cursor-pointer shrink-0"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Fila Rápida</span>
@@ -779,27 +906,48 @@ export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
                     {/* Estado Envío */}
                     {visibleColumns.estadoEnvio && (
                       <td className="p-2.5 font-sans whitespace-nowrap">
-                        <select
-                          value={sale.estadoEnvio}
-                          onChange={(e) =>
-                            onUpdateInlineSale(sale.id, {
-                              estadoEnvio: e.target.value as ShippingStatus
-                            })
-                          }
-                          className="bg-transparent border-none text-xs focus:ring-0 cursor-pointer py-0 font-sans dark:text-slate-200"
-                        >
-                          {estadosEnvio.map((status) => {
-                            let colorClass = "bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400";
-                            if (status === 'Entregado') colorClass = "bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 font-semibold";
-                            else if (status === 'Enviado') colorClass = "bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-400 font-semibold";
-                            else if (status === 'Pendiente') colorClass = "bg-white dark:bg-slate-900 text-amber-700 dark:text-amber-400 font-semibold";
-                            return (
-                              <option key={status} value={status} className={colorClass}>
-                                {status}
-                              </option>
-                            );
-                          })}
-                        </select>
+                        {isAndreani && sale.andreaniStatus ? (
+                          <div className="flex items-center gap-1 group/status">
+                            {getAndreaniStatusBadge(sale.andreaniStatus)}
+                            <button
+                              onClick={() => {
+                                const input = prompt("Forzar estado de envío manualmente (deja vacío para restaurar seguimiento automático):", sale.estadoEnvio);
+                                if (input !== null) {
+                                  onUpdateInlineSale(sale.id, { 
+                                    estadoEnvio: (input || 'Enviado') as ShippingStatus, 
+                                    andreaniStatus: input ? input : undefined 
+                                  });
+                                }
+                              }}
+                              className="opacity-0 group-hover/status:opacity-100 p-0.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded transition-opacity"
+                              title="Forzar estado manual"
+                            >
+                              <Edit3 className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ) : (
+                          <select
+                            value={sale.estadoEnvio}
+                            onChange={(e) =>
+                              onUpdateInlineSale(sale.id, {
+                                estadoEnvio: e.target.value as ShippingStatus
+                              })
+                            }
+                            className="bg-transparent border-none text-xs focus:ring-0 cursor-pointer py-0 font-sans dark:text-slate-200"
+                          >
+                            {estadosEnvio.map((status) => {
+                              let colorClass = "bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400";
+                              if (status === 'Entregado') colorClass = "bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 font-semibold";
+                              else if (status === 'Enviado') colorClass = "bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-400 font-semibold";
+                              else if (status === 'Pendiente') colorClass = "bg-white dark:bg-slate-900 text-amber-700 dark:text-amber-400 font-semibold";
+                              return (
+                                <option key={status} value={status} className={colorClass}>
+                                  {status}
+                                </option>
+                              );
+                            })}
+                          </select>
+                        )}
                       </td>
                     )}
 

@@ -53,6 +53,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
   const [estadosEnvio, setEstadosEnvio] = useState<string[]>(config.estadosEnvio || ['Pendiente', 'Enviado', 'Entregado', 'No Requiere']);
   const [puntoVenta, setPuntoVenta] = useState<string>(config.puntoVentaPresupuesto || '0001');
   const [ultimoNumero, setUltimoNumero] = useState<number>(config.ultimoNumeroPresupuesto || 311);
+  const [andreaniHash, setAndreaniHash] = useState<string>(config.andreaniHash || '');
 
   // Security config state
   const defaultSec: SecurityConfig = {
@@ -304,6 +305,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
       estadosEnvio,
       puntoVentaPresupuesto: puntoVenta || '0001',
       ultimoNumeroPresupuesto: Number(ultimoNumero) || 1,
+      andreaniHash: andreaniHash.trim(),
       seguridad: {
         ...secConfig,
         pinAcceso
@@ -698,6 +700,37 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
                       )}
                     </div>
                   ))}
+                </div>
+              </div>
+
+              {/* 2d. Integración con Andreani (Seguimiento) */}
+              <div className="bg-slate-50/70 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-lg p-4 space-y-3">
+                <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-2">
+                  <span className="font-semibold text-slate-900 dark:text-slate-100 text-xs flex items-center gap-2">
+                    <Truck className="w-4 h-4 text-red-600 dark:text-red-400" />
+                    Integración con Andreani (Seguimiento de Envíos)
+                  </span>
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold border ${
+                    andreaniHash ? 'bg-emerald-100 border-emerald-200 text-emerald-800 dark:bg-emerald-950/80 dark:border-emerald-800 dark:text-emerald-300' : 'bg-slate-100 border-slate-200 text-slate-500 dark:bg-slate-850 dark:border-slate-750 dark:text-slate-400'
+                  }`}>
+                    {andreaniHash ? 'Configurado' : 'No Configurado'}
+                  </span>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-slate-650 dark:text-slate-400 font-medium">Hash de Autenticación de Andreani (HASH_ANDREANI)</label>
+                  <div className="relative">
+                    <input
+                      type="password"
+                      placeholder="Ingrese el hash de cuenta de Andreani provisto..."
+                      value={andreaniHash}
+                      onChange={(e) => setAndreaniHash(e.target.value)}
+                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-md px-3 py-1.5 text-xs font-mono focus:outline-none focus:border-red-500 shadow-2xs"
+                    />
+                  </div>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 italic">
+                    Hash provisto por Andreani para la integración. Se utiliza para obtener tokens de sesión y actualizar el estado de tus envíos de forma automática.
+                  </p>
                 </div>
               </div>
 

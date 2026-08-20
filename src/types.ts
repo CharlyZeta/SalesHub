@@ -49,6 +49,8 @@ export interface Sale {
   
   notas?: string;
   creadoEn: string;
+  andreaniStatus?: string;
+  andreaniLastCheck?: string;
 }
 
 export interface Customer {
@@ -182,5 +184,6 @@ export interface AppConfig {
   puntoVentaPresupuesto: string; // e.g. "0001"
   seguridad?: SecurityConfig;
   backup?: BackupConfig;
+  andreaniHash?: string;
 }
 

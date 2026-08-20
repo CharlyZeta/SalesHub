@@ -4,6 +4,22 @@ Todas las mejoras y fixes notables del proyecto.
 
 El formato se basa en Keep a Changelog, y el proyecto respeta Versionado Semántico.
 
+## [0.0.6] - 2026-08-20
+
+### Módulo de Seguimiento de Envíos de Andreani
+
+#### Añadido (características)
+- **Integración con API de Andreani**: Implementación de un proxy/middleware de backend en Vite (`vite.config.ts`) para conectarse y autenticarse con la API de Andreani.
+- **Rastreo Automático y Optimizado**: Los envíos se sincronizan de forma selectiva para la página activa actual del SpreadsheetGrid. Las llamadas de API se omiten para envíos ya marcados como "Entregado" para evitar consultas innecesarias.
+- **Visualización por Colores de Badges**: Colores dinámicos para los estados de envío de Andreani en la planilla (Verde para Entregado, Azul para En camino/Distribución, Morado para Sucursal, Rojo para incidencias/demoras, Amarillo/Gris para Pendiente/Generado).
+- **Configuración de Credencial HASH_ANDREANI**: Input de contraseña persistente añadido en `ConfigModal.tsx` para ingresar la credencial de autenticación de Andreani.
+
+#### Corregido (bugs)
+- **Corrección de Token de Acceso**: Se corrigió el extractor de tokens para que busque correctamente en la clave `response.accessToken` de la respuesta de inicio de sesión de la API.
+- **Mapeo por Número de Seguimiento (Guía)**: Se modificaron las consultas de seguimiento del endpoint `ByOrderNumbers` a la API de búsqueda `Shipments?search={guia}` para buscar correctamente por número de seguimiento/guía en lugar de ID de orden de WooCommerce. Esto soluciona las búsquedas de envíos para ventas registradas manualmente sin número de orden.
+
+---
+
 ## [0.0.5] - 2026-08-14
 
 ### Configuración Personalizada de Envíos

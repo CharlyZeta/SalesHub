@@ -137,6 +137,8 @@ export default function App() {
     }
   }, [theme]);
 
+
+
   const toggleTheme = () => {
     setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
   };
@@ -530,6 +532,71 @@ export default function App() {
     );
   };
 
+  const handleSyncAndreaniTrackings = async (trackingNumbers: string[]) => {
+    if (!config.andreaniHash) return;
+    try {
+      const response = await fetch('/api/tracking/andreani/bulk', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-andreani-hash': config.andreaniHash
+        },
+        body: JSON.stringify({ trackingNumbers })
+      });
+      if (!response.ok) {
+        let errMsg = response.statusText;
+        try {
+          const errData = await response.json();
+          if (errData && errData.error) {
+            errMsg = errData.error;
+          }
+        } catch (e) {}
+        throw new Error(`Error en servidor: ${errMsg}`);
+      }
+      const data = await response.json();
+      if (Array.isArray(data)) {
+        const trackingMap = new Map<string, { status: string, events: any[] }>();
+        data.forEach(item => {
+          if (item.tracking_number) {
+            trackingMap.set(item.tracking_number.trim(), {
+              status: item.status,
+              events: item.events
+            });
+          }
+        });
+
+        setSales(prev =>
+          prev.map(sale => {
+            const trackNum = sale.numeroSeguimiento?.trim();
+            if (trackNum && trackingMap.has(trackNum)) {
+              const info = trackingMap.get(trackNum)!;
+              
+              let estadoEnvio = sale.estadoEnvio;
+              const text = info.status.toLowerCase();
+              if (text.includes('entregado') || text.includes('finalizado') || text.includes('recibido') || text.includes('entregada')) {
+                estadoEnvio = 'Entregado';
+              } else if (text.includes('transito') || text.includes('viaje') || text.includes('camino') || text.includes('distribucion') || text.includes('despachado') || text.includes('sucursal')) {
+                estadoEnvio = 'Enviado';
+              }
+
+              return {
+                ...sale,
+                andreaniStatus: info.status,
+                andreaniLastCheck: new Date().toISOString(),
+                estadoEnvio
+              };
+            }
+            return sale;
+          })
+        );
+        addSystemLog('INFO', 'Andreani', `Sincronizados ${data.length} envíos con éxito`);
+      }
+    } catch (e: any) {
+      addSystemLog('ERROR', 'Andreani', `Error de rastreo: ${e.message}`);
+      throw e;
+    }
+  };
+
   const handleImportSales = (importedSales: Sale[]) => {
     setSales(prev => [...importedSales, ...prev]);
   };
@@ -629,6 +696,8 @@ export default function App() {
         canales={config.canales}
         metodosPago={config.metodosPago}
         estadosEnvio={config.estadosEnvio}
+        andreaniHash={config.andreaniHash}
+        onSyncAndreaniTrackings={handleSyncAndreaniTrackings}
         selectedMonth={selectedMonth}
         showAllMonths={showAllMonths}
       />
