@@ -45,8 +45,8 @@ export const SaleFormModal: React.FC<SaleFormModalProps> = ({
 
   const [productos, setProductos] = useState<SaleProductItem[]>(
     existingSale && existingSale.productos.length > 0
-      ? existingSale.productos
-      : [{ id: '1', nombre: '', cantidad: 1, precioUnitario: 0, subtotal: 0 }]
+      ? existingSale.productos.map(p => ({ ...p, descuento: p.descuento ?? 0 }))
+      : [{ id: '1', nombre: '', cantidad: 1, precioUnitario: 0, descuento: 0, subtotal: 0 }]
   );
 
   const [tipoFactura, setTipoFactura] = useState<InvoiceType>(existingSale?.tipoFactura || 'Factura B');
@@ -77,10 +77,11 @@ export const SaleFormModal: React.FC<SaleFormModalProps> = ({
     const updated = [...productos];
     const current = { ...updated[index], [field]: value };
 
-    if (field === 'cantidad' || field === 'precioUnitario') {
+    if (field === 'cantidad' || field === 'precioUnitario' || field === 'descuento') {
       const qty = field === 'cantidad' ? parseFloat(value) || 0 : current.cantidad;
       const price = field === 'precioUnitario' ? parseFloat(value) || 0 : current.precioUnitario;
-      current.subtotal = qty * price;
+      const desc = field === 'descuento' ? parseFloat(value) || 0 : (current.descuento || 0);
+      current.subtotal = qty * price * (1 - desc / 100);
     }
 
     updated[index] = current;
@@ -89,13 +90,14 @@ export const SaleFormModal: React.FC<SaleFormModalProps> = ({
 
   const handleSelectCatalogProduct = (index: number, catProd: CatalogProduct) => {
     const updated = [...productos];
+    const desc = updated[index].descuento || 0;
     updated[index] = {
       ...updated[index],
       id: catProd.id,
       nombre: catProd.nombre,
       sku: catProd.sku,
       precioUnitario: catProd.precio,
-      subtotal: updated[index].cantidad * catProd.precio,
+      subtotal: updated[index].cantidad * catProd.precio * (1 - desc / 100),
       imagenUrl: catProd.imagenUrl
     };
     setProductos(updated);
@@ -104,7 +106,7 @@ export const SaleFormModal: React.FC<SaleFormModalProps> = ({
   const handleAddProductLine = () => {
     setProductos([
       ...productos,
-      { id: String(Date.now()), nombre: '', cantidad: 1, precioUnitario: 0, subtotal: 0 }
+      { id: String(Date.now()), nombre: '', cantidad: 1, precioUnitario: 0, descuento: 0, subtotal: 0 }
     ]);
   };
 
@@ -343,7 +345,7 @@ export const SaleFormModal: React.FC<SaleFormModalProps> = ({
                 <div key={idx} className="grid grid-cols-12 gap-2 items-center bg-white dark:bg-slate-900 p-2 rounded-lg border border-slate-200 dark:border-slate-800 shadow-2xs">
                   
                   {/* Búsqueda Sensitiva de Producto con Imagen */}
-                  <div className="col-span-12 sm:col-span-6">
+                  <div className="col-span-12 sm:col-span-5">
                     <label className="block text-[10px] text-slate-500 dark:text-slate-400 mb-0.5">Producto (Búsqueda sensible con imagen)</label>
                     <ProductSearchPicker
                       catalog={catalog}
@@ -355,21 +357,21 @@ export const SaleFormModal: React.FC<SaleFormModalProps> = ({
                     />
                   </div>
 
-                  {/* Cantidad */}
-                  <div className="col-span-4 sm:col-span-2">
-                    <label className="block text-[10px] text-slate-500 dark:text-slate-400 mb-0.5">Cant.</label>
+                  {/* Cantidad (reducido al 50%) */}
+                  <div className="col-span-3 sm:col-span-1">
+                    <label className="block text-[10px] text-slate-500 dark:text-slate-400 mb-0.5 text-center">Cant.</label>
                     <input
                       type="number"
                       min="1"
                       value={prod.cantidad}
                       onChange={(e) => handleProductChange(idx, 'cantidad', e.target.value)}
-                      className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 px-2 py-1 rounded text-center focus:outline-none focus:border-blue-500 font-mono"
+                      className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 px-1 py-1 rounded text-center focus:outline-none focus:border-blue-500 font-mono"
                     />
                   </div>
 
                   {/* Precio Unitario */}
-                  <div className="col-span-4 sm:col-span-2">
-                    <label className="block text-[10px] text-slate-500 dark:text-slate-400 mb-0.5">Precio Unit. ($)</label>
+                  <div className="col-span-3 sm:col-span-2">
+                    <label className="block text-[10px] text-slate-500 dark:text-slate-400 mb-0.5 text-right">Precio Unit. ($)</label>
                     <input
                       type="number"
                       min="0"
@@ -379,8 +381,21 @@ export const SaleFormModal: React.FC<SaleFormModalProps> = ({
                     />
                   </div>
 
+                  {/* Descuento (%) */}
+                  <div className="col-span-3 sm:col-span-2">
+                    <label className="block text-[10px] text-slate-500 dark:text-slate-400 mb-0.5 text-center">Desc. (%)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={prod.descuento ?? 0}
+                      onChange={(e) => handleProductChange(idx, 'descuento', e.target.value)}
+                      className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 px-2 py-1 rounded text-center focus:outline-none focus:border-blue-500 font-mono"
+                    />
+                  </div>
+
                   {/* Subtotal & Delete */}
-                  <div className="col-span-4 sm:col-span-2 flex items-center justify-between gap-1 pl-1">
+                  <div className="col-span-3 sm:col-span-2 flex items-center justify-between gap-1 pl-1">
                     <div>
                       <span className="block text-[10px] text-slate-500 dark:text-slate-400">Subtotal</span>
                       <span className="font-mono font-bold text-emerald-700 dark:text-emerald-400">
@@ -392,7 +407,7 @@ export const SaleFormModal: React.FC<SaleFormModalProps> = ({
                       <button
                         type="button"
                         onClick={() => handleRemoveProductLine(idx)}
-                        className="text-slate-400 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-400 p-1"
+                        className="text-slate-400 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-400 p-1 cursor-pointer"
                         title="Eliminar fila de producto"
                       >
                         <Trash2 className="w-4 h-4" />
