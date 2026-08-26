@@ -50,7 +50,10 @@ export const SaleFormModal: React.FC<SaleFormModalProps> = ({
   );
 
   const [tipoFactura, setTipoFactura] = useState<InvoiceType>(existingSale?.tipoFactura || 'Factura B');
-  const [numeroFactura, setNumeroFactura] = useState(existingSale?.numeroFactura || `FC-B-0002-0000${Math.floor(4500 + Math.random() * 500)}`);
+  const [numeroFactura, setNumeroFactura] = useState(() => {
+    if (existingSale) return existingSale.numeroFactura;
+    return `B-0003-0000${Math.floor(1000 + Math.random() * 9000)}`;
+  });
   const [metodoPago, setMetodoPago] = useState<PaymentMethod>(existingSale?.metodoPago || 'Efectivo');
   const [canal, setCanal] = useState<SaleChannel>(existingSale?.canal || 'Local');
   const [metodoEnvio, setMetodoEnvio] = useState<ShippingMethod>(existingSale?.metodoEnvio || 'Retiro en Local');
@@ -62,6 +65,17 @@ export const SaleFormModal: React.FC<SaleFormModalProps> = ({
   const [customerSearch, setCustomerSearch] = useState('');
   const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
 
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.customer-search-container')) {
+        setShowCustomerDropdown(false);
+      }
+    };
+    document.addEventListener('click', handleOutsideClick);
+    return () => document.removeEventListener('click', handleOutsideClick);
+  }, []);
+
   // Auto-fill customer if selected from directory
   const handleSelectCustomer = (c: Customer) => {
     setClienteId(c.clienteId);
@@ -69,6 +83,7 @@ export const SaleFormModal: React.FC<SaleFormModalProps> = ({
     setClienteApellido(c.apellido);
     setClienteDniCuit(c.dniCuit || '');
     setClienteTelefono(c.telefono || '');
+    setCustomerSearch(`${c.nombre} ${c.apellido}`);
     setShowCustomerDropdown(false);
   };
 
@@ -117,6 +132,24 @@ export const SaleFormModal: React.FC<SaleFormModalProps> = ({
 
   // Calculated total amount
   const montoTotalCalculado = productos.reduce((sum, p) => sum + (p.subtotal || 0), 0);
+
+  const generateDefaultInvoiceNumber = (type: InvoiceType) => {
+    const rand = Math.floor(1000 + Math.random() * 9000);
+    const rand3 = Math.floor(100 + Math.random() * 900);
+    switch (type) {
+      case 'Factura A':
+        return `A-0003-00000${rand3}`;
+      case 'Factura B':
+        return `B-0003-0000${rand}`;
+      case 'Factura C':
+        return `C-0003-0000${rand}`;
+      case 'Ticket':
+        return `T-0003-0000${rand}`;
+      case 'Sin Factura':
+      default:
+        return '';
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -234,7 +267,7 @@ export const SaleFormModal: React.FC<SaleFormModalProps> = ({
               </div>
 
               {/* Quick Customer Search Autocomplete */}
-              <div className="relative">
+              <div className="relative customer-search-container">
                 <label className="block text-slate-500 dark:text-slate-400 mb-1">Buscar Cliente Existente</label>
                 <div className="relative">
                   <input
@@ -251,14 +284,16 @@ export const SaleFormModal: React.FC<SaleFormModalProps> = ({
                   <Search className="w-3.5 h-3.5 absolute left-2.5 top-2 text-slate-400 dark:text-slate-500" />
                 </div>
 
-                {showCustomerDropdown && customerSearch.trim() !== '' && (
+                {showCustomerDropdown && (
                   <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md shadow-xl z-20 max-h-40 overflow-y-auto">
                     {customers
-                      .filter((c) =>
-                        `${c.nombre} ${c.apellido} ${c.clienteId} ${c.dniCuit}`
+                      .filter((c) => {
+                        if (customerSearch.trim() === '') return true;
+                        return `${c.nombre} ${c.apellido} ${c.clienteId} ${c.dniCuit}`
                           .toLowerCase()
-                          .includes(customerSearch.toLowerCase())
-                      )
+                          .includes(customerSearch.toLowerCase());
+                      })
+                      .slice(0, 20)
                       .map((c) => (
                         <div
                           key={c.clienteId}
@@ -272,6 +307,16 @@ export const SaleFormModal: React.FC<SaleFormModalProps> = ({
                           <span className="text-slate-400 text-[10px]">{c.dniCuit}</span>
                         </div>
                       ))}
+                    {customers.filter((c) => {
+                      if (customerSearch.trim() === '') return true;
+                      return `${c.nombre} ${c.apellido} ${c.clienteId} ${c.dniCuit}`
+                        .toLowerCase()
+                        .includes(customerSearch.toLowerCase());
+                    }).length === 0 && (
+                      <div className="p-2 text-center text-xs text-slate-500 dark:text-slate-400">
+                        No se encontraron clientes
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -444,7 +489,15 @@ export const SaleFormModal: React.FC<SaleFormModalProps> = ({
                 <label className="block text-slate-500 dark:text-slate-400 mb-1">Tipo de Comprobante</label>
                 <select
                   value={tipoFactura}
-                  onChange={(e) => setTipoFactura(e.target.value as InvoiceType)}
+                  onChange={(e) => {
+                    const val = e.target.value as InvoiceType;
+                    setTipoFactura(val);
+                    if (val === 'Sin Factura') {
+                      setNumeroFactura('');
+                    } else {
+                      setNumeroFactura(generateDefaultInvoiceNumber(val));
+                    }
+                  }}
                   className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1.5 text-slate-900 dark:text-slate-100 focus:outline-none shadow-xs"
                 >
                   <option value="Factura B" className="dark:bg-slate-900">Factura B (Consumidor Final)</option>
@@ -460,10 +513,11 @@ export const SaleFormModal: React.FC<SaleFormModalProps> = ({
                 <label className="block text-slate-500 dark:text-slate-400 mb-1">Nº Factura Emitida</label>
                 <input
                   type="text"
-                  placeholder="FC-B-0002-00001234"
+                  placeholder={tipoFactura === 'Sin Factura' ? 'Sin comprobante' : 'B-0003-00001234'}
                   value={numeroFactura}
                   onChange={(e) => setNumeroFactura(e.target.value)}
-                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1.5 text-slate-900 dark:text-slate-100 font-mono focus:outline-none focus:border-blue-500 shadow-xs"
+                  disabled={tipoFactura === 'Sin Factura'}
+                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500 font-mono shadow-xs disabled:bg-slate-100 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-500 disabled:cursor-not-allowed"
                 />
               </div>
 
