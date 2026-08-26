@@ -24,7 +24,11 @@ import {
   CreditCard,
   Building2,
   DollarSign,
-  Printer
+  Printer,
+  MessageSquare,
+  Instagram,
+  Phone,
+  FileText
 } from 'lucide-react';
 import { Sale, SaleChannel, PaymentMethod, ShippingMethod, ShippingStatus } from '../types';
 import { formatCurrency, formatDate, validateRequiredSaleFields } from '../utils/formatters';
@@ -287,16 +291,107 @@ export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
 
   // Helper badge color for channel
   const getChannelBadge = (canal: SaleChannel) => {
-    switch (canal) {
-      case 'Local':
-        return <span className="inline-flex items-center gap-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[11px] px-2 py-0.5 rounded font-medium border border-slate-200 dark:border-slate-700"><Store className="w-3 h-3 text-slate-500 dark:text-slate-400" /> Local</span>;
-      case 'MercadoLibre':
-        return <span className="inline-flex items-center gap-1 bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 text-[11px] px-2 py-0.5 rounded font-medium border border-amber-200/80 dark:border-amber-800/80"><ShoppingBag className="w-3 h-3 text-amber-600 dark:text-amber-400" /> MercadoLibre</span>;
-      case 'WooCommerce':
-        return <span className="inline-flex items-center gap-1 bg-purple-50 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300 text-[11px] px-2 py-0.5 rounded font-medium border border-purple-200/80 dark:border-purple-800/80"><ExternalLink className="w-3 h-3 text-purple-600 dark:text-purple-400" /> Woo / Web</span>;
-      default:
-        return <span className="text-[11px] bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700">{canal}</span>;
+    const canalClean = canal.trim();
+    const canalLower = canalClean.toLowerCase();
+    
+    let colorClasses = "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700";
+    let icon = null;
+    
+    if (canalLower === 'local') {
+      colorClasses = "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700";
+      icon = <Store className="w-3 h-3 text-slate-500 dark:text-slate-400" />;
+    } else if (canalLower === 'mercadolibre') {
+      colorClasses = "bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border-amber-200/80 dark:border-amber-800/80";
+      icon = <ShoppingBag className="w-3 h-3 text-amber-600 dark:text-amber-400" />;
+    } else if (canalLower === 'woocommerce' || canalLower === 'web' || canalLower === 'woo / web') {
+      colorClasses = "bg-purple-50 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300 border-purple-200/80 dark:border-purple-800/80";
+      icon = <ExternalLink className="w-3 h-3 text-purple-600 dark:text-purple-400" />;
+    } else if (canalLower === 'whatsapp') {
+      colorClasses = "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800";
+      icon = <MessageSquare className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />;
+    } else if (canalLower === 'instagram') {
+      colorClasses = "bg-pink-50 dark:bg-pink-950/60 text-pink-800 dark:text-pink-300 border-pink-200 dark:border-pink-800";
+      icon = <Instagram className="w-3 h-3 text-pink-600 dark:text-pink-400" />;
+    } else if (canalLower === 'venta telefónica' || canalLower === 'venta telefonica' || canalLower === 'telefono') {
+      colorClasses = "bg-blue-50 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-800";
+      icon = <Phone className="w-3 h-3 text-blue-600 dark:text-blue-400" />;
+    } else {
+      const colors = [
+        "bg-red-50 dark:bg-red-950/60 text-red-800 dark:text-red-300 border-red-200 dark:border-red-800",
+        "bg-orange-50 dark:bg-orange-950/60 text-orange-800 dark:text-orange-300 border-orange-200 dark:border-orange-800",
+        "bg-lime-50 dark:bg-lime-950/60 text-lime-800 dark:text-lime-300 border-lime-200 dark:border-lime-800",
+        "bg-teal-50 dark:bg-teal-950/60 text-teal-800 dark:text-teal-300 border-teal-200 dark:border-teal-800",
+        "bg-cyan-50 dark:bg-cyan-950/60 text-cyan-800 dark:text-cyan-300 border-cyan-200 dark:border-cyan-800",
+        "bg-sky-50 dark:bg-sky-950/60 text-sky-800 dark:text-sky-300 border-sky-200 dark:border-sky-800",
+        "bg-indigo-50 dark:bg-indigo-950/60 text-indigo-800 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800",
+        "bg-fuchsia-50 dark:bg-fuchsia-950/60 text-fuchsia-800 dark:text-fuchsia-300 border-fuchsia-200 dark:border-fuchsia-800",
+        "bg-rose-50 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 border-rose-200 dark:border-rose-800"
+      ];
+      let hash = 0;
+      for (let i = 0; i < canalLower.length; i++) {
+        hash = canalLower.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      colorClasses = colors[Math.abs(hash) % colors.length];
     }
+    
+    return (
+      <span className={`inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded font-medium border ${colorClasses}`}>
+        {icon}
+        {canalClean}
+      </span>
+    );
+  };
+
+  // Helper badge color for payment method
+  const getPaymentMethodBadge = (metodo: PaymentMethod) => {
+    const metodoClean = metodo.trim();
+    const metodoLower = metodoClean.toLowerCase();
+    
+    let colorClasses = "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700";
+    let icon = <CreditCard className="w-3 h-3 text-slate-400" />;
+    
+    if (metodoLower === 'efectivo') {
+      colorClasses = "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/80";
+      icon = <DollarSign className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />;
+    } else if (metodoLower === 'transferencia' || metodoLower === 'banco') {
+      colorClasses = "bg-blue-50 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-800/80";
+      icon = <Building2 className="w-3 h-3 text-blue-600 dark:text-blue-400" />;
+    } else if (metodoLower === 'tarjeta de débito' || metodoLower === 'debito' || metodoLower === 'débito' || metodoLower === 'tarjeta debito') {
+      colorClasses = "bg-cyan-50 dark:bg-cyan-950/60 text-cyan-800 dark:text-cyan-300 border-cyan-200 dark:border-cyan-800/80";
+      icon = <CreditCard className="w-3 h-3 text-cyan-600 dark:text-cyan-400" />;
+    } else if (metodoLower === 'tarjeta de crédito' || metodoLower === 'credito' || metodoLower === 'crédito' || metodoLower === 'tarjeta credito') {
+      colorClasses = "bg-indigo-50 dark:bg-indigo-950/60 text-indigo-800 dark:text-indigo-300 border-indigo-200/80 dark:border-indigo-800/80";
+      icon = <CreditCard className="w-3 h-3 text-indigo-600 dark:text-indigo-400" />;
+    } else if (metodoLower === 'mercadopago' || metodoLower === 'mp') {
+      colorClasses = "bg-sky-50 dark:bg-sky-950/60 text-sky-800 dark:text-sky-300 border-sky-200/80 dark:border-sky-800/80";
+      icon = <ExternalLink className="w-3 h-3 text-sky-600 dark:text-sky-400" />;
+    } else if (metodoLower === 'efectivo contra entrega' || metodoLower === 'contra entrega') {
+      colorClasses = "bg-teal-50 dark:bg-teal-950/60 text-teal-800 dark:text-teal-300 border-teal-200 dark:border-teal-800/80";
+      icon = <DollarSign className="w-3 h-3 text-teal-600 dark:text-teal-400" />;
+    } else if (metodoLower === 'cheque / ejeq' || metodoLower === 'cheque' || metodoLower === 'echeq' || metodoLower === 'cheque / echeq') {
+      colorClasses = "bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border-amber-200/80 dark:border-amber-800/80";
+      icon = <FileText className="w-3 h-3 text-amber-600 dark:text-amber-400" />;
+    } else {
+      const colors = [
+        "bg-red-50 dark:bg-red-950/60 text-red-800 dark:text-red-300 border-red-200 dark:border-red-800",
+        "bg-orange-50 dark:bg-orange-950/60 text-orange-800 dark:text-orange-300 border-orange-200 dark:border-orange-800",
+        "bg-lime-50 dark:bg-lime-950/60 text-lime-800 dark:text-lime-300 border-lime-200 dark:border-lime-800",
+        "bg-violet-50 dark:bg-violet-950/60 text-violet-800 dark:text-violet-300 border-violet-200 dark:border-violet-800",
+        "bg-rose-50 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 border-rose-200 dark:border-rose-800"
+      ];
+      let hash = 0;
+      for (let i = 0; i < metodoLower.length; i++) {
+        hash = metodoLower.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      colorClasses = colors[Math.abs(hash) % colors.length];
+    }
+    
+    return (
+      <span className={`inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded font-medium border ${colorClasses}`}>
+        {icon}
+        {metodoClean}
+      </span>
+    );
   };
 
   // Helper badge for Shipping status
@@ -827,9 +922,7 @@ export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
                     {/* Método Pago */}
                     {visibleColumns.metodoPago && (
                       <td className="p-2.5 font-sans text-slate-700 dark:text-slate-300 whitespace-nowrap">
-                        <span className="text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded text-[11px] font-medium">
-                          {sale.metodoPago}
-                        </span>
+                        {getPaymentMethodBadge(sale.metodoPago)}
                       </td>
                     )}
 

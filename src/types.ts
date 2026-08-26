@@ -24,6 +24,7 @@ export interface SaleProductItem {
   precioUnitario: number;
   subtotal: number;
   imagenUrl?: string;
+  descuento?: number; // Porcentaje de descuento (0 a 100)
 }
 
 export interface Sale {
