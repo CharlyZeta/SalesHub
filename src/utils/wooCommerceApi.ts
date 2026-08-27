@@ -31,6 +31,11 @@ export interface WooCustomerDTO {
     phone?: string;
     email?: string;
   };
+  meta_data?: Array<{
+    id?: number;
+    key: string;
+    value: any;
+  }>;
 }
 
 export const buildWooApiUrl = (baseUrl: string, endpoint: string, ck?: string, cs?: string): string => {
@@ -71,14 +76,36 @@ export const transformWooCustomer = (item: WooCustomerDTO): Customer => {
   const razonSocial = billing.company || `${nombre} ${apellido}`.trim();
   const address = [billing.address_1, billing.city, billing.state].filter(Boolean).join(', ');
 
+  // Extract DNI/CUIT from WooCommerce meta_data fields if present
+  let dniCuit = '';
+  if (item.meta_data && Array.isArray(item.meta_data)) {
+    const docMeta = item.meta_data.find(m => 
+      ['billing_dni', 'billing_cuit', 'dni', 'cuit', 'billing_cuit_dni', 'billing_doc', 'doc', 'documento'].includes(m.key.toLowerCase())
+    );
+    if (docMeta && docMeta.value) {
+      dniCuit = String(docMeta.value).trim();
+    }
+  }
+
+  // Extract phone number from WooCommerce meta_data fields if billing.phone is empty
+  let telefono = billing.phone || '';
+  if (!telefono && item.meta_data && Array.isArray(item.meta_data)) {
+    const phoneMeta = item.meta_data.find(m => 
+      ['billing_phone', 'phone', 'telefono', 'celular', 'billing_cellphone'].includes(m.key.toLowerCase())
+    );
+    if (phoneMeta && phoneMeta.value) {
+      telefono = String(phoneMeta.value).trim();
+    }
+  }
+
   return {
     id: `woo-cust-${item.id}`,
     clienteId: `WC-${item.id}`,
     nombre: nombre,
     apellido: apellido,
     razonSocialNombre: razonSocial,
-    dniCuit: '',
-    telefono: billing.phone || '',
+    dniCuit: dniCuit,
+    telefono: telefono,
     email: item.email || billing.email || `cliente${item.id}@tienda.com`,
     direccion: address || '',
     canalHabitual: 'WooCommerce',

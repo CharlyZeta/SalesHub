@@ -71,6 +71,26 @@ describe('WooCommerce API Utility', () => {
     expect(transformed.direccion).toBe('');
   });
 
+  it('extracts dniCuit and phone from metadata when billing fields are missing or empty', () => {
+    const dto: WooCustomerDTO = {
+      id: 106,
+      email: 'juan@cuit.com',
+      first_name: 'Juan',
+      last_name: 'Gomez',
+      billing: {
+        phone: ''
+      },
+      meta_data: [
+        { key: 'billing_dni', value: '20-38491029-4' },
+        { key: 'billing_phone', value: '11-5491-8821' }
+      ]
+    };
+
+    const transformed = transformWooCustomer(dto);
+    expect(transformed.dniCuit).toBe('20-38491029-4');
+    expect(transformed.telefono).toBe('11-5491-8821');
+  });
+
   it('uses direct fetch only and never routes credentials through third-party CORS proxies', async () => {
     const mockProducts: WooProductDTO[] = [{ id: 1, name: 'Prod 1', sku: 'SKU1', price: '100' }];
     const globalFetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
