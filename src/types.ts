@@ -48,6 +48,15 @@ export interface Sale {
   numeroSeguimiento?: string;
   estadoEnvio: ShippingStatus;
   
+  envioDomicilioDiferente?: boolean;
+  entregaDireccion?: string;
+  entregaLocalidad?: string;
+  entregaProvincia?: string;
+  entregaCoordenadas?: {
+    lat: number;
+    lng: number;
+  };
+
   notas?: string;
   creadoEn: string;
   andreaniStatus?: string;
