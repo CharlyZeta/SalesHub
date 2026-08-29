@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Search, MapPin } from 'lucide-react';
+import { Search, MapPin, MessageSquare } from 'lucide-react';
 
 // Fix default Leaflet icon assets urls
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -158,6 +158,20 @@ export const SaleLocationMap: React.FC<SaleLocationMapProps> = ({
       <div className="p-3 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 grid grid-cols-2 gap-2 text-[10px] font-mono text-slate-500">
         <div>Lat: {currentLat.toFixed(6)}</div>
         <div>Lng: {currentLng.toFixed(6)}</div>
+      </div>
+
+      <div className="p-3 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex justify-center">
+        <a
+          href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
+            `📍 Ubicación de entrega del cliente: https://www.google.com/maps?q=${currentLat},${currentLng}`
+          )}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-3 rounded flex items-center justify-center gap-1.5 text-xs transition-colors cursor-pointer"
+        >
+          <MessageSquare className="w-3.5 h-3.5" />
+          <span className="font-semibold">Compartir Ubicación por WhatsApp</span>
+        </a>
       </div>
     </div>
   );
