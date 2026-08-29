@@ -61,6 +61,12 @@ export const SaleFormModal: React.FC<SaleFormModalProps> = ({
   const [estadoEnvio, setEstadoEnvio] = useState<ShippingStatus>(existingSale?.estadoEnvio || 'Entregado');
   const [notas, setNotas] = useState(existingSale?.notas || '');
 
+  const [envioDomicilioDiferente, setEnvioDomicilioDiferente] = useState(existingSale?.envioDomicilioDiferente || false);
+  const [entregaDireccion, setEntregaDireccion] = useState(existingSale?.entregaDireccion || '');
+  const [entregaLocalidad, setEntregaLocalidad] = useState(existingSale?.entregaLocalidad || '');
+  const [entregaProvincia, setEntregaProvincia] = useState(existingSale?.entregaProvincia || 'Buenos Aires');
+  const [entregaCoordenadas, setEntregaCoordenadas] = useState<{lat: number; lng: number} | undefined>(existingSale?.entregaCoordenadas);
+
   // Search autocomplete helpers
   const [customerSearch, setCustomerSearch] = useState('');
   const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
@@ -174,6 +180,11 @@ export const SaleFormModal: React.FC<SaleFormModalProps> = ({
       metodoEnvio,
       numeroSeguimiento,
       estadoEnvio,
+      envioDomicilioDiferente,
+      entregaDireccion: envioDomicilioDiferente ? entregaDireccion : '',
+      entregaLocalidad: envioDomicilioDiferente ? entregaLocalidad : '',
+      entregaProvincia: envioDomicilioDiferente ? entregaProvincia : '',
+      entregaCoordenadas: envioDomicilioDiferente ? entregaCoordenadas : undefined,
       notas,
       creadoEn: existingSale ? existingSale.creadoEn : new Date().toISOString()
     };
@@ -365,6 +376,57 @@ export const SaleFormModal: React.FC<SaleFormModalProps> = ({
                   className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500 shadow-xs"
                 />
               </div>
+            </div>
+
+            {/* Opción de domicilio alternativo */}
+            <div className="col-span-12 mt-2 bg-slate-50 dark:bg-slate-950 p-3 rounded-lg border border-slate-200 dark:border-slate-800">
+              <label className="flex items-center gap-2 cursor-pointer font-medium text-slate-800 dark:text-slate-200">
+                <input
+                  type="checkbox"
+                  checked={envioDomicilioDiferente}
+                  onChange={(e) => setEnvioDomicilioDiferente(e.target.checked)}
+                  className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900"
+                />
+                <span>¿Enviar a un domicilio diferente al del cliente?</span>
+              </label>
+
+              {envioDomicilioDiferente && (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3 pt-3 border-t border-slate-200 dark:border-slate-800">
+                  <div>
+                    <label className="block text-slate-500 dark:text-slate-400 mb-1">Dirección de Entrega *</label>
+                    <input
+                      type="text"
+                      placeholder="Calle y número"
+                      value={entregaDireccion}
+                      onChange={(e) => setEntregaDireccion(e.target.value)}
+                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-500 dark:text-slate-400 mb-1">Localidad de Entrega *</label>
+                    <input
+                      type="text"
+                      placeholder="Ej: Rosario"
+                      value={entregaLocalidad}
+                      onChange={(e) => setEntregaLocalidad(e.target.value)}
+                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-500 dark:text-slate-400 mb-1">Provincia *</label>
+                    <input
+                      type="text"
+                      placeholder="Ej: Santa Fe"
+                      value={entregaProvincia}
+                      onChange={(e) => setEntregaProvincia(e.target.value)}
+                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500"
+                      required
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
