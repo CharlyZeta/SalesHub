@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { X, Plus, Trash2, Search, UserCheck, ShoppingCart, FileText, CheckCircle, Printer } from 'lucide-react';
+import { X, Plus, Trash2, Search, UserCheck, ShoppingCart, FileText, CheckCircle, Printer, Navigation } from 'lucide-react';
 import { Sale, SaleProductItem, Customer, CatalogProduct, SaleChannel, PaymentMethod, ShippingMethod, ShippingStatus, InvoiceType } from '../types';
 import { formatCurrency, parseDateToISO, validateRequiredSaleFields, generateSaleId } from '../utils/formatters';
 import { ProductSearchPicker } from './ProductSearchPicker';
+import { SaleLocationMap } from './SaleLocationMap';
 
 interface SaleFormModalProps {
   isOpen: boolean;
@@ -66,6 +67,7 @@ export const SaleFormModal: React.FC<SaleFormModalProps> = ({
   const [entregaLocalidad, setEntregaLocalidad] = useState(existingSale?.entregaLocalidad || '');
   const [entregaProvincia, setEntregaProvincia] = useState(existingSale?.entregaProvincia || 'Buenos Aires');
   const [entregaCoordenadas, setEntregaCoordenadas] = useState<{lat: number; lng: number} | undefined>(existingSale?.entregaCoordenadas);
+  const [showMap, setShowMap] = useState(false);
 
   // Search autocomplete helpers
   const [customerSearch, setCustomerSearch] = useState('');
@@ -202,7 +204,9 @@ export const SaleFormModal: React.FC<SaleFormModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-4xl rounded-xl shadow-2xl overflow-hidden flex flex-col my-auto max-h-[92vh]">
+      <div className={`bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full rounded-xl shadow-2xl overflow-hidden flex flex-col my-auto max-h-[92vh] transition-all duration-300 ${
+        showMap ? 'max-w-7xl' : 'max-w-4xl'
+      }`}>
         
         {/* Modal Header */}
         <div className="bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 px-5 py-3.5 flex items-center justify-between">
@@ -219,16 +223,29 @@ export const SaleFormModal: React.FC<SaleFormModalProps> = ({
               </p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 p-1 rounded-md hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowMap(!showMap)}
+              className="text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 px-3.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 flex items-center gap-1.5 font-bold cursor-pointer text-xs"
+            >
+              <span>{showMap ? 'Ocultar Mapa' : 'Ver Mapa'}</span>
+              <Navigation className={`w-3.5 h-3.5 transform transition-transform ${showMap ? 'rotate-90' : ''}`} />
+            </button>
+            <button
+              onClick={onClose}
+              className="text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 p-1 rounded-md hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Modal Form */}
-        <form onSubmit={handleSubmit} className="p-5 overflow-y-auto space-y-5 text-xs text-slate-800 dark:text-slate-200">
+        <form onSubmit={handleSubmit} className="flex-1 overflow-hidden flex flex-col text-xs text-slate-800 dark:text-slate-200 min-h-0">
+          <div className="flex-1 overflow-y-auto flex">
+            {/* Formulario (Left panel) */}
+            <div className={`p-5 space-y-4 flex-1 ${showMap ? 'max-w-[65%]' : 'w-full'}`}>
           
           {/* Section 1: Data & Client */}
           <div className="bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-lg p-4 space-y-3">
@@ -652,41 +669,56 @@ export const SaleFormModal: React.FC<SaleFormModalProps> = ({
             </div>
 
           </div>
+        </div>
 
-          {/* Form Actions */}
-          <div className="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-800">
-            <div>
-              {existingSale && onPrintRemito && (
-                <button
-                  type="button"
-                  onClick={() => onPrintRemito(existingSale)}
-                  className="bg-red-50 dark:bg-red-950/60 hover:bg-red-100 dark:hover:bg-red-900/60 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800 font-medium px-3.5 py-1.5 rounded-md flex items-center gap-1.5 text-xs transition-colors cursor-pointer"
-                >
-                  <Printer className="w-4 h-4 text-red-600 dark:text-red-400" />
-                  <span>Imprimir Remito</span>
-                </button>
-              )}
+        {/* Mapa (Right panel) */}
+          {showMap && (
+            <div className="w-[35%] min-w-[320px] flex flex-col">
+              <SaleLocationMap
+                address={envioDomicilioDiferente ? entregaDireccion : (clienteNombre ? `${clienteNombre} ${clienteApellido}` : '')}
+                city={envioDomicilioDiferente ? entregaLocalidad : 'Buenos Aires'}
+                province={envioDomicilioDiferente ? entregaProvincia : 'Buenos Aires'}
+                coordinates={entregaCoordenadas}
+                onChangeCoordinates={setEntregaCoordenadas}
+              />
             </div>
+          )}
+        </div>
 
-            <div className="flex items-center gap-3">
+        {/* Form Actions */}
+        <div className="flex items-center justify-between p-4 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
+          <div>
+            {existingSale && onPrintRemito && (
               <button
                 type="button"
-                onClick={onClose}
-                className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-md transition-colors cursor-pointer"
+                onClick={() => onPrintRemito(existingSale)}
+                className="bg-red-50 dark:bg-red-950/60 hover:bg-red-100 dark:hover:bg-red-900/60 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800 font-medium px-3.5 py-1.5 rounded-md flex items-center gap-1.5 text-xs transition-colors cursor-pointer"
               >
-                Cancelar
+                <Printer className="w-4 h-4 text-red-600 dark:text-red-400" />
+                <span>Imprimir Remito</span>
               </button>
-              <button
-                type="submit"
-                className="bg-slate-900 dark:bg-blue-600 hover:bg-slate-800 dark:hover:bg-blue-500 text-white font-medium px-5 py-2 rounded-md flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
-              >
-                <CheckCircle className="w-4 h-4" />
-                <span>{existingSale ? 'Guardar Cambios' : 'Registrar Venta'}</span>
-              </button>
-            </div>
+            )}
           </div>
 
-        </form>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-md transition-colors cursor-pointer"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              className="bg-slate-900 dark:bg-blue-600 hover:bg-slate-800 dark:hover:bg-blue-500 text-white font-medium px-5 py-2 rounded-md flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+            >
+              <CheckCircle className="w-4 h-4" />
+              <span>{existingSale ? 'Guardar Cambios' : 'Registrar Venta'}</span>
+            </button>
+          </div>
+        </div>
+
+      </form>
 
       </div>
     </div>
