@@ -21,6 +21,11 @@ El formato se basa en Keep a Changelog, y el proyecto respeta Versionado Semánt
   - Domicilio de entrega dinámico: Muestra automáticamente el domicilio alternativo de entrega si fue configurado en la venta o el domicilio por defecto del cliente.
   - Removido el campo *"Estado del envío"* para simplificar el documento de despacho.
   - Indicación de transporte y número de seguimiento/guía de despacho en el bloque de logística.
+- **Pestaña "Empresa / Firma" y Logotipo en Configurador (`ConfigModal.tsx`)**:
+  - Nueva pestaña dedicada para personalizar la identidad corporativa: Razón Social, Slogan, Domicilio comercial, Teléfono, Email, CUIT, Ingresos Brutos, Condición de IVA, Inicio de Actividades y Puntos de Venta por defecto.
+  - Selector y cargador de archivo de imagen de logotipo (almacenamiento en Data URL Base64 de hasta 2MB) con previsualizador y botón de eliminación.
+  - Interruptor para alternar si se prefiere mostrar el logotipo gráfico o el nombre de la firma en texto en los documentos.
+  - Renderizado dinámico en tiempo real de los datos y logotipo de la empresa en los encabezados de **Remitos de Entrega** (`RemitoModal.tsx`) y **Presupuestos AFIP** (`BudgetModal.tsx`).
 
 ---
 
