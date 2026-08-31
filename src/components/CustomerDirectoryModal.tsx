@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Users, Search, Plus, UserCheck, ShoppingBag, Phone, Mail, FileText, MapPin, Loader2 } from 'lucide-react';
 import { Customer, Sale } from '../types';
 import { formatCurrency, formatDate } from '../utils/formatters';
+import { addSystemLog } from '../utils/logger';
 
 interface CustomerDirectoryModalProps {
   isOpen: boolean;
@@ -78,31 +79,42 @@ export const CustomerDirectoryModal: React.FC<CustomerDirectoryModalProps> = ({
       return;
     }
 
-    const created: Customer = {
-      clienteId: `CLI-${Math.floor(1000 + Math.random() * 9000)}`,
-      nombre: newNombre,
-      apellido: newApellido,
-      dniCuit: newDniCuit,
-      telefono: newTelefono,
-      email: newEmail,
-      direccion: newDireccion,
-      localidad: newLocalidad,
-      provincia: newProvincia,
-      totalCompras: 0,
-      cantidadPedidos: 0,
-      ultimaCompra: new Date().toISOString().split('T')[0]
-    };
+    try {
+      const created: Customer = {
+        clienteId: `CLI-${Math.floor(1000 + Math.random() * 9000)}`,
+        nombre: newNombre,
+        apellido: newApellido,
+        dniCuit: newDniCuit,
+        telefono: newTelefono,
+        email: newEmail,
+        direccion: newDireccion,
+        localidad: newLocalidad,
+        provincia: newProvincia,
+        totalCompras: 0,
+        cantidadPedidos: 0,
+        ultimaCompra: new Date().toISOString().split('T')[0]
+      };
 
-    onAddCustomer(created);
-    setShowAddForm(false);
-    setNewNombre('');
-    setNewApellido('');
-    setNewDniCuit('');
-    setNewTelefono('');
-    setNewEmail('');
-    setNewDireccion('');
-    setNewLocalidad('');
-    setNewProvincia('Buenos Aires');
+      onAddCustomer(created);
+      addSystemLog('INFO', 'Clientes', `Nuevo cliente registrado: ${created.nombre} ${created.apellido || ''} (${created.clienteId})`, {
+        dniCuit: created.dniCuit,
+        telefono: created.telefono,
+        direccion: created.direccion
+      });
+
+      setShowAddForm(false);
+      setNewNombre('');
+      setNewApellido('');
+      setNewDniCuit('');
+      setNewTelefono('');
+      setNewEmail('');
+      setNewDireccion('');
+      setNewLocalidad('');
+      setNewProvincia('Buenos Aires');
+    } catch (err: any) {
+      console.error('Error al registrar cliente:', err);
+      addSystemLog('ERROR', 'Clientes', `Error al registrar cliente: ${err?.message || err}`);
+    }
   };
 
   return (

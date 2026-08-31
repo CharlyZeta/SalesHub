@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, Printer, Truck, CheckCircle2, Copy, ExternalLink, Package, ShieldCheck, MapPin, User, FileText, FileDown, Loader2 } from 'lucide-react';
 import { Sale, Customer, AppConfig } from '../types';
 import { formatDate } from '../utils/formatters';
+import { addSystemLog } from '../utils/logger';
 
 interface RemitoModalProps {
   isOpen: boolean;
@@ -87,8 +88,10 @@ export const RemitoModal: React.FC<RemitoModalProps> = ({
     window.addEventListener('afterprint', cleanup);
     try {
       window.print();
-    } catch (err) {
+      addSystemLog('INFO', 'Remitos', `Remito #${sale.id} enviado a impresión de comprobante`);
+    } catch (err: any) {
       console.error('Error al abrir el diálogo de impresión:', err);
+      addSystemLog('ERROR', 'Remitos', `Error al imprimir remito #${sale.id}: ${err?.message || err}`);
     } finally {
       setTimeout(cleanup, 500);
     }
@@ -151,9 +154,11 @@ export const RemitoModal: React.FC<RemitoModalProps> = ({
 
       pdf.save(filename);
       setErrorMsg(null);
-    } catch (err) {
+      addSystemLog('INFO', 'Remitos', `Remito #${sale.id} exportado a PDF (${filename})`);
+    } catch (err: any) {
       console.error('Error al generar PDF del remito:', err);
       setErrorMsg('No se pudo generar el PDF automáticamente. Usá el botón "Imprimir" y en el diálogo elegí "Guardar como PDF".');
+      addSystemLog('ERROR', 'Remitos', `Fallo al generar PDF del remito #${sale.id}: ${err?.message || err}`);
     } finally {
       setIsGeneratingPdf(false);
     }

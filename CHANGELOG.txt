@@ -31,6 +31,9 @@ El formato se basa en Keep a Changelog, y el proyecto respeta Versionado Semánt
   - **Formulario de Ventas (`SaleFormModal.tsx`)**: Spinner circular en el autocompletado y dentro del desplegable al buscar clientes en bases de datos amplias.
   - **Presupuestos (`BudgetModal.tsx`)**: Spinner circular en el buscador y listado de clientes agendados.
   - **Integración WooCommerce (`WooCommerceModal.tsx`)**: Spinner circular destacado durante la sincronización y consulta de clientes en la API de la tienda online.
+- **Corrección de Eventos en Localizador Geográfico y Control Global de Excepciones**:
+  - **Corrección de Cierre de Formulario en Búsqueda de Mapa (`SaleLocationMap.tsx`)**: Solucionado el problema donde presionar Enter o buscar una dirección en el mapa cerraba involuntariamente la ventana de carga de ventas debido al burbujeo del submit del formulario anidado (`e.stopPropagation()` y sustitución por contenedor de control desacoplado).
+  - **Auditoría y Control de Excepciones con Logs del Sistema (`addSystemLog`)**: Cobertura integral de `try/catch` con categorización (`Maps`, `Ventas`, `Presupuestos`, `Remitos`, `Clientes`, `Configuración`, `BACKUP`, `WooCommerce`, `Andreani`) en todos los flujos de carga, generación de PDFs, impresión de comprobantes, almacenamiento en IndexedDB y geocodificación para diagnóstico inmediato de incidencias desde el visor de logs del sistema.
 
 ---
 

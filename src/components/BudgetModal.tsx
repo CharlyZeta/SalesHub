@@ -30,6 +30,7 @@ import { formatCurrency } from '../utils/formatters';
 import { ProductSearchPicker } from './ProductSearchPicker';
 import { numberToWordsSpanish } from '../utils/numberToWords';
 import { SendBudgetModal } from './SendBudgetModal';
+import { addSystemLog } from '../utils/logger';
 
 interface BudgetModalProps {
   isOpen: boolean;
@@ -418,9 +419,11 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({
       pdf.addImage(dataUrl, 'PNG', x, y, w, h);
       pdf.save(filename);
       setSuccessMessage(`¡Documento PDF "${filename}" generado y descargado con éxito!`);
-    } catch (err) {
+      addSystemLog('INFO', 'Presupuestos', `Presupuesto ${selectedBudget.numeroPresupuesto} exportado a PDF (${filename})`);
+    } catch (err: any) {
       console.error('Error al generar PDF:', err);
       setFormError('No se pudo generar el PDF automáticamente. Usá el botón "Imprimir" y en el diálogo elegí "Guardar como PDF".');
+      addSystemLog('ERROR', 'Presupuestos', `Error al generar PDF de presupuesto: ${err?.message || err}`);
     } finally {
       setIsGeneratingPdf(false);
     }
@@ -455,8 +458,10 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({
     window.addEventListener('afterprint', cleanup);
     try {
       window.print();
-    } catch (err) {
+      addSystemLog('INFO', 'Presupuestos', `Presupuesto ${selectedBudget?.numeroPresupuesto || 'N/A'} enviado a impresión`);
+    } catch (err: any) {
       console.error('Error al abrir el diálogo de impresión:', err);
+      addSystemLog('ERROR', 'Presupuestos', `Error al imprimir presupuesto: ${err?.message || err}`);
     } finally {
       setTimeout(cleanup, 500);
     }

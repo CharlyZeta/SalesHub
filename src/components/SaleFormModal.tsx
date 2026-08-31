@@ -4,6 +4,7 @@ import { Sale, SaleProductItem, Customer, CatalogProduct, SaleChannel, PaymentMe
 import { formatCurrency, parseDateToISO, validateRequiredSaleFields, generateSaleId } from '../utils/formatters';
 import { ProductSearchPicker } from './ProductSearchPicker';
 import { SaleLocationMap } from './SaleLocationMap';
+import { addSystemLog } from '../utils/logger';
 
 interface SaleFormModalProps {
   isOpen: boolean;
@@ -169,47 +170,54 @@ export const SaleFormModal: React.FC<SaleFormModalProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Auto generate internal client ID if empty
-    const finalClienteId = clienteId.trim() || `CLI-${Math.floor(1000 + Math.random() * 9000)}`;
+    try {
+      // Auto generate internal client ID if empty
+      const finalClienteId = clienteId.trim() || `CLI-${Math.floor(1000 + Math.random() * 9000)}`;
 
-    const candidateSale: Sale = {
-      id: existingSale ? existingSale.id : generateSaleId(existingSaleIds),
-      fecha,
-      clienteId: finalClienteId,
-      clienteNombre: clienteNombre.trim() || 'Cliente Sin Nombre',
-      clienteApellido,
-      clienteDniCuit,
-      clienteTelefono,
-      clienteDireccion,
-      clienteLocalidad,
-      clienteProvincia,
-      productos: productos.filter(p => p.nombre.trim() !== ''),
-      montoTotal: montoTotalCalculado,
-      tipoFactura,
-      numeroFactura,
-      metodoPago,
-      canal,
-      metodoEnvio,
-      numeroSeguimiento,
-      estadoEnvio,
-      envioDomicilioDiferente,
-      entregaDireccion: envioDomicilioDiferente ? entregaDireccion : '',
-      entregaLocalidad: envioDomicilioDiferente ? entregaLocalidad : '',
-      entregaProvincia: envioDomicilioDiferente ? entregaProvincia : '',
-      entregaCoordenadas: envioDomicilioDiferente ? entregaCoordenadas : undefined,
-      notas,
-      creadoEn: existingSale ? existingSale.creadoEn : new Date().toISOString()
-    };
+      const candidateSale: Sale = {
+        id: existingSale ? existingSale.id : generateSaleId(existingSaleIds),
+        fecha,
+        clienteId: finalClienteId,
+        clienteNombre: clienteNombre.trim() || 'Cliente Sin Nombre',
+        clienteApellido,
+        clienteDniCuit,
+        clienteTelefono,
+        clienteDireccion,
+        clienteLocalidad,
+        clienteProvincia,
+        productos: productos.filter(p => p.nombre.trim() !== ''),
+        montoTotal: montoTotalCalculado,
+        tipoFactura,
+        numeroFactura,
+        metodoPago,
+        canal,
+        metodoEnvio,
+        numeroSeguimiento,
+        estadoEnvio,
+        envioDomicilioDiferente,
+        entregaDireccion: envioDomicilioDiferente ? entregaDireccion : '',
+        entregaLocalidad: envioDomicilioDiferente ? entregaLocalidad : '',
+        entregaProvincia: envioDomicilioDiferente ? entregaProvincia : '',
+        entregaCoordenadas: envioDomicilioDiferente ? entregaCoordenadas : undefined,
+        notas,
+        creadoEn: existingSale ? existingSale.creadoEn : new Date().toISOString()
+      };
 
-    // Requisito obligatorio: fecha, ncli, producto, precio, met. pago
-    const valResult = validateRequiredSaleFields(candidateSale);
-    if (!valResult.isValid) {
-      alert(`⚠️ Faltan requisitos obligatorios para registrar la venta:\n\n• ${valResult.missingFields.join('\n• ')}\n\nPor favor, completa los campos requeridos antes de guardar.`);
-      return;
+      // Requisito obligatorio: fecha, ncli, producto, precio, met. pago
+      const valResult = validateRequiredSaleFields(candidateSale);
+      if (!valResult.isValid) {
+        addSystemLog('WARN', 'Ventas', `Intento de guardar venta incompleta. Faltan: ${valResult.missingFields.join(', ')}`);
+        alert(`⚠️ Faltan requisitos obligatorios para registrar la venta:\n\n• ${valResult.missingFields.join('\n• ')}\n\nPor favor, completa los campos requeridos antes de guardar.`);
+        return;
+      }
+
+      onSave(candidateSale);
+      onClose();
+    } catch (err: any) {
+      console.error('Error al guardar la venta:', err);
+      addSystemLog('ERROR', 'Ventas', `Fallo al procesar el guardado de la venta: ${err?.message || err}`);
+      alert('Ocurrió un error al guardar la venta. Por favor, revisa la consola o el registro del sistema.');
     }
-
-    onSave(candidateSale);
-    onClose();
   };
 
   return (

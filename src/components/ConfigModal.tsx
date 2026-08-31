@@ -30,6 +30,7 @@ import { AppConfig, SecurityConfig, CompanyConfig } from '../types';
 import { INITIAL_COMPANY_CONFIG } from '../data/initialData';
 import { hashPin } from '../utils/security';
 import { BackupItem, listAllBackups, runBackup, restoreBackup, deleteFromIndexedDb } from '../utils/backupService';
+import { addSystemLog } from '../utils/logger';
 
 interface ConfigModalProps {
   isOpen: boolean;
@@ -382,47 +383,54 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
   };
 
   const handleSaveAll = async () => {
-    const newPin = pinChangeInput.trim();
-    // Persist only a hash of the PIN, never the plain value. Empty input keeps
-    // the already-stored hash untouched.
-    const pinAcceso = newPin
-      ? await hashPin(newPin)
-      : (secConfig.pinAcceso || await hashPin('1234'));
-    onSaveConfig({
-      canales,
-      metodosPago,
-      metodosEnvio,
-      estadosEnvio,
-      puntoVentaPresupuesto: pvPresupuesto.trim() || puntoVenta.trim() || '0001',
-      ultimoNumeroPresupuesto: Number(ultimoNumero) || 1,
-      andreaniHash: andreaniHash.trim(),
-      empresa: {
-        nombre: nombreEmpresa.trim() || 'DUAL S.R.L.',
-        subtitulo: subtituloEmpresa.trim(),
-        logoUrl,
-        mostrarLogo,
-        domicilio: domicilioEmpresa.trim(),
-        telefono: telefonoEmpresa.trim(),
-        email: emailEmpresa.trim(),
-        cuit: cuitEmpresa.trim(),
-        iibb: iibbEmpresa.trim(),
-        condicionIva: condicionIvaEmpresa.trim(),
-        inicioActividades: inicioActividadesEmpresa.trim(),
-        puntoVentaVenta: pvVenta.trim() || '0003',
-        puntoVentaPresupuesto: (pvPresupuesto || puntoVenta || '0001').trim()
-      },
-      seguridad: {
-        ...secConfig,
-        pinAcceso
-      },
-      backup: {
-        autoBackup,
-        periodicity,
-        lastBackupDate: config.backup?.lastBackupDate,
-        lastBackupFilename: config.backup?.lastBackupFilename
-      }
-    });
-    onClose();
+    try {
+      const newPin = pinChangeInput.trim();
+      // Persist only a hash of the PIN, never the plain value. Empty input keeps
+      // the already-stored hash untouched.
+      const pinAcceso = newPin
+        ? await hashPin(newPin)
+        : (secConfig.pinAcceso || await hashPin('1234'));
+      onSaveConfig({
+        canales,
+        metodosPago,
+        metodosEnvio,
+        estadosEnvio,
+        puntoVentaPresupuesto: pvPresupuesto.trim() || puntoVenta.trim() || '0001',
+        ultimoNumeroPresupuesto: Number(ultimoNumero) || 1,
+        andreaniHash: andreaniHash.trim(),
+        empresa: {
+          nombre: nombreEmpresa.trim() || 'DUAL S.R.L.',
+          subtitulo: subtituloEmpresa.trim(),
+          logoUrl,
+          mostrarLogo,
+          domicilio: domicilioEmpresa.trim(),
+          telefono: telefonoEmpresa.trim(),
+          email: emailEmpresa.trim(),
+          cuit: cuitEmpresa.trim(),
+          iibb: iibbEmpresa.trim(),
+          condicionIva: condicionIvaEmpresa.trim(),
+          inicioActividades: inicioActividadesEmpresa.trim(),
+          puntoVentaVenta: pvVenta.trim() || '0003',
+          puntoVentaPresupuesto: (pvPresupuesto || puntoVenta || '0001').trim()
+        },
+        seguridad: {
+          ...secConfig,
+          pinAcceso
+        },
+        backup: {
+          autoBackup,
+          periodicity,
+          lastBackupDate: config.backup?.lastBackupDate,
+          lastBackupFilename: config.backup?.lastBackupFilename
+        }
+      });
+      addSystemLog('INFO', 'Configuración', 'Configuración general, empresa y seguridad guardada exitosamente');
+      onClose();
+    } catch (err: any) {
+      console.error('Error al guardar configuración:', err);
+      addSystemLog('ERROR', 'Configuración', `Error al guardar configuración del sistema: ${err?.message || err}`);
+      alert('Ocurrió un error al guardar la configuración.');
+    }
   };
 
   return (

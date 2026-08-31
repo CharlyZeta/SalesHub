@@ -78,4 +78,25 @@ describe('Logger Utility', () => {
     expect(csv).toContain('ID,Timestamp,Level,Category,Message,Details');
     expect(csv).toContain('Synced 5 products');
   });
+
+  it('records Map geolocation, Remitos and Presupuestos logs with structured details', () => {
+    addSystemLog('API', 'Maps', 'Iniciando geocodificación OSM/Nominatim para: "Av. Corrientes 1234, CABA"');
+    addSystemLog('INFO', 'Maps', 'Geolocalización exitosa para "Av. Corrientes 1234, CABA"', { lat: -34.6037, lng: -58.3816 });
+    addSystemLog('ERROR', 'Maps', 'Fallo en geocodificación OSM/Nominatim: Network Error');
+    addSystemLog('INFO', 'Remitos', 'Remito #1001 exportado a PDF (Remito_1001.pdf)');
+    addSystemLog('INFO', 'Presupuestos', 'Presupuesto 0001-00000001 exportado a PDF');
+
+    const logs = getSystemLogs();
+    expect(logs.length).toBe(5);
+
+    const mapLogs = filterSystemLogs(logs, { category: 'Maps' });
+    expect(mapLogs.length).toBe(3);
+
+    const errorLogs = filterSystemLogs(logs, { level: 'ERROR' });
+    expect(errorLogs.length).toBe(1);
+    expect(errorLogs[0].message).toContain('Fallo en geocodificación');
+
+    const remitoLogs = filterSystemLogs(logs, { category: 'Remitos' });
+    expect(remitoLogs.length).toBe(1);
+  });
 });

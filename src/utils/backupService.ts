@@ -1,4 +1,5 @@
 import { Sale, Budget, Customer, CatalogProduct, AppConfig, WooCommerceConfig, BackupConfig } from '../types';
+import { addSystemLog } from './logger';
 
 export interface FullAppState {
   sales: Sale[];
@@ -172,7 +173,7 @@ export const runBackup = async (
     if (serverResult && serverResult.success) {
       successServer = true;
     }
-  } catch (e) {
+  } catch (e: any) {
     console.warn('Servidor de desarrollo no disponible para backup en disco.', e);
   }
   
@@ -180,8 +181,10 @@ export const runBackup = async (
   try {
     await saveToIndexedDb(filename, state);
     successIndexedDb = true;
-  } catch (e) {
+    addSystemLog('INFO', 'BACKUP', `Copia de seguridad local (IndexedDB) guardada: ${filename}`);
+  } catch (e: any) {
     console.error('Error al guardar backup en IndexedDB del navegador.', e);
+    addSystemLog('ERROR', 'BACKUP', `Error al guardar copia de seguridad en navegador: ${e?.message || e}`);
   }
   
   return { filename, successServer, successIndexedDb };
@@ -273,8 +276,9 @@ export const checkAndTriggerAutoBackup = async (
     try {
       const res = await runBackup(state);
       return { triggered: true, filename: res.filename };
-    } catch (e) {
+    } catch (e: any) {
       console.error('Fallo en backup automático:', e);
+      addSystemLog('ERROR', 'BACKUP', `Fallo al ejecutar copia de seguridad automática: ${e?.message || e}`);
     }
   }
 

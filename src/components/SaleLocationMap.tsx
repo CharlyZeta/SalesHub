@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Search, MapPin, MessageSquare } from 'lucide-react';
+import { Search, MapPin, MessageSquare, Loader2 } from 'lucide-react';
+import { addSystemLog } from '../utils/logger';
 
 // Fix default Leaflet icon assets urls
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -50,6 +51,7 @@ export const SaleLocationMap: React.FC<SaleLocationMapProps> = ({
     if (!addrStr.trim()) return;
     setIsSearching(true);
     setStatusText('Buscando dirección...');
+    addSystemLog('API', 'Maps', `Iniciando geocodificación OSM/Nominatim para: "${addrStr}"`);
     try {
       const query = encodeURIComponent(`${addrStr}`);
       const res = await fetch(
@@ -62,14 +64,18 @@ export const SaleLocationMap: React.FC<SaleLocationMapProps> = ({
         const lng = parseFloat(data[0].lon);
         onChangeCoordinates({ lat, lng });
         setStatusText('¡Dirección localizada!');
+        addSystemLog('INFO', 'Maps', `Geolocalización exitosa para "${addrStr}"`, { lat, lng });
         if (mapRef.current) {
           mapRef.current.setView([lat, lng], 15);
         }
       } else {
         setStatusText('No se encontraron coordenadas para esta dirección.');
+        addSystemLog('WARN', 'Maps', `Sin resultados de geolocalización para: "${addrStr}"`);
       }
-    } catch (err) {
+    } catch (err: any) {
+      console.error('Error al geolocalizar:', err);
       setStatusText('Error al geolocalizar.');
+      addSystemLog('ERROR', 'Maps', `Fallo en geocodificación OSM/Nominatim: ${err?.message || err}`);
     } finally {
       setIsSearching(false);
     }
@@ -79,38 +85,53 @@ export const SaleLocationMap: React.FC<SaleLocationMapProps> = ({
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
-    const map = L.map(mapContainerRef.current).setView([currentLat, currentLng], 15);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors',
-    }).addTo(map);
+    try {
+      const map = L.map(mapContainerRef.current).setView([currentLat, currentLng], 15);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+      }).addTo(map);
 
-    const marker = L.marker([currentLat, currentLng], { draggable: true }).addTo(map);
+      const marker = L.marker([currentLat, currentLng], { draggable: true }).addTo(map);
 
-    marker.on('dragend', () => {
-      const pos = marker.getLatLng();
-      onChangeCoordinates({ lat: pos.lat, lng: pos.lng });
-    });
+      marker.on('dragend', () => {
+        try {
+          const pos = marker.getLatLng();
+          onChangeCoordinates({ lat: pos.lat, lng: pos.lng });
+          addSystemLog('INFO', 'Maps', `Marcador de ubicación ajustado manualmente`, { lat: pos.lat, lng: pos.lng });
+        } catch (err: any) {
+          console.error('Error al arrastrar marcador:', err);
+          addSystemLog('ERROR', 'Maps', `Error al actualizar posición del marcador: ${err?.message || err}`);
+        }
+      });
 
-    mapRef.current = map;
-    markerRef.current = marker;
+      mapRef.current = map;
+      markerRef.current = marker;
 
-    const resizeTimer = setTimeout(() => {
-      map.invalidateSize();
-    }, 250);
+      const resizeTimer = setTimeout(() => {
+        map.invalidateSize();
+      }, 250);
 
-    return () => {
-      clearTimeout(resizeTimer);
-      map.remove();
-      mapRef.current = null;
-      markerRef.current = null;
-    };
+      return () => {
+        clearTimeout(resizeTimer);
+        map.remove();
+        mapRef.current = null;
+        markerRef.current = null;
+      };
+    } catch (err: any) {
+      console.error('Error al inicializar mapa Leaflet:', err);
+      addSystemLog('ERROR', 'Maps', `Error al inicializar mapa Leaflet: ${err?.message || err}`);
+    }
   }, []);
 
   // Sync marker position when coordinates change
   useEffect(() => {
     if (markerRef.current && mapRef.current) {
-      markerRef.current.setLatLng([currentLat, currentLng]);
-      mapRef.current.setView([currentLat, currentLng]);
+      try {
+        markerRef.current.setLatLng([currentLat, currentLng]);
+        mapRef.current.setView([currentLat, currentLng]);
+      } catch (err: any) {
+        console.error('Error al sincronizar posición del mapa:', err);
+      }
     }
   }, [currentLat, currentLng]);
 
@@ -124,8 +145,7 @@ export const SaleLocationMap: React.FC<SaleLocationMapProps> = ({
     return () => clearTimeout(timer);
   }, [address, city, province]);
 
-  const handleManualSearch = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleManualSearch = () => {
     geocodeAddress(searchQuery);
   };
 
@@ -144,22 +164,35 @@ export const SaleLocationMap: React.FC<SaleLocationMapProps> = ({
         </h3>
         <p className="text-[10px] text-slate-500">Mueve el pin en el mapa para corregir la ubicación si es necesario.</p>
 
-        <form onSubmit={handleManualSearch} className="flex gap-1.5">
+        {/* Search Container: NOT a form to avoid bubbling submit to parent SaleFormModal form */}
+        <div className="flex gap-1.5">
           <input
             type="text"
             placeholder="Buscar dirección manualmente..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                e.stopPropagation();
+                handleManualSearch();
+              }
+            }}
             className="flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded px-2 py-1 text-[11px] focus:outline-none focus:border-blue-500 text-slate-900 dark:text-slate-100"
           />
           <button
-            type="submit"
+            type="button"
             disabled={isSearching}
-            className="bg-blue-600 hover:bg-blue-500 text-white rounded px-2.5 py-1 text-[11px] font-bold flex items-center gap-1 cursor-pointer"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleManualSearch();
+            }}
+            className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded px-2.5 py-1 text-[11px] font-bold flex items-center gap-1 cursor-pointer"
           >
-            <Search className="w-3.5 h-3.5" />
+            {isSearching ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Search className="w-3.5 h-3.5" />}
           </button>
-        </form>
+        </div>
 
         {statusText && (
           <p className="text-[10px] font-medium text-blue-600 dark:text-blue-400">{statusText}</p>
@@ -178,6 +211,9 @@ export const SaleLocationMap: React.FC<SaleLocationMapProps> = ({
           href={`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={() => {
+            addSystemLog('INFO', 'Maps', `Ubicación compartida por WhatsApp para cliente ${clientName || 'Sin Nombre'}`);
+          }}
           className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-3 rounded flex items-center justify-center gap-1.5 text-xs transition-colors cursor-pointer"
         >
           <MessageSquare className="w-3.5 h-3.5" />
