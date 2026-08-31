@@ -83,10 +83,10 @@ export default function App() {
     }
     // Generate customer directory from initial sales
     const initialCusts: Customer[] = [
-      { clienteId: 'CLI-1001', nombre: 'Gonzalo', apellido: 'Fernández', email: 'gonzalo.f@gmail.com', telefono: '11-5491-8821', dniCuit: '20-38491029-4', totalCompras: 243500, cantidadPedidos: 2, ultimaCompra: new Date().toISOString().split('T')[0] },
-      { clienteId: 'CLI-1008', nombre: 'Mariana', apellido: 'Rossi', email: 'marianarossi@hotmail.com', telefono: '342-4591029', dniCuit: '27-33104928-1', totalCompras: 274500, cantidadPedidos: 2, ultimaCompra: new Date().toISOString().split('T')[0] },
-      { clienteId: 'CLI-1003', nombre: 'Esteban', apellido: 'Gómez', email: 'esteban_g@yahoo.com.ar', telefono: '341-8849102', dniCuit: '20-29184019-3', totalCompras: 164000, cantidadPedidos: 1, ultimaCompra: new Date().toISOString().split('T')[0] },
-      { clienteId: 'CLI-1012', nombre: 'Roberto', apellido: 'Martínez', email: 'martinez_construcciones@gmail.com', telefono: '11-3920-1928', dniCuit: '30-71940192-8', totalCompras: 349000, cantidadPedidos: 1, ultimaCompra: new Date().toISOString().split('T')[0] }
+      { clienteId: 'CLI-1001', nombre: 'Gonzalo', apellido: 'Fernández', email: 'gonzalo.f@gmail.com', telefono: '11-5491-8821', dniCuit: '20-38491029-4', direccion: 'Av. Corrientes 1234', localidad: 'CABA', provincia: 'Buenos Aires', totalCompras: 243500, cantidadPedidos: 2, ultimaCompra: new Date().toISOString().split('T')[0] },
+      { clienteId: 'CLI-1008', nombre: 'Mariana', apellido: 'Rossi', email: 'marianarossi@hotmail.com', telefono: '342-4591029', dniCuit: '27-33104928-1', direccion: 'San Martín 450', localidad: 'Santa Fe', provincia: 'Santa Fe', totalCompras: 274500, cantidadPedidos: 2, ultimaCompra: new Date().toISOString().split('T')[0] },
+      { clienteId: 'CLI-1003', nombre: 'Esteban', apellido: 'Gómez', email: 'esteban_g@yahoo.com.ar', telefono: '341-8849102', dniCuit: '20-29184019-3', direccion: 'Pellegrini 2200', localidad: 'Rosario', provincia: 'Santa Fe', totalCompras: 164000, cantidadPedidos: 1, ultimaCompra: new Date().toISOString().split('T')[0] },
+      { clienteId: 'CLI-1012', nombre: 'Roberto', apellido: 'Martínez', email: 'martinez_construcciones@gmail.com', telefono: '11-3920-1928', dniCuit: '30-71940192-8', direccion: 'Belgrano 880', localidad: 'San Isidro', provincia: 'Buenos Aires', totalCompras: 349000, cantidadPedidos: 1, ultimaCompra: new Date().toISOString().split('T')[0] }
     ];
     return initialCusts;
   });
@@ -503,6 +503,9 @@ export default function App() {
           dniCuit: saleToSave.clienteDniCuit || '',
           telefono: saleToSave.clienteTelefono || '',
           email: saleToSave.clienteEmail || '',
+          direccion: saleToSave.clienteDireccion || '',
+          localidad: saleToSave.clienteLocalidad || '',
+          provincia: saleToSave.clienteProvincia || '',
           totalCompras: saleToSave.montoTotal,
           cantidadPedidos: 1,
           ultimaCompra: saleToSave.fecha

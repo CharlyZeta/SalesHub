@@ -74,7 +74,6 @@ export const transformWooCustomer = (item: WooCustomerDTO): Customer => {
   const nombre = billing.first_name || item.first_name || 'Cliente';
   const apellido = billing.last_name || item.last_name || 'WooCommerce';
   const razonSocial = billing.company || `${nombre} ${apellido}`.trim();
-  const address = [billing.address_1, billing.city, billing.state].filter(Boolean).join(', ');
 
   // Extract DNI/CUIT from WooCommerce meta_data fields if present
   let dniCuit = '';
@@ -107,7 +106,9 @@ export const transformWooCustomer = (item: WooCustomerDTO): Customer => {
     dniCuit: dniCuit,
     telefono: telefono,
     email: item.email || billing.email || `cliente${item.id}@tienda.com`,
-    direccion: address || '',
+    direccion: billing.address_1 || '',
+    localidad: billing.city || '',
+    provincia: billing.state || '',
     canalHabitual: 'WooCommerce',
     origen: 'WooCommerce'
   };
@@ -397,7 +398,9 @@ export const fetchWooCommerceCustomers = async (config: WooCommerceConfig): Prom
           dniCuit: '30-71122334-8',
           telefono: '0341-4221100',
           email: 'ventas@gastronomiarosario.com',
-          direccion: 'Av. Pellegrini 1450, Rosario, Santa Fe',
+          direccion: 'Av. Pellegrini 1450',
+          localidad: 'Rosario',
+          provincia: 'Santa Fe',
           canalHabitual: 'WooCommerce',
           origen: 'WooCommerce'
         },
@@ -410,7 +413,9 @@ export const fetchWooCommerceCustomers = async (config: WooCommerceConfig): Prom
           dniCuit: '20-28990112-4',
           telefono: '0342-4558822',
           email: 'estacion_panaderia@gmail.com',
-          direccion: 'Bv. Gálvez 1820, Santa Fe',
+          direccion: 'Bv. Gálvez 1820',
+          localidad: 'Santa Fe',
+          provincia: 'Santa Fe',
           canalHabitual: 'WooCommerce',
           origen: 'WooCommerce'
         }

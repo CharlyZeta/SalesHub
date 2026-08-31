@@ -48,6 +48,7 @@ describe('WooCommerce API Utility', () => {
         company: 'Resto San Martin',
         address_1: 'San Martin 500',
         city: 'Santa Fe',
+        state: 'Santa Fe',
         phone: '342-4000111'
       }
     };
@@ -57,7 +58,9 @@ describe('WooCommerce API Utility', () => {
     expect(transformed.clienteId).toBe('WC-105');
     expect(transformed.razonSocialNombre).toBe('Resto San Martin');
     expect(transformed.email).toBe('marta@gastronomia.com');
-    expect(transformed.direccion).toContain('San Martin 500');
+    expect(transformed.direccion).toBe('San Martin 500');
+    expect(transformed.localidad).toBe('Santa Fe');
+    expect(transformed.provincia).toBe('Santa Fe');
     expect(transformed.canalHabitual).toBe('WooCommerce');
     expect(transformed.dniCuit).toBe('');
   });
@@ -69,6 +72,8 @@ describe('WooCommerce API Utility', () => {
     expect(transformed.dniCuit).toBe('');
     expect(transformed.telefono).toBe('');
     expect(transformed.direccion).toBe('');
+    expect(transformed.localidad).toBe('');
+    expect(transformed.provincia).toBe('');
   });
 
   it('extracts dniCuit and phone from metadata when billing fields are missing or empty', () => {

@@ -36,6 +36,9 @@ export interface Sale {
   clienteEmail?: string;
   clienteTelefono?: string;
   clienteDniCuit?: string;
+  clienteDireccion?: string;
+  clienteLocalidad?: string;
+  clienteProvincia?: string;
   
   productos: SaleProductItem[];
   montoTotal: number;
@@ -73,6 +76,8 @@ export interface Customer {
   telefono?: string;
   dniCuit?: string;
   direccion?: string;
+  localidad?: string;
+  provincia?: string;
   codigoPostal?: string;
   canalHabitual?: string;
   origen?: 'Manual' | 'WooCommerce';
