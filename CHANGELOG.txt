@@ -16,6 +16,11 @@ El formato se basa en Keep a Changelog, y el proyecto respeta Versionado Semánt
 - **Domicilio por Defecto del Cliente**: Inclusión de campos estructurados de Dirección, Localidad y Provincia en el registro de clientes (`CustomerDirectoryModal.tsx`) y en el formulario de ventas (`SaleFormModal.tsx`), autocompletando los datos al seleccionar un cliente existente.
 - **Domicilio de Entrega Alternativo**: Sección colapsable *"¿Enviar a un domicilio diferente al del cliente?"* para despachos esporádicos a destinos alternativos.
 - **Compartir por WhatsApp Enriquecido**: Generación de mensaje estructurado con un clic para WhatsApp conteniendo: Nombre completo del cliente, Domicilio de entrega completo, Teléfono, Listado detallado de productos de la venta (con cantidades) y enlace directo a Google Maps con las coordenadas del marcador.
+- **Mejora Gráfica en Remito de Entrega (`RemitoModal.tsx`)**:
+  - Limpieza de cabecera: Removido el logo en bloque y la leyenda *"Para Comercio y Hogar"*, unificando el nombre de la firma en texto limpio `DUAL S.R.L.`.
+  - Domicilio de entrega dinámico: Muestra automáticamente el domicilio alternativo de entrega si fue configurado en la venta o el domicilio por defecto del cliente.
+  - Removido el campo *"Estado del envío"* para simplificar el documento de despacho.
+  - Indicación de transporte y número de seguimiento/guía de despacho en el bloque de logística.
 
 ---
 

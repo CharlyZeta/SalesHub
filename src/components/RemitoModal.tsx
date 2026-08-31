@@ -24,7 +24,25 @@ export const RemitoModal: React.FC<RemitoModalProps> = ({
 
   // Find customer in directory to get shipping address if available
   const matchedCustomer = customers.find(c => c.clienteId === sale.clienteId);
-  const direccionEntrega = matchedCustomer?.direccion || 'Domicilio no especificado';
+
+  // Resolver domicilio de entrega: prioridad al domicilio alternativo si se especificó, sino domicilio del cliente
+  let direccionEntrega = '';
+  if (sale.envioDomicilioDiferente && sale.entregaDireccion?.trim()) {
+    const parts = [sale.entregaDireccion, sale.entregaLocalidad, sale.entregaProvincia].filter(Boolean);
+    direccionEntrega = parts.join(', ');
+  } else if (sale.clienteDireccion?.trim()) {
+    const parts = [sale.clienteDireccion, sale.clienteLocalidad, sale.clienteProvincia].filter(Boolean);
+    direccionEntrega = parts.join(', ');
+  } else if (matchedCustomer) {
+    const parts = [
+      matchedCustomer.direccion,
+      matchedCustomer.localidad,
+      matchedCustomer.provincia
+    ].filter(Boolean);
+    direccionEntrega = parts.join(', ') || 'Domicilio no especificado';
+  } else {
+    direccionEntrega = 'Domicilio no especificado';
+  }
 
   const isAndreani = sale.metodoEnvio?.toLowerCase().includes('andreani');
   const hasTracking = Boolean(sale.numeroSeguimiento && sale.numeroSeguimiento.trim() !== '');
@@ -261,17 +279,9 @@ export const RemitoModal: React.FC<RemitoModalProps> = ({
                 
                 {/* Left Column: Firm Details */}
                 <div className="col-span-6 p-3 border-r-2 border-black relative">
-                  <div className="mb-2 flex items-center space-x-2 border-b border-slate-300 pb-2">
-                    <div className="bg-slate-900 text-white font-black italic text-xl px-3 py-1 rounded tracking-tighter flex items-center gap-1">
-                      <span>DUAL</span>
-                      <span className="text-red-500 font-sans text-xs not-italic">S.R.L.</span>
-                    </div>
-                    <div className="text-[9px] font-bold tracking-widest text-slate-700 uppercase leading-tight">
-                      Para Comercio y Hogar
-                    </div>
+                  <div className="font-black text-xl mb-1.5 tracking-wide text-slate-900 border-b border-slate-300 pb-1.5">
+                    DUAL S.R.L.
                   </div>
-
-                  <div className="font-bold text-sm mb-1">DUAL S.R.L.</div>
                   <div className="text-[10px] space-y-0.5 leading-snug">
                     <p><span className="font-semibold">Domicilio Comercial:</span> ESTANISLAO ZEBALLOS 3825, SANTA FE.</p>
                     <p><span className="font-semibold">Teléfono / Email:</span> 0342-4883135 / dualdesantafe@hotmail.com</p>
@@ -336,18 +346,20 @@ export const RemitoModal: React.FC<RemitoModalProps> = ({
                   <Truck className="w-3 h-3" />
                   Empresa de Transporte y Envío
                 </div>
-                <p><span className="font-bold">Método de Envío:</span> <span className="uppercase font-semibold">{sale.metodoEnvio}</span></p>
-                <p><span className="font-bold">Estado del Envío:</span> {sale.estadoEnvio}</p>
+                <p><span className="font-bold">Método / Transporte:</span> <span className="uppercase font-semibold">{sale.metodoEnvio || 'No especificado'}</span></p>
+                {sale.metodoEnvio?.toLowerCase() !== 'retiro en local' && (
+                  <p><span className="font-bold">Nº de Seguimiento:</span> <span className="font-mono font-bold text-slate-900 bg-slate-100 px-1 py-0.5 border border-slate-300 rounded">{sale.numeroSeguimiento || '---'}</span></p>
+                )}
 
                 {/* Andreani / Tracking Special Box */}
-                {(isAndreani || hasTracking) && (
+                {isAndreani && hasTracking && (
                   <div className="mt-2 bg-red-50 border border-red-300 p-1.5 rounded text-[10px] space-y-0.5">
                     <p className="font-black text-red-800 uppercase flex items-center gap-1">
                       <Package className="w-3 h-3 text-red-600" />
-                      Transporte: {isAndreani ? 'ANDREANI LOGÍSTICA' : sale.metodoEnvio}
+                      Transporte: ANDREANI LOGÍSTICA
                     </p>
                     <p className="font-bold">
-                      Nº de Seguimiento: <span className="font-mono text-red-700 bg-white px-1 py-0.5 border border-red-200 rounded">{sale.numeroSeguimiento || 'Sin tracking'}</span>
+                      Guía Andreani: <span className="font-mono text-red-700 bg-white px-1 py-0.5 border border-red-200 rounded">{sale.numeroSeguimiento}</span>
                     </p>
                   </div>
                 )}
