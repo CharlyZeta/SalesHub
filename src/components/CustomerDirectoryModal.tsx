@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Users, Search, Plus, UserCheck, ShoppingBag, Phone, Mail, FileText } from 'lucide-react';
+import { X, Users, Search, Plus, UserCheck, ShoppingBag, Phone, Mail, FileText, MapPin } from 'lucide-react';
 import { Customer, Sale } from '../types';
 import { formatCurrency, formatDate } from '../utils/formatters';
 
@@ -30,6 +30,9 @@ export const CustomerDirectoryModal: React.FC<CustomerDirectoryModalProps> = ({
   const [newDniCuit, setNewDniCuit] = useState('');
   const [newTelefono, setNewTelefono] = useState('');
   const [newEmail, setNewEmail] = useState('');
+  const [newDireccion, setNewDireccion] = useState('');
+  const [newLocalidad, setNewLocalidad] = useState('');
+  const [newProvincia, setNewProvincia] = useState('Buenos Aires');
 
   // Filtered customer list
   const filteredCustomers = customers.filter((c) => {
@@ -63,6 +66,9 @@ export const CustomerDirectoryModal: React.FC<CustomerDirectoryModalProps> = ({
       dniCuit: newDniCuit,
       telefono: newTelefono,
       email: newEmail,
+      direccion: newDireccion,
+      localidad: newLocalidad,
+      provincia: newProvincia,
       totalCompras: 0,
       cantidadPedidos: 0,
       ultimaCompra: new Date().toISOString().split('T')[0]
@@ -75,6 +81,9 @@ export const CustomerDirectoryModal: React.FC<CustomerDirectoryModalProps> = ({
     setNewDniCuit('');
     setNewTelefono('');
     setNewEmail('');
+    setNewDireccion('');
+    setNewLocalidad('');
+    setNewProvincia('Buenos Aires');
   };
 
   return (
@@ -169,6 +178,36 @@ export const CustomerDirectoryModal: React.FC<CustomerDirectoryModalProps> = ({
                     className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded px-2.5 py-1 text-slate-900 dark:text-slate-100 focus:outline-none"
                   />
                 </div>
+                <div>
+                  <label className="block text-slate-500 dark:text-slate-400 mb-0.5">Dirección de Entrega por Defecto</label>
+                  <input
+                    type="text"
+                    placeholder="Calle y número"
+                    value={newDireccion}
+                    onChange={(e) => setNewDireccion(e.target.value)}
+                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded px-2.5 py-1 text-slate-900 dark:text-slate-100 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-500 dark:text-slate-400 mb-0.5">Localidad</label>
+                  <input
+                    type="text"
+                    placeholder="Ej: Rosario"
+                    value={newLocalidad}
+                    onChange={(e) => setNewLocalidad(e.target.value)}
+                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded px-2.5 py-1 text-slate-900 dark:text-slate-100 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-500 dark:text-slate-400 mb-0.5">Provincia</label>
+                  <input
+                    type="text"
+                    placeholder="Ej: Santa Fe"
+                    value={newProvincia}
+                    onChange={(e) => setNewProvincia(e.target.value)}
+                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded px-2.5 py-1 text-slate-900 dark:text-slate-100 focus:outline-none"
+                  />
+                </div>
                 <div className="flex items-end justify-end gap-2">
                   <button
                     type="button"
@@ -241,6 +280,9 @@ export const CustomerDirectoryModal: React.FC<CustomerDirectoryModalProps> = ({
                     <div className="mt-2 text-[11px] text-slate-500 dark:text-slate-400 flex flex-wrap gap-x-4 gap-y-1">
                       {c.dniCuit && <span>CUIT: {c.dniCuit}</span>}
                       {c.telefono && <span className="flex items-center gap-1"><Phone className="w-3 h-3 text-slate-400" /> {c.telefono}</span>}
+                      {(c.direccion || c.localidad || c.provincia) && (
+                        <span className="flex items-center gap-1"><MapPin className="w-3 h-3 text-slate-400" /> {[c.direccion, c.localidad].filter(Boolean).join(', ')}</span>
+                      )}
                       <span>Ventas: <strong className="text-slate-800 dark:text-slate-200">{cSales.length}</strong></span>
                     </div>
                   </div>
@@ -266,6 +308,12 @@ export const CustomerDirectoryModal: React.FC<CustomerDirectoryModalProps> = ({
                   <div className="text-xs text-slate-700 dark:text-slate-300 space-y-1">
                     {selectedCustomer.email && <div className="flex items-center gap-1.5"><Mail className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" /> {selectedCustomer.email}</div>}
                     {selectedCustomer.telefono && <div className="flex items-center gap-1.5"><Phone className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" /> {selectedCustomer.telefono}</div>}
+                    {(selectedCustomer.direccion || selectedCustomer.localidad || selectedCustomer.provincia) && (
+                      <div className="flex items-center gap-1.5">
+                        <MapPin className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                        {[selectedCustomer.direccion, selectedCustomer.localidad, selectedCustomer.provincia].filter(Boolean).join(', ')}
+                      </div>
+                    )}
                   </div>
 
                   <h4 className="font-bold text-slate-500 dark:text-slate-400 text-[11px] uppercase tracking-wider pt-2 border-t border-slate-200 dark:border-slate-800">
