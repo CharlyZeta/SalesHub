@@ -43,6 +43,9 @@ export const SaleFormModal: React.FC<SaleFormModalProps> = ({
   const [clienteApellido, setClienteApellido] = useState(existingSale ? existingSale.clienteApellido || '' : '');
   const [clienteDniCuit, setClienteDniCuit] = useState(existingSale ? existingSale.clienteDniCuit || '' : '');
   const [clienteTelefono, setClienteTelefono] = useState(existingSale ? existingSale.clienteTelefono || '' : '');
+  const [clienteDireccion, setClienteDireccion] = useState(existingSale?.clienteDireccion || '');
+  const [clienteLocalidad, setClienteLocalidad] = useState(existingSale?.clienteLocalidad || '');
+  const [clienteProvincia, setClienteProvincia] = useState(existingSale?.clienteProvincia || 'Buenos Aires');
 
   const [productos, setProductos] = useState<SaleProductItem[]>(
     existingSale && existingSale.productos.length > 0
@@ -91,6 +94,9 @@ export const SaleFormModal: React.FC<SaleFormModalProps> = ({
     setClienteApellido(c.apellido);
     setClienteDniCuit(c.dniCuit || '');
     setClienteTelefono(c.telefono || '');
+    setClienteDireccion(c.direccion || '');
+    setClienteLocalidad(c.localidad || '');
+    setClienteProvincia(c.provincia || 'Buenos Aires');
     setCustomerSearch(`${c.nombre} ${c.apellido}`);
     setShowCustomerDropdown(false);
   };
@@ -173,6 +179,9 @@ export const SaleFormModal: React.FC<SaleFormModalProps> = ({
       clienteApellido,
       clienteDniCuit,
       clienteTelefono,
+      clienteDireccion,
+      clienteLocalidad,
+      clienteProvincia,
       productos: productos.filter(p => p.nombre.trim() !== ''),
       montoTotal: montoTotalCalculado,
       tipoFactura,
@@ -390,6 +399,39 @@ export const SaleFormModal: React.FC<SaleFormModalProps> = ({
                   placeholder="342-4500000"
                   value={clienteTelefono}
                   onChange={(e) => setClienteTelefono(e.target.value)}
+                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500 shadow-xs"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+              <div>
+                <label className="block text-slate-500 dark:text-slate-400 mb-1">Domicilio del Cliente</label>
+                <input
+                  type="text"
+                  placeholder="Calle y altura"
+                  value={clienteDireccion}
+                  onChange={(e) => setClienteDireccion(e.target.value)}
+                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500 shadow-xs"
+                />
+              </div>
+              <div>
+                <label className="block text-slate-500 dark:text-slate-400 mb-1">Localidad Cliente</label>
+                <input
+                  type="text"
+                  placeholder="Localidad"
+                  value={clienteLocalidad}
+                  onChange={(e) => setClienteLocalidad(e.target.value)}
+                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500 shadow-xs"
+                />
+              </div>
+              <div>
+                <label className="block text-slate-500 dark:text-slate-400 mb-1">Provincia Cliente</label>
+                <input
+                  type="text"
+                  placeholder="Provincia"
+                  value={clienteProvincia}
+                  onChange={(e) => setClienteProvincia(e.target.value)}
                   className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500 shadow-xs"
                 />
               </div>
@@ -675,9 +717,9 @@ export const SaleFormModal: React.FC<SaleFormModalProps> = ({
           {showMap && (
             <div className="w-[35%] min-w-[320px] flex flex-col">
               <SaleLocationMap
-                address={envioDomicilioDiferente ? entregaDireccion : (clienteNombre ? `${clienteNombre} ${clienteApellido}` : '')}
-                city={envioDomicilioDiferente ? entregaLocalidad : 'Buenos Aires'}
-                province={envioDomicilioDiferente ? entregaProvincia : 'Buenos Aires'}
+                address={envioDomicilioDiferente ? entregaDireccion : clienteDireccion}
+                city={envioDomicilioDiferente ? entregaLocalidad : clienteLocalidad}
+                province={envioDomicilioDiferente ? entregaProvincia : clienteProvincia}
                 coordinates={entregaCoordenadas}
                 onChangeCoordinates={setEntregaCoordenadas}
               />
