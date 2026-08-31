@@ -56,6 +56,20 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'create' | 'list' | 'preview'>('create');
   
+  const empresa = config?.empresa || {
+    nombre: 'DUAL S.R.L.',
+    subtitulo: 'Para Comercio y Hogar',
+    logoUrl: '',
+    mostrarLogo: false,
+    domicilio: 'ESTANISLAO ZEBALLOS 3825, SANTA FE.',
+    telefono: '0342-4883135',
+    email: 'dualdesantafe@hotmail.com',
+    cuit: '30710642857',
+    iibb: '0111353853',
+    condicionIva: 'I.V.A. Responsable Inscripto',
+    inicioActividades: '01/07/2008'
+  };
+
   // Currently active budget for viewing / editing / previewing
   const [selectedBudget, setSelectedBudget] = useState<Budget | null>(null);
 
@@ -461,7 +475,7 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({
               <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                 Herramienta de Presupuestos & Cotizaciones
                 <span className="text-[10px] bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded font-mono font-bold border border-blue-200 dark:border-blue-800">
-                  Firma DUAL S.R.L.
+                  Firma {empresa.nombre}
                 </span>
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -1162,22 +1176,28 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({
                     
                     {/* Left Column: Firm Details */}
                     <div className="col-span-6 p-3 border-r border-black relative">
-                      {/* Logo DUAL S.R.L. */}
-                      <div className="mb-2 flex items-center space-x-2 border-b border-slate-300 pb-2">
-                        <div className="bg-blue-900 text-white font-black italic text-xl px-3 py-1 rounded tracking-tighter flex items-center gap-1">
-                          <span className="text-white">DUAL</span>
-                          <span className="text-red-500 font-sans text-xs not-italic">S.R.L.</span>
+                      {empresa.mostrarLogo && empresa.logoUrl ? (
+                        <div className="mb-2 border-b border-slate-300 pb-2">
+                          <img src={empresa.logoUrl} alt={empresa.nombre} className="max-h-12 object-contain mb-1.5" />
+                          {empresa.subtitulo && (
+                            <div className="text-[9px] font-bold tracking-widest text-slate-700 uppercase leading-tight">
+                              {empresa.subtitulo}
+                            </div>
+                          )}
                         </div>
-                        <div className="text-[9px] font-bold tracking-widest text-slate-700 uppercase leading-tight">
-                          Para Comercio y Hogar
+                      ) : (
+                        <div className="mb-2 border-b border-slate-300 pb-2">
+                          <div className="font-bold text-base mb-1">{empresa.nombre}</div>
+                          {empresa.subtitulo && (
+                            <div className="text-[9px] font-bold text-slate-700 uppercase">{empresa.subtitulo}</div>
+                          )}
                         </div>
-                      </div>
+                      )}
 
-                      <div className="font-bold text-sm mb-1">DUAL S.R.L.</div>
                       <div className="text-[10px] space-y-0.5">
-                        <p><span className="font-semibold">Domicilio :</span> ESTANISLAO ZEBALLOS 3825 , SANTA FE , SANTA FE.</p>
-                        <p><span className="font-semibold">Tel./Email:</span> 4883135 / dualdesantafe@hotmail.com.</p>
-                        <p className="mt-1 font-bold">I.V.A. Responsable Inscripto</p>
+                        <p><span className="font-semibold">Domicilio :</span> {empresa.domicilio}</p>
+                        <p><span className="font-semibold">Tel./Email:</span> {empresa.telefono} / {empresa.email}</p>
+                        <p className="mt-1 font-bold">{empresa.condicionIva}</p>
                       </div>
                     </div>
 
@@ -1201,9 +1221,9 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({
                       </div>
 
                       <div className="pt-2 text-[10px] space-y-0.5">
-                        <p><span className="font-semibold">CUIT:</span> 30710642857</p>
-                        <p><span className="font-semibold">Ing. Brutos:</span> 0111353853</p>
-                        <p><span className="font-semibold">Fecha de Inicio de Actividades:</span> 01/07/08</p>
+                        <p><span className="font-semibold">CUIT:</span> {empresa.cuit}</p>
+                        <p><span className="font-semibold">Ing. Brutos:</span> {empresa.iibb}</p>
+                        <p><span className="font-semibold">Fecha de Inicio de Actividades:</span> {empresa.inicioActividades || '01/07/2008'}</p>
                       </div>
                     </div>
 

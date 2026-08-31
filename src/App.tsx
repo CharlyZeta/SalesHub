@@ -804,6 +804,7 @@ export default function App() {
         }}
         sale={remitoSale}
         customers={customers}
+        config={config}
       />
 
       <SystemLogsModal

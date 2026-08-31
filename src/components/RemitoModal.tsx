@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, Printer, Truck, CheckCircle2, Copy, ExternalLink, Package, ShieldCheck, MapPin, User, FileText, FileDown, Loader2 } from 'lucide-react';
-import { Sale, Customer } from '../types';
+import { Sale, Customer, AppConfig } from '../types';
 import { formatDate } from '../utils/formatters';
 
 interface RemitoModalProps {
@@ -8,19 +8,34 @@ interface RemitoModalProps {
   onClose: () => void;
   sale: Sale | null;
   customers?: Customer[];
+  config?: AppConfig;
 }
 
 export const RemitoModal: React.FC<RemitoModalProps> = ({
   isOpen,
   onClose,
   sale,
-  customers = []
+  customers = [],
+  config
 }) => {
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [copiedMessage, setCopiedMessage] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   if (!isOpen || !sale) return null;
+
+  const empresa = config?.empresa || {
+    nombre: 'DUAL S.R.L.',
+    subtitulo: 'Para Comercio y Hogar',
+    logoUrl: '',
+    mostrarLogo: false,
+    domicilio: 'ESTANISLAO ZEBALLOS 3825, SANTA FE.',
+    telefono: '0342-4883135',
+    email: 'dualdesantafe@hotmail.com',
+    cuit: '30710642857',
+    iibb: '0111353853',
+    condicionIva: 'I.V.A. Responsable Inscripto',
+  };
 
   // Find customer in directory to get shipping address if available
   const matchedCustomer = customers.find(c => c.clienteId === sale.clienteId);
@@ -279,13 +294,31 @@ export const RemitoModal: React.FC<RemitoModalProps> = ({
                 
                 {/* Left Column: Firm Details */}
                 <div className="col-span-6 p-3 border-r-2 border-black relative">
-                  <div className="font-black text-xl mb-1.5 tracking-wide text-slate-900 border-b border-slate-300 pb-1.5">
-                    DUAL S.R.L.
-                  </div>
+                  {empresa.mostrarLogo && empresa.logoUrl ? (
+                    <div className="mb-1.5 border-b border-slate-300 pb-1.5">
+                      <img src={empresa.logoUrl} alt={empresa.nombre} className="max-h-12 object-contain" />
+                      {empresa.subtitulo && (
+                        <div className="text-[9px] font-bold tracking-widest text-slate-700 uppercase leading-tight mt-0.5">
+                          {empresa.subtitulo}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div>
+                      <div className="font-black text-xl mb-1.5 tracking-wide text-slate-900 border-b border-slate-300 pb-1.5">
+                        {empresa.nombre}
+                      </div>
+                      {empresa.subtitulo && (
+                        <div className="text-[9px] font-bold tracking-widest text-slate-700 uppercase leading-tight -mt-1 mb-1">
+                          {empresa.subtitulo}
+                        </div>
+                      )}
+                    </div>
+                  )}
                   <div className="text-[10px] space-y-0.5 leading-snug">
-                    <p><span className="font-semibold">Domicilio Comercial:</span> ESTANISLAO ZEBALLOS 3825, SANTA FE.</p>
-                    <p><span className="font-semibold">Teléfono / Email:</span> 0342-4883135 / dualdesantafe@hotmail.com</p>
-                    <p className="font-bold text-slate-800 pt-0.5">I.V.A. Responsable Inscripto</p>
+                    <p><span className="font-semibold">Domicilio Comercial:</span> {empresa.domicilio}</p>
+                    <p><span className="font-semibold">Teléfono / Email:</span> {empresa.telefono} / {empresa.email}</p>
+                    <p className="font-bold text-slate-800 pt-0.5">{empresa.condicionIva}</p>
                   </div>
                 </div>
 
@@ -317,8 +350,8 @@ export const RemitoModal: React.FC<RemitoModalProps> = ({
                   </div>
 
                   <div className="pt-1 text-[9px] space-y-0.5 text-slate-700">
-                    <p><span className="font-semibold">CUIT Empresa:</span> 30710642857</p>
-                    <p><span className="font-semibold">Ingresos Brutos:</span> 0111353853</p>
+                    <p><span className="font-semibold">CUIT Empresa:</span> {empresa.cuit}</p>
+                    <p><span className="font-semibold">Ingresos Brutos:</span> {empresa.iibb}</p>
                   </div>
                 </div>
 
@@ -437,7 +470,7 @@ export const RemitoModal: React.FC<RemitoModalProps> = ({
 
             {/* Footer Copyright / Leyenda */}
             <div className="mt-3 text-[8px] text-slate-500 text-center flex justify-between items-center border-t border-slate-200 pt-1">
-              <span>DUAL S.R.L. - Sistema de Gestión de Ventas & Despachos</span>
+              <span>{empresa.nombre} - Sistema de Gestión de Ventas & Despachos</span>
               <span>Documento de Control Interno y Remisión de Mercadería</span>
             </div>
 
