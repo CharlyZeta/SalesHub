@@ -17,6 +17,9 @@ interface SaleLocationMapProps {
   province: string;
   coordinates?: { lat: number; lng: number };
   onChangeCoordinates: (coords: { lat: number; lng: number }) => void;
+  clientName?: string;
+  clientPhone?: string;
+  productsText?: string;
 }
 
 export const SaleLocationMap: React.FC<SaleLocationMapProps> = ({
@@ -25,6 +28,9 @@ export const SaleLocationMap: React.FC<SaleLocationMapProps> = ({
   province,
   coordinates,
   onChangeCoordinates,
+  clientName = '',
+  clientPhone = '',
+  productsText = '',
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
@@ -123,6 +129,13 @@ export const SaleLocationMap: React.FC<SaleLocationMapProps> = ({
     geocodeAddress(searchQuery);
   };
 
+  const shareText = `📍 Ubicación de Entrega
+👤 Cliente: ${clientName || 'Sin Nombre'}
+🏠 Domicilio: ${address.trim()}, ${city.trim()}, ${province.trim()}
+📞 Teléfono: ${clientPhone || 'Sin Teléfono'}
+📦 Productos: ${productsText || 'Ninguno'}
+🗺️ Mapa: https://www.google.com/maps?q=${currentLat},${currentLng}`;
+
   return (
     <div className="flex flex-col h-full bg-slate-50 dark:bg-slate-950 border-l border-slate-200 dark:border-slate-800">
       <div className="p-3 border-b border-slate-200 dark:border-slate-800 space-y-2">
@@ -162,9 +175,7 @@ export const SaleLocationMap: React.FC<SaleLocationMapProps> = ({
 
       <div className="p-3 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex justify-center">
         <a
-          href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
-            `📍 Ubicación de entrega del cliente: https://www.google.com/maps?q=${currentLat},${currentLng}`
-          )}`}
+          href={`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`}
           target="_blank"
           rel="noopener noreferrer"
           className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-3 rounded flex items-center justify-center gap-1.5 text-xs transition-colors cursor-pointer"
