@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, ShoppingBag, RefreshCw, Key, CheckCircle2, Users, Search, Plus, ExternalLink, ShieldCheck, Download, AlertCircle } from 'lucide-react';
+import { X, ShoppingBag, RefreshCw, Key, CheckCircle2, Users, Search, Plus, ExternalLink, ShieldCheck, Download, AlertCircle, Loader2 } from 'lucide-react';
 import { CatalogProduct, Customer, WooCommerceConfig, UserRole } from '../types';
 import { formatCurrency } from '../utils/formatters';
 import { fetchWooCommerceProducts, fetchWooCommerceCustomers } from '../utils/wooCommerceApi';
@@ -463,7 +463,17 @@ export const WooCommerceModal: React.FC<WooCommerceModalProps> = ({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200 dark:divide-slate-800/60 font-mono">
-                    {filteredCustomers.length === 0 ? (
+                    {isSyncing ? (
+                      <tr>
+                        <td colSpan={6} className="p-8 text-center text-slate-500 dark:text-slate-400 font-sans">
+                          <div className="flex flex-col items-center justify-center gap-2">
+                            <Loader2 className="w-6 h-6 animate-spin text-purple-600 dark:text-purple-400" />
+                            <span className="text-xs font-semibold">Cargando y sincronizando clientes desde WooCommerce...</span>
+                            <span className="text-[10px] text-slate-400">Por favor, ten paciencia mientras se consulta la API.</span>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : filteredCustomers.length === 0 ? (
                       <tr>
                         <td colSpan={6} className="p-4 text-center text-slate-400 dark:text-slate-500 font-sans">
                           No hay clientes sincronizados de WooCommerce. Presiona "Sincronizar Productos y Clientes".

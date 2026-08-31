@@ -78,6 +78,7 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({
   const [esClienteAgendado, setEsClienteAgendado] = useState<boolean>(false);
   const [selectedCustomerSearch, setSelectedCustomerSearch] = useState('');
   const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
+  const [isCustomerSearchLoading, setIsCustomerSearchLoading] = useState(false);
 
   // Customer fields
   const [clienteId, setClienteId] = useState('');
@@ -642,34 +643,63 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({
                         onChange={(e) => {
                           setSelectedCustomerSearch(e.target.value);
                           setShowCustomerDropdown(true);
+                          setIsCustomerSearchLoading(true);
+                          setTimeout(() => setIsCustomerSearchLoading(false), 150);
                         }}
-                        onFocus={() => setShowCustomerDropdown(true)}
+                        onFocus={() => {
+                          setShowCustomerDropdown(true);
+                          setIsCustomerSearchLoading(true);
+                          setTimeout(() => setIsCustomerSearchLoading(false), 150);
+                        }}
                         className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md pl-8 pr-2.5 py-1.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500 shadow-2xs"
                       />
-                      <Search className="w-3.5 h-3.5 absolute left-2.5 top-2 text-slate-400 dark:text-slate-500" />
+                      {isCustomerSearchLoading ? (
+                        <Loader2 className="w-3.5 h-3.5 absolute left-2.5 top-2 text-blue-600 dark:text-blue-400 animate-spin" />
+                      ) : (
+                        <Search className="w-3.5 h-3.5 absolute left-2.5 top-2 text-slate-400 dark:text-slate-500" />
+                      )}
                     </div>
 
                     {showCustomerDropdown && (
-                      <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md shadow-xl z-20 max-h-40 overflow-y-auto">
-                        {customers
-                          .filter((c) =>
-                            `${c.nombre} ${c.apellido} ${c.clienteId} ${c.dniCuit}`
-                              .toLowerCase()
-                              .includes(selectedCustomerSearch.toLowerCase())
-                          )
-                          .map((c) => (
-                            <div
-                              key={c.clienteId}
-                              onClick={() => handleSelectCustomer(c)}
-                              className="p-2 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer border-b border-slate-100 dark:border-slate-800 flex items-center justify-between"
-                            >
-                              <div>
-                                <span className="font-bold text-slate-800 dark:text-slate-200">{c.nombre} {c.apellido}</span>
-                                <span className="ml-2 font-mono text-blue-600 dark:text-blue-400 text-[10px]">{c.clienteId}</span>
+                      <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md shadow-xl z-20 max-h-48 overflow-y-auto">
+                        {isCustomerSearchLoading ? (
+                          <div className="p-3 flex items-center justify-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                            <Loader2 className="w-4 h-4 animate-spin text-blue-600 dark:text-blue-400" />
+                            <span>Cargando clientes ({customers.length})...</span>
+                          </div>
+                        ) : (
+                          <>
+                            {customers
+                              .filter((c) =>
+                                `${c.nombre} ${c.apellido} ${c.clienteId} ${c.dniCuit}`
+                                  .toLowerCase()
+                                  .includes(selectedCustomerSearch.toLowerCase())
+                              )
+                              .slice(0, 25)
+                              .map((c) => (
+                                <div
+                                  key={c.clienteId}
+                                  onClick={() => handleSelectCustomer(c)}
+                                  className="p-2 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer border-b border-slate-100 dark:border-slate-800 flex items-center justify-between"
+                                >
+                                  <div>
+                                    <span className="font-bold text-slate-800 dark:text-slate-200">{c.nombre} {c.apellido}</span>
+                                    <span className="ml-2 font-mono text-blue-600 dark:text-blue-400 text-[10px]">{c.clienteId}</span>
+                                  </div>
+                                  <span className="text-slate-400 dark:text-slate-500 text-[10px]">{c.dniCuit || 'Sin DNI'}</span>
+                                </div>
+                              ))}
+                            {customers.filter((c) =>
+                              `${c.nombre} ${c.apellido} ${c.clienteId} ${c.dniCuit}`
+                                .toLowerCase()
+                                .includes(selectedCustomerSearch.toLowerCase())
+                            ).length === 0 && (
+                              <div className="p-2 text-center text-xs text-slate-500 dark:text-slate-400">
+                                No se encontraron clientes
                               </div>
-                              <span className="text-slate-400 dark:text-slate-500 text-[10px]">{c.dniCuit || 'Sin DNI'}</span>
-                            </div>
-                          ))}
+                            )}
+                          </>
+                        )}
                       </div>
                     )}
                   </div>
