@@ -722,6 +722,12 @@ export const SaleFormModal: React.FC<SaleFormModalProps> = ({
                 province={envioDomicilioDiferente ? entregaProvincia : clienteProvincia}
                 coordinates={entregaCoordenadas}
                 onChangeCoordinates={setEntregaCoordenadas}
+                clientName={`${clienteNombre} ${clienteApellido}`.trim()}
+                clientPhone={clienteTelefono}
+                productsText={productos
+                  .filter(p => p.nombre.trim() !== '')
+                  .map(p => `${p.nombre} (x${p.cantidad})`)
+                  .join(', ')}
               />
             </div>
           )}
