@@ -173,6 +173,7 @@ const backupApiPlugin = () => ({
           res.writeHead(500, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: e.message }));
         }
+        return;
       }
 
       // 1. Andreani Bulk Tracking
