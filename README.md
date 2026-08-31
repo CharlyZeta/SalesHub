@@ -57,9 +57,9 @@ Entidades tipadas en `src/types.ts` (Strict Typing Layer) que modelan el dominio
 
 | Entidad | Descripción | Relaciones clave |
 | :--- | :--- | :--- |
-| `Sale` | Operación de venta con productos, montos, canal y envío | 1..n `items`; 1 `Customer` |
+| `Sale` | Operación de venta con productos, descuentos, montos, canal, facturación condicional, datos de geolocalización y envío | 1..n `items`; 1 `Customer` |
 | `Budget` | Presupuesto oficial AFIP convertible a venta | 1..n `items`; 1 `Customer`; → `Sale` (1:1) |
-| `Customer` | Cliente del directorio con historial de compras | 1..n `Sale` / `Budget` |
+| `Customer` | Cliente del directorio con CUIT/DNI, teléfono, dirección por defecto (calle, localidad, provincia) e historial de compras | 1..n `Sale` / `Budget` |
 | `CatalogProduct` | Producto del catálogo (local o WooCommerce) | 1..n ventas/presupuestos |
 | `LogEntry` | Entrada de auditoría del sistema | eventos de todos los módulos |
 | `ShippingStatus` | Estado de envío (Pendiente/En tránsito/Entregado) | 1 `Sale` |
@@ -68,10 +68,11 @@ Entidades tipadas en `src/types.ts` (Strict Typing Layer) que modelan el dominio
 **Persistencia:** `localStorage` (claves `app_sales_v1`, `app_catalog_v1`, `app_budgets_v1`, `app_customers_v1`, `app_config_v1`, `app_woo_config_v1`, `app_theme`) con caché en el navegador — cero dependencia de servidor en operación.
 
 ### Principales Problemas Resueltos:
-1. **Desfragmentación de Canales**: Agrupa en una sola planilla interactiva las operaciones del local físico, transferencias bancarias, pedidos e-commerce de WooCommerce y ventas de MercadoLibre.
+1. **Desfragmentación de Canales**: Agrupa en una sola planilla interactiva las operaciones del local físico, transferencias bancarias, pedidos e-commerce de WooCommerce y ventas de MercadoLibre con badges visuales de color e íconos dinámicos.
 2. **Ciclo de Cotización Ágil**: Permite confeccionar presupuestos profesionales con cálculo AFIP de IVA (21%), percepciones de Ingresos Brutos y bonificaciones, con la capacidad de convertirlos en una **Venta Real en 1 Clic** sin reingreso de datos.
-3. **Distribución Omnicanal Inmediata**: Integración directa con la **API de WhatsApp (`wa.me`)** adaptada a la numeración argentina (`+54 9`) y cliente de correo electrónico para compartir presupuestos al instante.
+3. **Distribución Omnicanal Inmediata**: Integración directa con la **API de WhatsApp (`wa.me`)** adaptada a la numeración argentina (`+54 9`) y cliente de correo electrónico para compartir presupuestos y ubicaciones geográficas de entrega con detalle de cliente y productos.
 4. **Trazabilidad y Auditoría Completa**: Sistema de logs de auditoría en memoria y almacenamiento local que registra cada alta, modificación, conversión y sincronización de API.
+5. **Localización y Logística Simplificada**: Geolocalización en mapa interactivo de OpenStreetMap sin costos de API, pin arrastrable para corrección exacta de coordenadas y plantilla de WhatsApp para transportistas y clientes.
 
 ---
 
@@ -95,11 +96,12 @@ El sistema ha sido estructurado siguiendo los principios **SOLID** y una arquite
 │  • Presupuestos & AFIP  │  │ • WooCommerce API│  │ • Logger Engine     │
 │  • Remitos de Despacho  │  │ • WhatsApp wa.me │  │ • Custom Event Bus  │
 │  • Formateadores ARS    │  │ • Mailto RFC 6068│  │ • Exporter CSV/JSON │
+│  • Mapas & Leaflet/OSM  │  │ • Geocoder API   │  │ • Backups Engine    │
 └─────────────────────────┘  └──────────────────┘  └─────────────────────┘
 ```
 
 ### Principales Patrones Implementados:
-- **Single Responsibility Principle (SRP)**: Cada componente modal (`BudgetModal`, `RemitoModal`, `SendBudgetModal`, `WooCommerceModal`) y módulo de utilidad (`formatters.ts`, `budgetDelivery.ts`, `logger.ts`) posee una responsabilidad única y delimitada.
+- **Single Responsibility Principle (SRP)**: Cada componente modal (`BudgetModal`, `RemitoModal`, `SendBudgetModal`, `WooCommerceModal`, `SaleLocationMap`) y módulo de utilidad (`formatters.ts`, `budgetDelivery.ts`, `logger.ts`) posee una responsabilidad única y delimitada.
 - **Fail-Safe & Graceful Degradation**: La API de WooCommerce implementa detección de fallos de red con simulador integrado para mantener la operatividad continua aun sin conexión a la tienda e-commerce.
 - **Strict Typing Layer (`src/types.ts`)**: Tipado exhaustivo con interfaces explícitas para `Sale`, `Budget`, `Customer`, `CatalogProduct`, `LogEntry` y `ShippingStatus`.
 - **Pure Functional Helpers**: Las funciones de cálculo financiero y formateo de texto (`numberToWords.ts`, `formatCurrency`, `formatWhatsAppPhone`) son puras y 100% probadas unitariamente.
@@ -110,37 +112,49 @@ El sistema ha sido estructurado siguiendo los principios **SOLID** y una arquite
 
 ### 1. 📊 Planilla Interactiva de Ventas (`SpreadsheetGrid`)
 - Tabla de alta densidad inspirada en hojas de cálculo profesionales.
+- Badges visuales con colores e íconos específicos por canal de comercialización (Local, WhatsApp, WooCommerce, MercadoLibre, Instagram, etc.) y método de pago (Efectivo, Transferencia, Débito, Crédito, MercadoPago, etc.).
 - Edición *inline* en tiempo real para métodos de pago, canales de venta y estado del envío.
-- Filtros dinámicos por mes de emisión y canal de comercialización (Local, WhatsApp, WooCommerce, MercadoLibre).
+- Filtros dinámicos por mes de emisión y canal de comercialización.
 - Acceso instantáneo a emisión de remitos y modificación de operaciones.
 
-### 2. 💼 Gestor de Presupuestos & Cotizaciones (`BudgetModal`)
+### 2. 📝 Registro Rápido de Ventas (`SaleFormModal`)
+- Descuento individual (%) por línea de producto con recálculo dinámico en tiempo real del subtotal y total de venta.
+- Facturación condicional: bloqueo automático para comprobantes "Sin Factura" y sugerencia de numeración correlativa (`A-0003-00000xxx` y `B-0003-0000xxxx`).
+- Buscador interactivo de clientes existentes con despliegue al hacer foco y autocompletado de nombre, apellido, DNI/CUIT, teléfono y domicilio por defecto.
+- Opción colapsable para envíos a domicilios alternativos y panel desplegable de mapa.
+
+### 3. 🗺️ Localizador Geográfico y Mapas Interactivos (`SaleLocationMap`)
+- Integración nativa de **Leaflet + OpenStreetMap** (100% gratuita, sin APIs de pago ni tarjetas de crédito).
+- Geocodificación inteligente con **Nominatim** a partir del domicilio, localidad y provincia.
+- **Pin Arrastrable (Draggable Marker)**: Permite ajustar y precisar con el puntero las coordenadas exactas de entrega en el mapa.
+- **Compartir por WhatsApp**: Botón directo para enviar la ubicación en formato Google Maps (`https://www.google.com/maps?q=lat,lng`) junto con el nombre del cliente, domicilio, teléfono y lista de productos de la venta.
+
+### 4. 💼 Gestor de Presupuestos & Cotizaciones (`BudgetModal`)
 - Creación de presupuestos A/B con numeración correlativa (`PRES-0001-XXXXXX`).
 - Buscador autocompletable de productos del catálogo y clientes agendados.
 - Desglose oficial con IVA (21%), percepciones y descuentos globales.
 - **Conversión en 1-Clic a Venta Real**: Transforma el presupuesto en una venta registrada asociando la factura B/A correspondiente.
 - Vista previa e impresión en formato oficial PDF / A4.
 
-### 3. 📱 Envíos Directos por WhatsApp & Correo Electrónico (`SendBudgetModal` & `budgetDelivery.ts`)
+### 5. 📱 Envíos Directos por WhatsApp & Correo Electrónico (`SendBudgetModal` & `budgetDelivery.ts`)
 - **Procesamiento de Números Argentinos**: Normaliza automáticamente celulares locales (ej. `0342 154883135` → `5493424883135`) cumpliendo los estándares de la API internacional de WhatsApp (`wa.me`).
 - Generación de mensajes enriquecidos con emojis, detalle ítem por ítem, importes y datos de contacto de DUAL S.R.L.
 - Plantilla de Correo Electrónico lista con asunto oficial y cuerpo estructurado para envío vía `mailto:`.
-- Posibilidad de enviar al teléfono/email guardado del cliente o ingresar un número/correo alternativo.
 
-### 4. 🚚 Remitos de Transporte & Despacho (`RemitoModal`)
+### 6. 🚚 Remitos de Transporte & Despacho (`RemitoModal`)
 - Generación e impresión de **Remito X - Documento No Válido como Factura**.
 - Incluye datos del transporte/flete, dirección de entrega, desglose de bultos y espacio para firma de conformidad del receptor.
 
-### 5. 🛒 Sincronizador WooCommerce (`WooCommerceModal` & `wooCommerceApi.ts`)
+### 7. 🛒 Sincronizador WooCommerce (`WooCommerceModal` & `wooCommerceApi.ts`)
 - Configuración de credenciales de API (Consumer Key / Consumer Secret).
 - Sincronización bidireccional del catálogo de productos (precios, stock y SKUs).
-- Importación automática de clientes de la tienda online al directorio local.
+- Importación automática de clientes de la tienda online al directorio local con extracción proactiva de CUIT/DNI y teléfonos secundarios desde `meta_data`.
 
-### 6. 📈 Panel de Analítica Comercial (`AnalyticsModal` & `KpiSummary`)
+### 8. 📈 Panel de Analítica Comercial (`AnalyticsModal` & `KpiSummary`)
 - Métricas clave en tiempo real: Facturación mensual total, ticket promedio, total de ventas y canales destacados.
 - Gráficos interactivos construidos con **Recharts**: Tendencia de ventas acumuladas y distribución porcentual por canal.
 
-### 7. 📋 Auditoría y Registros de Sistema (`SystemLogsModal` & `logger.ts`)
+### 9. 📋 Auditoría y Registros de Sistema (`SystemLogsModal` & `logger.ts`)
 - Registro cronológico de todos los eventos del sistema (`INFO`, `WARN`, `ERROR`, `SYNC`, `API`, `SALE`, `BUDGET`).
 - Filtrado dinámico por nivel de log, categoría, fechas y cuadro de búsqueda en tiempo real.
 - Exportación de auditoría en formato JSON y CSV.

@@ -4,6 +4,36 @@ Todas las mejoras y fixes notables del proyecto.
 
 El formato se basa en Keep a Changelog, y el proyecto respeta Versionado Semántico.
 
+## [0.0.8] - 2026-08-31
+
+### Localizador Geográfico Interactivo, Domicilio por Defecto y Compartir en WhatsApp
+
+#### Añadido (características)
+- **Motor de Mapas Leaflet + OpenStreetMap**: Integración de mapas interactivos 100% gratuita y sin consumo de cuotas de APIs pagas ni necesidad de configurar Google Maps API Keys o tarjetas.
+- **Panel Desplegable de Mapa**: Botón "Ver Mapa / Ocultar Mapa" con ícono de navegación en el formulario de ventas (`SaleFormModal.tsx`), con transición suave y ampliación del modal a dos columnas.
+- **Geocodificación con Nominatim**: Búsqueda automática y geolocalización basada en `Dirección + Localidad + Provincia + Argentina`.
+- **Pin Arrastrable (Draggable Marker)**: Marcador interactivo que el usuario puede arrastrar directamente en pantalla para corregir y almacenar con precisión las coordenadas exactas de entrega (`lat`, `lng`).
+- **Domicilio por Defecto del Cliente**: Inclusión de campos estructurados de Dirección, Localidad y Provincia en el registro de clientes (`CustomerDirectoryModal.tsx`) y en el formulario de ventas (`SaleFormModal.tsx`), autocompletando los datos al seleccionar un cliente existente.
+- **Domicilio de Entrega Alternativo**: Sección colapsable *"¿Enviar a un domicilio diferente al del cliente?"* para despachos esporádicos a destinos alternativos.
+- **Compartir por WhatsApp Enriquecido**: Generación de mensaje estructurado con un clic para WhatsApp conteniendo: Nombre completo del cliente, Domicilio de entrega completo, Teléfono, Listado detallado de productos de la venta (con cantidades) y enlace directo a Google Maps con las coordenadas del marcador.
+
+---
+
+## [0.0.7] - 2026-08-26
+
+### Mejoras Visuales, Descuentos por Línea, Facturación Condicional e Integración WooCommerce
+
+#### Añadido (características)
+- **Badges Visuales por Canal y Método de Pago**: Colores dinámicos e íconos identificativos en la planilla principal (`SpreadsheetGrid.tsx`), con algoritmo Hash de respaldo para nuevos métodos o canales creados por el usuario.
+- **Descuentos por Línea de Producto**: Nuevo campo de % de Descuento por ítem en el formulario de ventas con cálculo automático del subtotal por producto y monto total en tiempo real. Reducción al 50% del ancho del campo Cantidad.
+- **Facturación Condicional y Nomenclatura Oficial**: Bloqueo y limpieza automática del campo Nº de Factura al seleccionar "Sin Factura". Autocompletado con numeración sugerida de los puntos de venta de la empresa (`A-0003-00000xxx` y `B-0003-0000xxxx`) al elegir comprobantes con factura.
+- **Buscador de Clientes Optimizado**: Despliegue inmediato de los primeros 20 clientes registrados al hacer foco en el buscador y cierre automático con listener de clics exteriores.
+
+#### Corregido (bugs)
+- **Extracción de CUIT/DNI y Teléfono en WooCommerce**: Se corrigió el mapeo de clientes (`wooCommerceApi.ts`) para buscar de forma proactiva en el array de `meta_data` (`billing_dni`, `billing_cuit`, `dni`, `cuit`, `billing_phone`, `celular`, etc.) habituales en los plugins de checkout de Argentina.
+
+---
+
 ## [0.0.6] - 2026-08-20
 
 ### Módulo de Seguimiento de Envíos de Andreani
