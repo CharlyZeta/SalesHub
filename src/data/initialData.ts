@@ -1,4 +1,4 @@
-import { Sale, CatalogProduct, Customer, WooCommerceConfig, AppConfig, Budget } from '../types';
+import { Sale, CatalogProduct, Customer, WooCommerceConfig, AppConfig, Budget, CompanyConfig } from '../types';
 
 // Utility to generate recent dates
 const today = new Date();
@@ -8,6 +8,22 @@ const formatDateIso = (daysAgo: number) => {
   return d.toISOString().split('T')[0];
 };
 
+export const INITIAL_COMPANY_CONFIG: CompanyConfig = {
+  nombre: 'DUAL S.R.L.',
+  subtitulo: 'Para Comercio y Hogar',
+  logoUrl: '',
+  mostrarLogo: false,
+  domicilio: 'ESTANISLAO ZEBALLOS 3825, SANTA FE.',
+  telefono: '0342-4883135',
+  email: 'dualdesantafe@hotmail.com',
+  cuit: '30710642857',
+  iibb: '0111353853',
+  condicionIva: 'I.V.A. Responsable Inscripto',
+  inicioActividades: '01/07/2008',
+  puntoVentaVenta: '0003',
+  puntoVentaPresupuesto: '0001'
+};
+
 export const INITIAL_CONFIG: AppConfig = {
   canales: ['Local', 'MercadoLibre', 'WooCommerce', 'WhatsApp', 'Instagram', 'Venta Telefónica', 'Otro'],
   metodosPago: ['Efectivo', 'Transferencia', 'Tarjeta de Débito', 'Tarjeta de Crédito', 'MercadoPago', 'Efectivo contra entrega', 'Cheque / eCheq', 'Otro'],
@@ -15,6 +31,7 @@ export const INITIAL_CONFIG: AppConfig = {
   estadosEnvio: ['Pendiente', 'Enviado', 'Entregado', 'No Requiere'],
   ultimoNumeroPresupuesto: 311,
   puntoVentaPresupuesto: '0001',
+  empresa: INITIAL_COMPANY_CONFIG,
   seguridad: {
     seguridadHabilitada: false,
     pinAcceso: '1234',

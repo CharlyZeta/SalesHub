@@ -190,6 +190,22 @@ export interface BackupConfig {
   lastBackupFilename?: string;
 }
 
+export interface CompanyConfig {
+  nombre: string;
+  subtitulo?: string;
+  logoUrl?: string;
+  mostrarLogo?: boolean;
+  domicilio: string;
+  telefono: string;
+  email: string;
+  cuit: string;
+  iibb: string;
+  condicionIva: string;
+  inicioActividades?: string;
+  puntoVentaVenta?: string;
+  puntoVentaPresupuesto?: string;
+}
+
 export interface AppConfig {
   canales: string[];
   metodosPago: string[];
@@ -197,6 +213,7 @@ export interface AppConfig {
   estadosEnvio?: string[];
   ultimoNumeroPresupuesto: number; // e.g. 311 for P0001-00000311
   puntoVentaPresupuesto: string; // e.g. "0001"
+  empresa?: CompanyConfig;
   seguridad?: SecurityConfig;
   backup?: BackupConfig;
   andreaniHash?: string;
