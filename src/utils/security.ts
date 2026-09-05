@@ -40,5 +40,6 @@ export async function hashPin(pin: string): Promise<string> {
 }
 
 export function isHashedPin(value: string): boolean {
-  return /^[a-f0-9]{64}$/i.test((value || '').trim());
+  const clean = (value || '').trim();
+  return /^[a-f0-9]{16}$/i.test(clean) || /^[a-f0-9]{64}$/i.test(clean);
 }

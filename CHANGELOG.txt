@@ -4,6 +4,43 @@ Todas las mejoras y fixes notables del proyecto.
 
 El formato se basa en Keep a Changelog, y el proyecto respeta Versionado Semántico.
 
+## [0.0.9] - 2026-09-05
+
+### Replicación Fiel del Plugin de Andreani, Auto-Seguimiento Reactivo, Blindaje de Seguridad y CI/CD con Git
+
+#### Añadido (características)
+- **Replicación Canónica de Estados de Andreani (`andreaniStatusMapper.ts`)**:
+  - Mapeo 1:1 basado en el plugin oficial de WordPress (`andreani-shipping`):
+    - `"listo para enviar"` / `"created"` / `"empaquetado"` $\rightarrow$ **`"Pendiente de ingreso"`**
+    - `"en camino"` / `"in_transit"` / `"despachado"` $\rightarrow$ **`"En camino"`**
+    - `"listo para retirar"` / `"en sucursal"` $\rightarrow$ **`"Listo para retirar"`**
+    - `"entregado"` / `"delivered"` / `"recibido"` $\rightarrow$ **`"Entregado"`**
+    - `"no entregado"` / `"visita fallida"` / `"siniestro"` $\rightarrow$ **`"No entregado"`**
+  - Configuración de badges con íconos vectoriales SVG (`Camión`, `Sucursal`, `Tilde`, `Alerta`, `Reloj`) y descripciones/tooltips de seguimiento.
+  - Detección de estados terminales (`isTerminalStatus`) para detener consultas innecesarias una vez entregado.
+- **Auto-Hidratación de Seguimiento en Pantalla (`SpreadsheetGrid.tsx` & `andreaniSyncService.ts`)**:
+  - Auto-consulta en segundo plano al visualizar o cambiar de página para todas las ventas con envío de Andreani no terminales.
+  - Caché en memoria con TTL de **60 segundos** (`CACHE_TTL_MS = 60000`), idéntica al sistema de transients del plugin oficial, evitando saturar la API en re-renders.
+  - Botón manual **"Rastrear Andreani"** con parámetro de forzado en vivo (`force = true`).
+- **Selector Unificado y Sincronizado en Columna "ESTADO ENVIO"**:
+  - El selector dropdown de la grilla refleja y actualiza reactivamente `sale.estadoEnvio` al recibir datos frescos de Andreani y permite modificación manual directa en cualquier momento.
+  - Renderizado conjunto del selector y el badge con tooltip de última hora de actualización.
+- **Pipeline Automatizado de CI/CD en GitHub Actions (`.github/workflows/ci.yml`)**:
+  - Flujo de integración continua para pull requests y commits en `master`/`main` que ejecuta: instalación con `npm ci`, verificación de tipos (`npx tsc --noEmit`), suite de 60 tests (`npm test`) y build de producción (`npm run build`).
+
+#### Seguridad y Blindaje de Datos
+- **Protección contra Fuga de Backups y Logs (`.gitignore`)**:
+  - Exclusión estricta de la carpeta `backups/` para evitar que snapshots con datos de clientes o claves API se suban accidentalmente a Git o CI/CD.
+  - Exclusión de `andreani-shipping/`, `*.log` y directorios internos de trabajo.
+- **Sanitización contra Inyección de Fórmulas CSV (`formatters.ts`)**:
+  - Sanitización en `exportSalesToCSV` de caracteres disparadores (`=`, `+`, `-`, `@`, `\t`, `\r`) anteponiendo comilla simple `'` para prevenir ejecución maliciosa en hojas de cálculo.
+- **Protección contra Path Traversal (`vite.config.ts`)**:
+  - Validación de `path.basename` y restricción a archivos `.json` con prefijo `backup-` en el endpoint `/api/backup/restore`.
+- **Validación Robusta de PIN (`security.ts`)**:
+  - Compatibilidad ampliada en `isHashedPin` para admitir tanto hashes SHA-256 (64 hex) como hashes de respaldo syncDigest (16 hex).
+
+---
+
 ## [0.0.8] - 2026-08-31
 
 ### Localizador Geográfico Interactivo, Domicilio por Defecto y Compartir en WhatsApp

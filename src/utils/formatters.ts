@@ -190,7 +190,11 @@ export function exportSalesToCSV(sales: Sale[], filename = 'ventas_exportadas.cs
   if (typeof document === 'undefined') return;
 
   const escapeCsv = (value: unknown): string => {
-    const str = value === null || value === undefined ? '' : String(value);
+    let str = value === null || value === undefined ? '' : String(value);
+    // Sanitize CSV formula injection for spreadsheet software (Excel, LibreOffice)
+    if (/^[=+\-@\t\r]/.test(str)) {
+      str = `'${str}`;
+    }
     if (/[",\n\r]/.test(str)) {
       return `"${str.replace(/"/g, '""')}"`;
     }

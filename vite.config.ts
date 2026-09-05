@@ -43,13 +43,23 @@ async function getAndreaniToken(hash: string): Promise<string> {
 
 function normalizeAndreaniShipment(data: any) {
   const trackingNumber = data.trackingNumber || data.numeroSeguimiento || '';
-  const status = data.trackingStatus || data.estado || 'Desconocido';
+  const trackingStatus = data.trackingStatus || data.status || data.estado || '';
+  const status = data.status || '';
+  const deliveryMode = data.deliveryMode || '';
+  const salesOrderNumber = data.salesOrderNumber || '';
+  const pedidoId = data.pedidoId || '';
   const events = data.events || data.eventos || [];
+  const updatedAt = data.trackingUpdatedAt || data.updatedAt || new Date().toISOString();
+  
   return {
     tracking_number: trackingNumber,
-    status: status,
+    tracking_status: trackingStatus,
+    status: trackingStatus || status || 'Pendiente de ingreso',
+    delivery_mode: deliveryMode,
+    sales_order_number: salesOrderNumber,
+    pedido_id: pedidoId,
     events: events,
-    updated_at: new Date().toISOString()
+    updated_at: updatedAt
   };
 }
 
@@ -103,9 +113,15 @@ const backupApiPlugin = () => ({
           req.on('end', () => {
             try {
               const { filename } = JSON.parse(body);
+              if (!filename || typeof filename !== 'string') {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: 'Nombre de archivo inválido' }));
+                return;
+              }
+              const safeFilename = path.basename(filename);
               const backupsDir = path.resolve(__dirname, 'backups');
-              const filePath = path.join(backupsDir, filename);
-              if (fs.existsSync(filePath)) {
+              const filePath = path.join(backupsDir, safeFilename);
+              if (fs.existsSync(filePath) && safeFilename.startsWith('backup-') && safeFilename.endsWith('.json')) {
                 const data = fs.readFileSync(filePath, 'utf-8');
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(data);

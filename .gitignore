@@ -1,9 +1,33 @@
+# Dependencies
 node_modules/
+
+# Production builds & artifacts
 build/
 dist/
 coverage/
-graphify-out/
-.DS_Store
+
+# Local backups (contains customer PII and database snapshots)
+backups/
+
+# Logs
 *.log
+andreani_error.log
+
+# WordPress plugins or local vendor mirrors
+andreani-shipping/
+
+# Local environment & secrets
 .env*
 !.env.example
+
+# OS & Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Internal AI agent cache/logs
+graphify-out/
+.agents/
+.superpowers/
+scratch/

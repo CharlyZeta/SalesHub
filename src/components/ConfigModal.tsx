@@ -86,7 +86,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
   const [canales, setCanales] = useState<string[]>(config.canales || []);
   const [metodosPago, setMetodosPago] = useState<string[]>(config.metodosPago || []);
   const [metodosEnvio, setMetodosEnvio] = useState<string[]>(config.metodosEnvio || ['Retiro en Local', 'Correo Argentino', 'Andreani', 'OCA', 'Cadetería / Moto', 'Mercado Envíos', 'Otro']);
-  const [estadosEnvio, setEstadosEnvio] = useState<string[]>(config.estadosEnvio || ['Pendiente', 'Enviado', 'Entregado', 'No Requiere']);
+  const [estadosEnvio, setEstadosEnvio] = useState<string[]>(config.estadosEnvio || ['Pendiente', 'Pendiente de ingreso', 'En camino', 'Listo para retirar', 'Entregado', 'No entregado', 'Enviado', 'No Requiere']);
   const [puntoVenta, setPuntoVenta] = useState<string>(config.puntoVentaPresupuesto || defaultEmpresa.puntoVentaPresupuesto || '0001');
   const [ultimoNumero, setUltimoNumero] = useState<number>(config.ultimoNumeroPresupuesto || 311);
   const [andreaniHash, setAndreaniHash] = useState<string>(config.andreaniHash || '');
@@ -159,7 +159,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
       setCanales(config.canales || []);
       setMetodosPago(config.metodosPago || []);
       setMetodosEnvio(config.metodosEnvio || ['Retiro en Local', 'Correo Argentino', 'Andreani', 'OCA', 'Cadetería / Moto', 'Mercado Envíos', 'Otro']);
-      setEstadosEnvio(config.estadosEnvio || ['Pendiente', 'Enviado', 'Entregado', 'No Requiere']);
+      setEstadosEnvio(config.estadosEnvio || ['Pendiente', 'Pendiente de ingreso', 'En camino', 'Listo para retirar', 'Entregado', 'No entregado', 'Enviado', 'No Requiere']);
       setAndreaniHash(config.andreaniHash || '');
       setSecConfig(config.seguridad || defaultSec);
       setAutoBackup(config.backup?.autoBackup ?? false);

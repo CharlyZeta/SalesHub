@@ -12,7 +12,16 @@ export type ShippingMethod =
   | 'Otro'
   | string;
 
-export type ShippingStatus = 'Pendiente' | 'Enviado' | 'Entregado' | 'No Requiere';
+export type ShippingStatus = 
+  | 'Pendiente' 
+  | 'Pendiente de ingreso' 
+  | 'En camino' 
+  | 'Listo para retirar' 
+  | 'Entregado' 
+  | 'No entregado' 
+  | 'No Requiere' 
+  | 'Enviado'
+  | string;
 
 export type InvoiceType = 'Factura A' | 'Factura B' | 'Factura C' | 'Ticket' | 'Sin Factura';
 
