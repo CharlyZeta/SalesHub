@@ -1,4 +1,4 @@
-import { Sale, Budget, Customer, CatalogProduct, AppConfig, WooCommerceConfig, BackupConfig } from '../types';
+import { Sale, Budget, Customer, CatalogProduct, AppConfig, WooCommerceConfig } from '../types';
 import { addSystemLog } from './logger';
 
 export interface FullAppState {
@@ -28,7 +28,7 @@ const openDb = (): Promise<IDBDatabase> => {
     request.onerror = () => reject(request.error);
     request.onsuccess = () => resolve(request.result);
     
-    request.onupgradeneeded = (e) => {
+    request.onupgradeneeded = (_e) => {
       const db = request.result;
       if (!db.objectStoreNames.contains(STORE_NAME)) {
         db.createObjectStore(STORE_NAME, { keyPath: 'filename' });
@@ -136,7 +136,7 @@ export const listFromBackend = async (): Promise<BackupItem[]> => {
       size: f.size,
       source: 'server' as const
     }));
-  } catch (e) {
+  } catch (_e) {
     // Fail silently if server is offline or not running Vite dev server
     return [];
   }

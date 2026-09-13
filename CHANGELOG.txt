@@ -4,6 +4,222 @@ Todas las mejoras y fixes notables del proyecto.
 
 El formato se basa en Keep a Changelog, y el proyecto respeta Versionado Semántico.
 
+## [0.0.17] - 2026-09-09
+
+### Fix: recargas del dev server, parpadeo de tema y pérdida de la venta en curso
+
+#### Corregido
+- **Parpadeo tipo cambio de tema (FOUC) en cada carga**: la clase `dark` se aplicaba
+  dentro de un `useEffect` (después del primer pintado) con transición de colores
+  activa. Se agregó un script inline en `index.html` que aplica el tema guardado
+  (`app_theme`), `color-scheme` y el color de fondo base **antes del primer frame**.
+  Aplica tanto en dev como en el build de producción.
+- **Pérdida de la venta a medio cargar al recargarse la pestaña**: `SaleFormModal` ahora
+  autoguarda un borrador en `localStorage` (`app_sale_draft_v1`, debounce 600 ms) y lo
+  restaura al reabrir el modal, mostrando un aviso con la fecha y un botón
+  "Descartar borrador". El borrador se limpia al guardar o cerrar explícitamente
+  (X / Cancelar) y hay aviso `beforeunload` si se intenta salir con cambios sin guardar.
+- **Auto-bloqueo por inactividad al volver de otra ventana**: el temporizador ignoraba
+  `document.hidden`. Ahora se pausa con la pestaña oculta, se reinicia al volver
+  (`visibilitychange`), y también se refresca en `focus`; deja de aparecer la pantalla
+  de PIN encima del modal al regresar.
+
+#### Añadido
+- **Modos de ejecución sin recargas**:
+  - `npm run dev:stable` → dev server con `DISABLE_HMR=true` (sin HMR ni watcher: elimina
+    las recargas por cambios de archivos).
+  - `npm run stable` → `npm run build && node server.js`: sirve el build de producción,
+    **sin cliente de Vite** ⇒ cero recargas automáticas (recomendado para operar).
+  - Dependencia `cross-env` para scripts multiplataforma.
+
+#### Notas técnicas (hallazgo)
+- La recarga de pestaña en desarrollo es del propio cliente de Vite
+  (`location.reload()` al reconectar el WebSocket tras perderlo, `client.mjs:962-969`).
+  Se verificó que `server.hmr: false` **no** evita que el cliente se inyecte y se conecte
+  (mismo `wsToken` servido en ambos modos), por lo que ese flag reduce las recargas por
+  archivos, pero no las de reconexión: para eliminarlas hay que servir el build
+  (`npm run stable`).
+
+#### Calidad
+- `npm run lint`: 0 errores / 2 warnings (preexistentes en `SaleLocationMap`).
+- Tests: **8 suites / 74 tests** OK. Build de producción OK.
+
+## [0.0.16] - 2026-09-09
+
+### Fix: React Hooks en modales legacy (reglas de hooks cumplidas en todo el código)
+
+#### Corregido
+- **6 modales declaraban hooks DESPUÉS de un `return null` temprano** (`if (!isOpen)`),
+  violando las Reglas de Hooks de React (orden condicional → riesgo de crash
+  "Rendered more hooks than during the previous render" al cerrar/reabrir):
+  `AnalyticsModal`, `CustomerDirectoryModal`, `ExportModal`, `ImportModal`,
+  `SaleFormModal` y `WooCommerceModal`.
+- Refactor con patrón **wrapper + inner component**: el export público conserva el
+  guard `isOpen` y monta un componente interno (`XModalInner`) que contiene TODOS los
+  hooks. Así los hooks corren únicamente cuando el modal está abierto y con los props
+  correctos (los inicializadores de estado se ejecutan al abrir, sin estados obsoletos).
+- `eslint.config.js`: eliminado el override que degradaba `react-hooks/rules-of-hooks`
+  a warning en esos 6 archivos — la regla vuelve a ser **error en todo el código**.
+
+#### Calidad
+- `npm run lint` (tsc + eslint): **0 errores | 2 warnings** (solo `exhaustive-deps`
+  preexistentes de `SaleLocationMap`).
+- Tests: **8 suites / 74 tests** OK. Build de producción OK.
+
+## [0.0.15] - 2026-09-09
+
+### Lint & Formato: ESLint 10 + Prettier (calidad de código)
+
+#### Añadido (características)
+- **ESLint 10 con config flat** (`eslint.config.js`): `typescript-eslint`, `react-hooks`,
+  `react-refresh` y `eslint-config-prettier`.
+- **Prettier 3** (`.prettierrc.json` + `.prettierignore`).
+- **Scripts npm**: `lint` ahora ejecuta `tsc --noEmit && eslint .`; nuevos
+  `lint:eslint`, `format` y `format:check`.
+
+#### Corregido (con la primera pasada de lint)
+- ~60 imports sin uso eliminados y variables/setters/parámetros muertos limpiados en
+  componentes, utils y tests (p. ej. `useRef` huérfano en `SpreadsheetGrid`,
+  `setCategoryFilter` nunca usado, props no leídas de `Header`/`AuthModal`).
+- Escapes innecesarios en regex de `formatters.ts` y `budgetDelivery.ts`.
+- Reespecificado el setstate de `authLockWaitMs`/`verifyPin` intactos.
+
+#### Baseline documentado (warnings, no errores)
+- `react-hooks/rules-of-hooks`: **72 warnings** en 6 modales legacy (`SaleFormModal`,
+  `WooCommerceModal`, `ImportModal`, `ExportModal`, `AnalyticsModal`,
+  `CustomerDirectoryModal`) que declaran hooks DESPUÉS de un `return null` temprano —
+  deuda real de React Hooks pendiente de refactor (elevar hooks por encima del early
+  return). La regla queda en `error` para el resto del código.
+- `react-hooks/exhaustive-deps`: 2 warnings (SaleLocationMap) sin migrar todavía.
+- Reglas ruidosas desactivadas para el baseline: `no-explicit-any` (migración gradual),
+  reglas nuevas/experimentales del plugin react-hooks v7 y `no-useless-assignment`.
+- JS de infraestructura raíz (`server.js`, `api-handlers.js`, `eslint.config.js`) y el
+  mirror `andreani-shipping/` excluidos del scope de lint.
+
+#### Calidad
+- `npm run lint` (tsc + eslint): 0 errores | 74 warnings | typecheck OK.
+- Tests: **8 suites / 74 tests** OK. Build de producción OK.
+
+## [0.0.14] - 2026-09-09
+
+### Neutralización de marca: repositorio público sin datos del cliente
+
+#### Cambiado
+- **Removido todo rastro de la marca y los datos del cliente** (nombre comercial,
+  CUIT/IIBB, teléfonos, emails, domicilio y slogan) de archivos, código y defaults
+  versionados:
+  - Defaults de empresa neutros en `initialData.ts` (`nombre: 'Mi Empresa'`, CUIT/IIBB/
+    contacto vacíos) y en los literales de respaldo de `ConfigModal`, `BudgetModal` y
+    `RemitoModal`. Los datos ya guardados en `localStorage` de cada instalación no se
+    modifican; solo afecta a instalaciones nuevas.
+  - Plantillas de envío (`budgetDelivery.ts`) y placeholders/UI sin marca ni contactos
+    reales (ej. `placeholder="20-30123456-7"` en vez del CUIT real).
+  - README, CHANGELOG, docs y textos de UI (Header, AuthModal, ConfigSecurityTab) sin
+    referencias a la firma ni a su dominio (`gestion.dualsrl.com.ar` → ejemplos
+    genéricos `gestion.miempresa.com.ar`).
+  - Producto renombrado: título de pestaña, cabeceras y comentarios de `SalesHub Dual` y
+    `sistema-gestion-comercial-dual` → **`saleshub`** (package.json, package-lock.json,
+    index.html).
+- **Autoría asignada a Gerardo Maidana**: `LICENSE` (MIT © 2026 Gerardo Maidana),
+  `author` en
+  `package.json` y sección "Licencia y Autor" del README.
+
+#### Notas técnicas
+- `security.ts`: el salt de hash del PIN cambió a `saleshub::`. Se mantiene la constante
+  legacy `dualsrl::` (y el fallback sin salt) **solo para verificación retrocompatible**
+  de hashes ya persistidos — es el único lugar del código donde permanece esa cadena, y
+  eliminarla rompería el desbloqueo de instalaciones existentes.
+- Nuevos tests de `verifyPin` (retrocompatibilidad). Suite: **8 archivos / 74 tests**.
+
+## [0.0.13] - 2026-09-09
+
+### Documentación: README actualizado a la realidad del código y licencia
+
+#### Cambiado
+- **Badges tecnológicos corregidos**: React 18.3.1 → **19**, TypeScript 5.5 → **5.8**,
+  Vite 5.4 → **6**, Tailwind 4.0 → **4.1**, Vitest 2.1.8 → **4.1** y cobertura
+  91% → **78.6%** real.
+- **Tabla de cobertura regenerada** desde `npm run test:coverage`: 8 suites / **71 tests**
+  con los porcentajes actuales por módulo (`security.ts` y `andreaniStatusMapper.ts`
+  incorporados) y nota aclarando que la cobertura mide `src/utils` (los componentes de
+  UI aún no tienen tests).
+- **Estructura del proyecto sincronizada**: se agregaron los componentes faltantes
+  (`AuthModal`, `SaleLocationMap`, `ProductSearchPicker`, pestañas de ConfigModal), los
+  utils nuevos (`security`, `backupService`, módulos Andreani) y los 2 tests agregados.
+- **URL de clonación corregida** (apuntaba a un repo inexistente; ahora usa el remoto
+  real `CharlyZeta/SalesHub`) y prerrequisitos actualizados (Node 20+ / npm 10+).
+- **Documentación de seguridad alineada con el endurecimiento H1**: Auth Gate al
+  iniciar, bloqueo progresivo, PIN solo hasheado y requisito de PIN propio al habilitar.
+- Diagrama de arquitectura: React 18 → React 19.
+
+#### Añadido
+- **`LICENSE` (MIT)** en la raíz, con el copyright de Gerardo Maidana, para que el badge y los
+  enlaces de licencia no queden rotos.
+
+## [0.0.12] - 2026-09-09
+
+### Refactor: División de ConfigModal por Pestañas (mantenibilidad)
+
+#### Cambiado
+- **`ConfigModal.tsx` reducido de ~1.558 a ~440 líneas**: ahora es el orquestador del
+  shell del modal (header, navegación de pestañas, estado compartido, guardado y footer),
+  delegando el contenido de cada pestaña a su propio archivo:
+  - `ConfigGeneralTab.tsx` — canales, métodos de pago, métodos/estados de envío,
+    integración Andreani, secuencia de presupuestos e importación inicial.
+  - `ConfigEmpresaTab.tsx` — identidad visual/logotipo, datos fiscales, contacto y PV.
+  - `ConfigSecurityTab.tsx` — PIN/auto-bloqueo, restricciones de rol y recomendaciones VPS.
+  - `ConfigBackupsTab.tsx` — backup automático, copia manual y listado/restauración.
+- **Eliminada la duplicación de los 4 bloques CRUD idénticos** (canales, métodos de pago,
+  envíos y estados de envío) mediante el componente interno reutilizable `TagListEditor`
+  dentro de `ConfigGeneralTab` (un solo bloque de ~110 líneas ahora sirve a los cuatro).
+- El estado y las reglas de negocio (mínimos por lista, duplicados, hash de PIN, backups)
+  permanecen en `ConfigModal.tsx`; el comportamiento y la apariencia no cambian.
+- Verificado: `tsc --noEmit` sin errores, build de producción OK, suite completa 71/71.
+
+## [0.0.11] - 2026-09-09
+
+### Endurecimiento de Seguridad del PIN (H1)
+
+#### Corregido
+- **El PIN ya nunca se persiste en texto plano**: al guardar la configuración, un PIN
+  legacy en claro (ej. `"1234"` de instalaciones previas o del seed inicial) se migra
+  automáticamente a su hash (SHA-256 / cyrb53) aunque no se escriba un PIN nuevo.
+- **Auth Gate real al inicio de sesión**: si "Habilitar PIN" está activo, la aplicación
+  arranca bloqueada pidiendo el PIN (antes el control solo actuaba con el bloqueo manual
+  o por inactividad, por lo que un alta de sesión quedaba sin protección).
+
+#### Añadido (características)
+- **Bloqueo progresivo ante intentos fallidos** (`AuthModal`): 3 intentos fallidos
+  bloquean el login por 5 segundos, 5 por 30 segundos y 7 o más por 60 segundos.
+  El contador persiste en `sessionStorage` (sobrevive recargas de pestaña) y se
+  registra en el log de auditoría.
+- **Validación al habilitar la seguridad** (`ConfigModal`): no se permite ACTIVAR el
+  control de acceso dejando el PIN predeterminado `"1234"` — se exige fijar un PIN
+  nuevo antes de habilitar. Aviso visual ámbar cuando el PIN en uso sigue siendo el
+  predeterminado.
+
+## [0.0.10] - 2026-09-09
+
+### Servidor de Producción Standalone (`server.js`) y Capa de API Compartida
+
+#### Añadido (características)
+- **Servidor de producción Node.js (`server.js`)**:
+  - Sirve el build estático de Vite (`dist/`) con tipos MIME, protección contra path traversal y fallback SPA para navegación directa.
+  - Monta la misma superficie de API que el dev server: `/api/backup` (POST), `/api/backup/list` (GET), `/api/backup/restore` (POST) y `/api/tracking/andreani/bulk` + `/api/tracking/andreani/:nro` (GET).
+  - De este modo los **backups en disco y el seguimiento de envíos Andreani funcionan también en producción**, no solo durante `npm run dev`.
+  - Configurable por entorno: `PORT` (3000), `HOST` (0.0.0.0) y `DIST_DIR` (./dist).
+- **Capa de API compartida (`api-handlers.js`)**:
+  - Extrae toda la lógica de handlers (backups + Andreani) que antes vivía dentro del middleware de `vite.config.ts`.
+  - Se monta en ambos contextos —middleware del dev server y `server.js`— eliminando la duplicación de código.
+  - Contrato estable: `handleApiRequest(req, res, options)` → `Promise<boolean>` (`true` si la petición era `/api/*` y ya fue respondida, incluidos los 404 de rutas desconocidas).
+  - Mejoras menores de robustez: 400 para JSON inválido o cuerpo vacío en endpoints que esperan JSON, y 404 explícito para rutas `/api/*` desconocidas (antes la conexión podía quedar sin respuesta).
+
+#### Cambiado
+- `npm run dev` usa el mismo módulo `api-handlers.js` vía middleware de Vite (comportamiento idéntico al anterior).
+- Script `clean` ya no elimina `server.js` (ahora es fuente versionada); solo limpia `dist/`.
+- Nuevo script `npm start` → `node server.js` para correr el sistema en producción.
+
+
 ## [0.0.9] - 2026-09-05
 
 ### Replicación Fiel del Plugin de Andreani, Auto-Seguimiento Reactivo, Blindaje de Seguridad y CI/CD con Git
@@ -54,7 +270,7 @@ El formato se basa en Keep a Changelog, y el proyecto respeta Versionado Semánt
 - **Domicilio de Entrega Alternativo**: Sección colapsable *"¿Enviar a un domicilio diferente al del cliente?"* para despachos esporádicos a destinos alternativos.
 - **Compartir por WhatsApp Enriquecido**: Generación de mensaje estructurado con un clic para WhatsApp conteniendo: Nombre completo del cliente, Domicilio de entrega completo, Teléfono, Listado detallado de productos de la venta (con cantidades) y enlace directo a Google Maps con las coordenadas del marcador.
 - **Mejora Gráfica en Remito de Entrega (`RemitoModal.tsx`)**:
-  - Limpieza de cabecera: Removido el logo en bloque y la leyenda *"Para Comercio y Hogar"*, unificando el nombre de la firma en texto limpio `DUAL S.R.L.`.
+  - Limpieza de cabecera: Removido el logo en bloque y la leyenda corporativa, unificando el nombre de la firma en texto limpio desde la configuración de empresa.
   - Domicilio de entrega dinámico: Muestra automáticamente el domicilio alternativo de entrega si fue configurado en la venta o el domicilio por defecto del cliente.
   - Removido el campo *"Estado del envío"* para simplificar el documento de despacho.
   - Indicación de transporte y número de seguimiento/guía de despacho en el bloque de logística.
@@ -143,7 +359,7 @@ El formato se basa en Keep a Changelog, y el proyecto respeta Versionado Semánt
 - **Paginación en Planilla**: Se incorporó un sistema de paginación interactivo con controles de navegación (Página anterior/siguiente) y un selector dinámico para configurar el límite de registros por página (de 10 en 10, desde 20 a 100).
 - **Filtro "Mostrar Todos"**: Añadido checkbox "Mostrar todos" al lado del selector de mes en `KpiSummary.tsx`. Permite alternar entre visualizar únicamente las ventas del mes seleccionado o el historial completo acumulado (el cual deshabilita temporalmente el selector de fecha y recalculó los KPIs a totales históricos).
 - **KPIs Personalizables**: Se agregó un configurador de indicadores (ícono de engranaje ⚙) en `KpiSummary.tsx` que permite activar/desactivar individualmente cada tarjeta métrica (Acumulado Mensual, Ticket Prom., etc.), persistiendo la selección del usuario en `localStorage` y auto-ajustando dinámicamente el layout de columnas.
-- **Título de la Pestaña**: Actualizado el título del sitio en `index.html` a "SalesHub Dual".
+- **Título de la Pestaña**: Actualizado el título del sitio en `index.html` a "SalesHub".
 
 ---
 
@@ -183,8 +399,8 @@ El formato se basa en Keep a Changelog, y el proyecto respeta Versionado Semánt
   `@google/genai` y `html2pdf.js` (se importaba `jspdf` directo). Se agregó `jspdf`
   como dependencia directa.
 - `vite.config.ts`: corregido comentario con encoding corrupto.
-- `package.json` renombrado a `sistema-gestion-comercial-dual` v1.0.0; Header ahora
-  muestra la marca DUAL S.R.L. en vez de "SalesHub / Subdominio Ecommerce".
+- `package.json` renombrado a `saleshub` v1.0.0; Header ahora muestra la marca de la
+  empresa configurada en vez de un nombre genérico.
 - `App.tsx`: handlers de ventas/presupuestos/catálogo migrados a functional setState
   (evita stale closures).
 - `alert()` reemplazado por feedback inline en `ExportModal` e `ImportModal`.
@@ -199,8 +415,8 @@ El formato se basa en Keep a Changelog, y el proyecto respeta Versionado Semánt
 
 ### Commit inicial - Lanzamiento del Sistema de Gestión Comercial
 
-Primera versión estable del sistema de gestión comercial omnicanal de DUAL S.R.L.,
-herramienta de front-office complementaria al ERP de la firma. Registro de ventas,
+Primera versión estable del sistema de gestión comercial omnicanal como herramienta
+de front-office complementaria al ERP de la firma. Registro de ventas,
 presupuestos AFIP, remitos y despacho en el punto de venta.
 
 #### Añadido (características)

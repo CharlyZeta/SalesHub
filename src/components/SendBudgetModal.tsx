@@ -1,16 +1,9 @@
 import React, { useState } from 'react';
-import { X, Send, Mail, MessageSquare, Copy, Check, ExternalLink, Phone, User, FileText } from 'lucide-react';
+import { X, Send, Mail, MessageSquare, Copy, Check, ExternalLink } from 'lucide-react';
 import { Budget } from '../types';
 import { formatCurrency } from '../utils/formatters';
 import { addSystemLog } from '../utils/logger';
-import { 
-  formatWhatsAppPhone, 
-  generateBudgetWhatsAppText, 
-  generateBudgetEmailSubject, 
-  generateBudgetEmailBody,
-  openWhatsAppForBudget,
-  openEmailForBudget
-} from '../utils/budgetDelivery';
+import { formatWhatsAppPhone, generateBudgetWhatsAppText, generateBudgetEmailSubject, generateBudgetEmailBody, openWhatsAppForBudget, openEmailForBudget } from '../utils/budgetDelivery';
 
 interface SendBudgetModalProps {
   isOpen: boolean;

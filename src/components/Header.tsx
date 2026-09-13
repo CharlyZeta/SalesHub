@@ -1,21 +1,5 @@
 import React from 'react';
-import { 
-  PlusCircle, 
-  FileSpreadsheet, 
-  BarChart3, 
-  Users, 
-  ShoppingBag, 
-  Download, 
-  Store,
-  Settings,
-  FileText,
-  Terminal,
-  Lock,
-  ShieldCheck,
-  UserCheck,
-  Sun,
-  Moon
-} from 'lucide-react';
+import { PlusCircle, BarChart3, Users, ShoppingBag, Download, Store, Settings, FileText, Terminal, Lock, ShieldCheck, UserCheck, Sun, Moon } from 'lucide-react';
 import { getMonthYearLabel } from '../utils/formatters';
 import { UserRole } from '../types';
 
@@ -41,10 +25,7 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({
   currentMonthIso,
-  totalMonthSales,
-  monthSalesCount,
   onOpenNewSale,
-  onOpenImport,
   onOpenAnalytics,
   onOpenCustomers,
   onOpenWooCommerce,
@@ -69,7 +50,7 @@ export const Header: React.FC<HeaderProps> = ({
           <div>
             <div className="flex items-center space-x-2">
               <h1 className="font-semibold text-base md:text-lg tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
-                DUAL S.R.L. <span className="text-slate-400 dark:text-slate-500 font-normal">/ Gestión Comercial</span>
+                SalesHub <span className="text-slate-400 dark:text-slate-500 font-normal">/ Gestión Comercial</span>
               </h1>
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400 hidden sm:block">

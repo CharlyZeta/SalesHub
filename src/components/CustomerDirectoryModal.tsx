@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Users, Search, Plus, UserCheck, ShoppingBag, Phone, Mail, FileText, MapPin, Loader2 } from 'lucide-react';
+import { X, Users, Search, Plus, UserCheck, ShoppingBag, Phone, MapPin, Loader2 } from 'lucide-react';
 import { Customer, Sale } from '../types';
 import { formatCurrency, formatDate } from '../utils/formatters';
 import { addSystemLog } from '../utils/logger';
@@ -12,14 +12,17 @@ interface CustomerDirectoryModalProps {
   onAddCustomer: (customer: Customer) => void;
 }
 
-export const CustomerDirectoryModal: React.FC<CustomerDirectoryModalProps> = ({
-  isOpen,
+export const CustomerDirectoryModal: React.FC<CustomerDirectoryModalProps> = (props) => {
+  if (!props.isOpen) return null;
+  return <CustomerDirectoryModalInner {...props} />;
+};
+
+const CustomerDirectoryModalInner: React.FC<CustomerDirectoryModalProps> = ({
   onClose,
   customers,
   sales,
   onAddCustomer
 }) => {
-  if (!isOpen) return null;
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
@@ -39,7 +42,7 @@ export const CustomerDirectoryModal: React.FC<CustomerDirectoryModalProps> = ({
   const handleSearchChange = (val: string) => {
     setSearch(val);
     setIsSearching(true);
-    const timer = setTimeout(() => {
+    setTimeout(() => {
       setIsSearching(false);
     }, 150);
   };

@@ -1,13 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import {
-  getSystemLogs,
-  addSystemLog,
-  clearSystemLogs,
-  filterSystemLogs,
-  exportLogsJSON,
-  exportLogsCSV,
-  LogEntry
-} from '../utils/logger';
+import { getSystemLogs, addSystemLog, clearSystemLogs, filterSystemLogs, exportLogsJSON, exportLogsCSV } from '../utils/logger';
 
 describe('Logger Utility', () => {
   beforeEach(() => {

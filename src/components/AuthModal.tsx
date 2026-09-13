@@ -1,8 +1,45 @@
-import React, { useState } from 'react';
-import { Lock, KeyRound, ShieldAlert, ShieldCheck, UserCheck, Eye, EyeOff, Server, Globe } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Lock, KeyRound, ShieldAlert, ShieldCheck, UserCheck, Eye, EyeOff, Server, Timer } from 'lucide-react';
 import { SecurityConfig, UserRole } from '../types';
 import { addSystemLog } from '../utils/logger';
-import { hashPin } from '../utils/security';
+import { verifyPin, authLockWaitMs } from '../utils/security';
+
+// --- H1: bloqueo progresivo ante intentos fallidos de PIN --------------------
+const LOCKOUT_KEY = 'saleshub_auth_lockout_v1';
+
+interface LockoutState {
+  count: number;        // intentos fallidos acumulados
+  lockedUntil: number;  // epoch ms hasta el cual el login queda bloqueado
+}
+
+const loadLockout = (): LockoutState => {
+  try {
+    const raw = sessionStorage.getItem(LOCKOUT_KEY);
+    if (raw) {
+      const p = JSON.parse(raw);
+      return { count: Number(p.count) || 0, lockedUntil: Number(p.lockedUntil) || 0 };
+    }
+  } catch (_) {
+    // sessionStorage no disponible o dato corrupto: comenzar de cero
+  }
+  return { count: 0, lockedUntil: 0 };
+};
+
+const persistLockout = (state: LockoutState) => {
+  try {
+    sessionStorage.setItem(LOCKOUT_KEY, JSON.stringify(state));
+  } catch (_) {
+    // sin persistencia entre recargas, el bloqueo sigue activo en memoria
+  }
+};
+
+const clearLockout = () => {
+  try {
+    sessionStorage.removeItem(LOCKOUT_KEY);
+  } catch (_) {
+    // ignore
+  }
+};
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -14,8 +51,7 @@ interface AuthModalProps {
 export const AuthModal: React.FC<AuthModalProps> = ({
   isOpen,
   onUnlock,
-  securityConfig,
-  isInitialLock = false
+  securityConfig
 }) => {
   const [pinInput, setPinInput] = useState('');
   const [selectedRole, setSelectedRole] = useState<UserRole>('OPERADOR');
@@ -23,32 +59,69 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [errorMsg, setErrorMsg] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
 
+  // H1: estado de bloqueo progresivo (persistido en sessionStorage)
+  const [lockState, setLockState] = useState<LockoutState>(loadLockout);
+  const [nowTs, setNowTs] = useState<number>(() => Date.now());
+  const lockRemainingSec = Math.max(0, Math.ceil((lockState.lockedUntil - nowTs) / 1000));
+
+  // Cuenta regresiva mientras el login esté bloqueado
+  useEffect(() => {
+    if (!isOpen || lockState.lockedUntil <= Date.now()) return;
+    const id = window.setInterval(() => {
+      setNowTs(Date.now());
+      if (Date.now() >= lockState.lockedUntil) {
+        window.clearInterval(id);
+      }
+    }, 500);
+    return () => window.clearInterval(id);
+  }, [isOpen, lockState.lockedUntil]);
+
   if (!isOpen) return null;
 
   const handleAttemptUnlock = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
+
+    if (lockRemainingSec > 0) {
+      setErrorMsg(`Demasiados intentos fallidos. Reintentá en ${lockRemainingSec} segundos.`);
+      return;
+    }
     if (isVerifying) return;
 
     setIsVerifying(true);
     try {
       const storedPin = securityConfig.pinAcceso || '1234';
       // Legacy plaintext PINs (pre-hash) are verified directly; hashed ones
-      // are compared against a freshly computed hash of the input.
-      const storedIsHashed = /^[a-f0-9]{64}$/i.test(storedPin.trim());
-      const inputHash = await hashPin(pinInput);
+      // are compared via verifyPin, que acepta hashes actuales y legacy.
+      const storedTrim = storedPin.trim();
+      const storedIsHashed = /^[a-f0-9]{64}$/i.test(storedTrim);
 
       const matches = storedIsHashed
-        ? inputHash === storedPin.trim().toLowerCase()
-        : pinInput.trim() === storedPin.trim();
+        ? await verifyPin(pinInput, storedTrim)
+        : pinInput.trim() === storedTrim;
 
       if (matches) {
+        clearLockout();
+        setLockState({ count: 0, lockedUntil: 0 });
+        setNowTs(Date.now());
         addSystemLog('INFO', 'Seguridad', `Autenticación exitosa como ${selectedRole}`);
         onUnlock(selectedRole);
         setPinInput('');
       } else {
-        setErrorMsg('PIN / Clave incorrecta');
-        addSystemLog('WARN', 'Seguridad', `Intento fallido de autenticación (${selectedRole})`, { intento: pinInput.length });
+        const nextCount = lockState.count + 1;
+        const waitMs = authLockWaitMs(nextCount);
+        const nextState: LockoutState = { count: nextCount, lockedUntil: Date.now() + waitMs };
+        persistLockout(nextState);
+        setLockState(nextState);
+        setNowTs(Date.now());
+
+        if (waitMs > 0) {
+          addSystemLog('WARN', 'Seguridad', `Bloqueo temporal activado por intentos fallidos (${waitMs / 1000}s)`, { intentos: nextCount });
+          setErrorMsg(`PIN incorrecto. Demasiados intentos: la app se bloquea por ${waitMs / 1000} segundos.`);
+        } else {
+          addSystemLog('WARN', 'Seguridad', `Intento fallido de autenticación (${selectedRole})`, { intento: pinInput.length });
+          setErrorMsg('PIN / Clave incorrecta');
+        }
       }
     } finally {
       setIsVerifying(false);
@@ -66,7 +139,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           </div>
           <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Acceso Protegido</h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            DUAL S.R.L. • Sistema de Gestión Comercial
+            SalesHub • Sistema de Gestión Comercial
           </p>
           <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[11px] text-slate-700 dark:text-slate-300">
             <Server className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
@@ -145,6 +218,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             </div>
             <p className="text-[11px] text-slate-500 dark:text-slate-400">
               💡 El PIN por defecto es <strong className="font-mono text-slate-700 dark:text-slate-200">1234</strong>. Puede cambiarlo en Configuración.
+              Tras 3 intentos fallidos el acceso se bloquea temporalmente.
             </p>
           </div>
 
@@ -152,7 +226,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             ℹ️ Como <strong>Operador</strong> podrá registrar ventas, generar presupuestos y crear remitos. La edición de credenciales de WooCommerce y borrado de logs están reservadas para Administradores.
           </div>
 
-          {errorMsg && (
+          {lockRemainingSec > 0 ? (
+            <div className="bg-amber-50 dark:bg-amber-950/50 border border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-200 p-2.5 rounded-lg flex items-center gap-2 text-xs font-medium">
+              <Timer className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+              <span>Bloqueo temporal por seguridad. Reintentá en <strong className="font-mono">{lockRemainingSec} segundos</strong>.</span>
+            </div>
+          ) : errorMsg && (
             <div className="bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 p-2.5 rounded-lg flex items-center gap-2 text-xs font-medium animate-shake">
               <ShieldAlert className="w-4 h-4 text-red-600 dark:text-red-400 shrink-0" />
               <span>{errorMsg}</span>
@@ -162,7 +241,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           {/* Submit Action */}
           <button
             type="submit"
-            disabled={isVerifying}
+            disabled={isVerifying || lockRemainingSec > 0}
             className={`w-full py-2.5 rounded-xl text-white font-bold text-sm flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed ${
               selectedRole === 'ADMIN'
                 ? 'bg-purple-600 hover:bg-purple-700 active:scale-98'
@@ -170,13 +249,19 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             }`}
           >
             <KeyRound className="w-4 h-4" />
-            <span>{isVerifying ? 'Verificando...' : `Ingresar al Sistema (${selectedRole})`}</span>
+            <span>
+              {isVerifying
+                ? 'Verificando...'
+                : lockRemainingSec > 0
+                  ? `Bloqueado - reintentá en ${lockRemainingSec}s`
+                  : `Ingresar al Sistema (${selectedRole})`}
+            </span>
           </button>
         </form>
 
         {/* Footer info */}
         <div className="bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 p-3 text-center text-[11px] text-slate-500 dark:text-slate-400">
-          Protección SSL/TLS • VPS Subdominio E-commerce • DUAL S.R.L.
+          Protección SSL/TLS • VPS Subdominio E-commerce
         </div>
 
       </div>

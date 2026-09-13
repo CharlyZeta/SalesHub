@@ -38,7 +38,7 @@ export function parseDateToISO(input: string): string {
   }
   
   // DD/MM/YYYY or DD-MM-YYYY or D/M/YYYY
-  const parts = cleaned.split(/[\/\.-]/);
+  const parts = cleaned.split(/[/.-]/);
   if (parts.length === 3) {
     if (parts[2].length === 4) {
       // DD MM YYYY -> YYYY-MM-DD

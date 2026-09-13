@@ -1,29 +1,8 @@
 import React, { useState, useMemo } from 'react';
-import { 
-  X, 
-  BarChart3, 
-  TrendingUp, 
-  PieChart as PieIcon, 
-  ShoppingBag, 
-  Store, 
-  DollarSign, 
-  Calendar,
-  Award
-} from 'lucide-react';
-import { 
-  ResponsiveContainer, 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  Tooltip, 
-  Cell, 
-  PieChart, 
-  Pie, 
-  Legend 
-} from 'recharts';
+import { X, BarChart3, PieChart as PieIcon, Store, DollarSign, Calendar, Award } from 'lucide-react';
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Cell, PieChart, Pie, Legend } from 'recharts';
 import { Sale } from '../types';
-import { formatCurrency, getMonthYearLabel } from '../utils/formatters';
+import { formatCurrency } from '../utils/formatters';
 
 interface AnalyticsModalProps {
   isOpen: boolean;
@@ -31,8 +10,12 @@ interface AnalyticsModalProps {
   sales: Sale[];
 }
 
-export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({ isOpen, onClose, sales }) => {
-  if (!isOpen) return null;
+export const AnalyticsModal: React.FC<AnalyticsModalProps> = (props) => {
+  if (!props.isOpen) return null;
+  return <AnalyticsModalInner {...props} />;
+};
+
+const AnalyticsModalInner: React.FC<AnalyticsModalProps> = ({ onClose, sales }) => {
 
   const [dateRange, setDateRange] = useState<'este_mes' | 'mes_anterior' | 'ultimos_30' | 'este_ano' | 'todos'>('este_mes');
 

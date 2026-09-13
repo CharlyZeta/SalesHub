@@ -1,14 +1,18 @@
-# 🚀 DUAL S.R.L. - Sistema Integral de Gestión de Ventas, Presupuestos y Omnicanalidad
+# 🚀 SalesHub - Sistema Integral de Gestión de Ventas, Presupuestos y Omnicanalidad
 
-[![React](https://img.shields.io/badge/React-18.3.1-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.5-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Vite](https://img.shields.io/badge/Vite-5.4-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.0-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
-[![Vitest](https://img.shields.io/badge/Vitest-2.1.8-6E9F18?style=for-the-badge&logo=vitest&logoColor=white)](https://vitest.dev/)
-[![Code Coverage](https://img.shields.io/badge/Coverage-91%25-brightgreen?style=for-the-badge&logo=vitest)](./src/__tests__)
+[![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Vite](https://img.shields.io/badge/Vite-6-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.1-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![Vitest](https://img.shields.io/badge/Vitest-4.1-6E9F18?style=for-the-badge&logo=vitest&logoColor=white)](https://vitest.dev/)
+[![Code Coverage](https://img.shields.io/badge/Coverage-78.6%25-yellowgreen?style=for-the-badge&logo=vitest)](./src/__tests__)
+[![CI](https://img.shields.io/github/actions/workflow/status/CharlyZeta/SalesHub/ci.yml?style=for-the-badge&logo=githubactions&logoColor=white&label=CI)](https://github.com/CharlyZeta/SalesHub/actions)
+[![Node](https://img.shields.io/badge/Node-20-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
+[![Leaflet](https://img.shields.io/badge/Leaflet-1.9-199900?style=for-the-badge&logo=leaflet&logoColor=white)](https://leafletjs.com/)
+[![WooCommerce](https://img.shields.io/badge/WooCommerce-REST_API-96588A?style=for-the-badge&logo=woocommerce&logoColor=white)](https://woocommerce.com/)
 [![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](./LICENSE)
 
-Plataforma de alta velocidad para la gestión comercial omnicanal de **DUAL S.R.L. (Santa Fe Equipamientos para Comercio y Hogar)**. Diseñado bajo estándares de ingeniería de software para administrar ventas físicas e integraciones e-commerce (WooCommerce / MercadoLibre), emisión de presupuestos oficiales AFIP con conversión a venta, generación de remitos de transporte y entrega directa a clientes por **WhatsApp API (`wa.me`)** y **Correo Electrónico**.
+Plataforma de alta velocidad para la gestión comercial omnicanal como herramienta de **front-office**. Diseñado bajo estándares de ingeniería de software para administrar ventas físicas e integraciones e-commerce (WooCommerce / MercadoLibre), emisión de presupuestos oficiales AFIP con conversión a venta, generación de remitos de transporte y entrega directa a clientes por **WhatsApp API (`wa.me`)** y **Correo Electrónico**.
 
 ---
 
@@ -19,13 +23,13 @@ Plataforma de alta velocidad para la gestión comercial omnicanal de **DUAL S.R.
 
 ## 🎯 Objetivo del Proyecto y Visión General
 
-El propósito principal del sistema es dotar al equipo comercial de **DUAL S.R.L.** de una herramienta unificada y responsiva que elimine la fricción operativa entre la venta en salón, la tienda e-commerce y el despacho logístico.
+El propósito principal del sistema es dotar al equipo comercial de la empresa de una herramienta unificada y responsiva que elimine la fricción operativa entre la venta en salón, la tienda e-commerce y el despacho logístico.
 
 ---
 
 ## 🔄 Complemento al ERP de la Firma
 
-Este sistema **no reemplaza al ERP** de DUAL S.R.L.: actúa como su **herramienta comercial complementaria de captura y operación en el punto de venta**, cubriendo la fricción operativa diaria que el ERP central no resuelve:
+Este sistema **no reemplaza al ERP** de la empresa: actúa como su **herramienta comercial complementaria de captura y operación en el punto de venta**, cubriendo la fricción operativa diaria que el ERP central no resuelve:
 
 | Proceso | Complemento comercial (este sistema) | ERP central |
 | :--- | :--- | :--- |
@@ -83,7 +87,7 @@ El sistema ha sido estructurado siguiendo los principios **SOLID** y una arquite
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                        CAPA DE PRESENTACIÓN (UI)                        │
-│   React 18 + Tailwind CSS v4 + Lucide Icons + Recharts Analytics        │
+│   React 19 + Tailwind CSS v4 + Lucide Icons + Recharts Analytics        │
 └────────────────────────────────────┬────────────────────────────────────┘
                                      │
 ┌────────────────────────────────────▼────────────────────────────────────┐
@@ -138,7 +142,7 @@ El sistema ha sido estructurado siguiendo los principios **SOLID** y una arquite
 
 ### 5. 📱 Envíos Directos por WhatsApp & Correo Electrónico (`SendBudgetModal` & `budgetDelivery.ts`)
 - **Procesamiento de Números Argentinos**: Normaliza automáticamente celulares locales (ej. `0342 154883135` → `5493424883135`) cumpliendo los estándares de la API internacional de WhatsApp (`wa.me`).
-- Generación de mensajes enriquecidos con emojis, detalle ítem por ítem, importes y datos de contacto de DUAL S.R.L.
+- Generación de mensajes enriquecidos con emojis, detalle ítem por ítem, importes y datos de la empresa configurada.
 - Plantilla de Correo Electrónico lista con asunto oficial y cuerpo estructurado para envío vía `mailto:`.
 
 ### 6. 🚚 Remitos de Transporte & Despacho (`RemitoModal`)
@@ -165,15 +169,22 @@ El sistema ha sido estructurado siguiendo los principios **SOLID** y una arquite
 
 El proyecto cuenta con una suite completa de pruebas unitarias implementada con **Vitest** y **V8 Coverage Engine**.
 
-### Resumen de Cobertura de Pruebas:
+### Resumen de Cobertura de Pruebas (reporte `npm run test:coverage`):
 | Módulo | Cobertura de Sentencias | Cobertura de Líneas | Estado |
 | :--- | :---: | :---: | :---: |
 | `src/utils/numberToWords.ts` | **100%** | **100%** | PASSED |
 | `src/utils/budgetDelivery.ts` | **97.2%** | **97.1%** | PASSED |
+| `src/utils/andreaniStatusMapper.ts` | **89.3%** | **88.9%** | PASSED |
+| `src/utils/formatters.ts` | **88.5%** | **88.4%** | PASSED |
 | `src/utils/logger.ts` | **88.5%** | **90.9%** | PASSED |
-| `src/utils/wooCommerceApi.ts` | **88.6%** | **88.6%** | PASSED |
-| `src/utils/formatters.ts` | **86.2%** | **87.2%** | PASSED |
-| **TOTAL PROMEDIO** | **>91.4%** | **>92.1%** | **6/6 TEST SUITES PASSED (36/36 TESTS)** |
+| `src/utils/wooCommerceApi.ts` | **60.4%** | **60.5%** | PASSED |
+| `src/utils/security.ts` | **55.2%** | **52.0%** | PASSED |
+| **TOTAL (módulos utils)** | **78.6%** | **78.2%** | **8/8 TEST SUITES PASSED (71/71 TESTS)** |
+
+> Nota: la cobertura mide los módulos de lógica pura (`src/utils`) ejercitados por los
+> tests; los componentes de UI (`src/components`) aún no tienen tests unitarios.
+> `wooCommerceApi.ts` y `security.ts` tienen rutas de fallback/simulación y hashing que
+> concentran la mayoría de las líneas no cubiertas.
 
 ### Ejecución de Pruebas:
 ```bash
@@ -189,15 +200,15 @@ npm run test:coverage
 ## 🚀 Guía de Instalación y Ejecución Local
 
 ### Prerrequisitos:
-- **Node.js**: v18.0.0 o superior
-- **npm**: v9.0.0 o superior
+- **Node.js**: v20.0.0 o superior (LTS recomendado)
+- **npm**: v10.0.0 o superior
 
 ### Pasos de Instalación:
 
 1. **Clonar el repositorio e instalar dependencias**:
    ```bash
-   git clone https://github.com/dualsrl/sistema-ventas.git
-   cd sistema-ventas
+   git clone https://github.com/CharlyZeta/SalesHub.git
+   cd SalesHub
    npm install
    ```
 
@@ -206,6 +217,18 @@ npm run test:coverage
    npm run dev
    ```
    La aplicación se ejecutará automáticamente en `http://localhost:3000`.
+
+   > **Modos de ejecución y recargas:** el dev server de Vite recarga la página cuando
+   > detecta que se cortó su WebSocket (pestaña en segundo plano, suspensión de la PC o
+   > reinicio del server) y también al aplicar cambios en archivos. Para carga de datos
+   > real sin recargas:
+   > - `npm run dev:stable` → levanta el dev server sin HMR ni watcher (menos recargas,
+   >   pero el cliente de Vite sigue conectado),
+   > - `npm run stable` → **compila y sirve el build de producción** (`server.js`), sin
+   >   cliente de Vite: **cero recargas automáticas** (recomendado para operar).
+   >
+   > Además, el formulario de venta autoguarda un borrador: si la página se recarga igual,
+   > al reabrir el modal se recupera la venta a medio cargar (con aviso y opción de descartar).
 
 3. **Verificar Calidad de Código (TypeScript Linter)**:
    ```bash
@@ -217,33 +240,52 @@ npm run test:coverage
    npm run build
    ```
 
+5. **Servir en Producción (Node.js standalone)**:
+   ```bash
+   npm start   # node server.js  →  http://0.0.0.0:3000
+   ```
+   `server.js` sirve el build estático (`dist/`) **y** la capa de servicios
+   (`/api/backup*` y `/api/tracking/andreani/*`), de modo que los backups en
+   disco y el seguimiento de envíos Andreani funcionan también fuera del dev
+   server. Configurable vía variables de entorno: `PORT`, `HOST` y `DIST_DIR`.
+   La lógica de API es compartida con el dev server a través de `api-handlers.js`.
+
 ---
 
 ## 📁 Estructura del Proyecto
 
 ```
-sistema-ventas/
+SalesHub/
+├── .github/workflows/ci.yml  # Pipeline CI: typecheck + tests + build (GitHub Actions)
 ├── src/
-│   ├── __tests__/            # Tests unitarios con Vitest
+│   ├── __tests__/            # Tests unitarios con Vitest (8 suites / 71 tests)
+│   │   ├── andreaniStatusMapper.test.ts
 │   │   ├── budgetDelivery.test.ts
 │   │   ├── budgetSaleLogic.test.ts
 │   │   ├── formatters.test.ts
 │   │   ├── logger.test.ts
 │   │   ├── numberToWords.test.ts
+│   │   ├── security.test.ts
 │   │   └── wooCommerceApi.test.ts
-│   ├── assets/               # Capturas e imágenes promocionales
-│   │   └── images/
-│   ├── components/           # Componentes UI encapsulados
+│   ├── assets/images/        # Capturas e imágenes promocionales
+│   ├── components/           # Componentes UI encapsulados (uno por responsabilidad)
 │   │   ├── AnalyticsModal.tsx
-│   │   ├── BudgetModal.tsx
-│   │   ├── ConfigModal.tsx
+│   │   ├── AuthModal.tsx               # Auth Gate: PIN, roles RBAC y bloqueo progresivo
+│   │   ├── BudgetModal.tsx             # Presupuestos AFIP + conversión a venta
+│   │   ├── ConfigModal.tsx             # Shell del modal de configuración
+│   │   ├── ConfigBackupsTab.tsx        # Pestaña: copias de seguridad
+│   │   ├── ConfigEmpresaTab.tsx        # Pestaña: empresa / firma
+│   │   ├── ConfigGeneralTab.tsx        # Pestaña: canales, pagos, envíos, Andreani
+│   │   ├── ConfigSecurityTab.tsx       # Pestaña: seguridad & PIN
 │   │   ├── CustomerDirectoryModal.tsx
 │   │   ├── ExportModal.tsx
 │   │   ├── Header.tsx
 │   │   ├── ImportModal.tsx
 │   │   ├── KpiSummary.tsx
+│   │   ├── ProductSearchPicker.tsx     # Buscador autocompletable de catálogo
 │   │   ├── RemitoModal.tsx
 │   │   ├── SaleFormModal.tsx
+│   │   ├── SaleLocationMap.tsx         # Mapa Leaflet/OSM + pin arrastrable
 │   │   ├── SendBudgetModal.tsx
 │   │   ├── SpreadsheetGrid.tsx
 │   │   ├── SystemLogsModal.tsx
@@ -251,17 +293,23 @@ sistema-ventas/
 │   ├── data/                 # Datos iniciales y semillas de prueba
 │   │   └── initialData.ts
 │   ├── utils/                # Utilidades puras y lógica de negocio
+│   │   ├── andreaniStatusMapper.ts     # Mapeo canónico de estados Andreani
+│   │   ├── andreaniSyncService.ts      # Auto-seguimiento reactivo de envíos
+│   │   ├── backupService.ts            # Backups IndexedDB + disco (API /api/backup)
 │   │   ├── budgetDelivery.ts
 │   │   ├── formatters.ts
-│   │   ├── logger.ts
+│   │   ├── logger.ts                   # Motor de auditoría (localStorage + eventos)
 │   │   ├── numberToWords.ts
+│   │   ├── security.ts                 # Hash de PIN (SHA-256) y bloqueo progresivo
 │   │   └── wooCommerceApi.ts
 │   ├── App.tsx               # Orquestador principal de estado
 │   ├── main.tsx              # Punto de entrada Vite React
 │   ├── types.ts              # Contratos e interfaces de TypeScript
 │   └── index.css             # Estilos globales con Tailwind CSS v4
+├── api-handlers.js           # Handlers de API compartidos (dev server + server.js)
 ├── metadata.json             # Metadatos del applet en AI Studio
 ├── package.json              # Dependencias y scripts de compilación
+├── server.js                 # Servidor de producción Node.js (dist/ + APIs /api/*)
 ├── tsconfig.json             # Configuración del compilador de TypeScript
 └── vite.config.ts            # Configuración de empaquetado Vite
 ```
@@ -270,15 +318,18 @@ sistema-ventas/
 
 ## 🔒 Guía Completa de Seguridad y Despliegue en VPS (Subdominio WooCommerce)
 
-Para poner este sistema en producción en el subdominio **`gestion.dualsrl.com.ar`** en el mismo VPS donde reside la tienda principal **`dualsrl.com.ar`** (WooCommerce / WordPress), se presentan **4 niveles de seguridad integrados**:
+Para poner este sistema en producción en el subdominio **`gestion.miempresa.com.ar`** en el mismo VPS donde reside la tienda principal **`miempresa.com.ar`** (WooCommerce / WordPress), se presentan **4 niveles de seguridad integrados**:
 
 ### 1. 🛡️ Capa de Aplicación: PIN de Bloqueo y Control de Roles (RBAC)
 El sistema incluye un gestor de seguridad integrado en el cliente React:
-- **Pantalla de Bloqueo (Auth Gate)**: Exige un PIN de Administrador (predeterminado: `1234`) para desbloquear funciones sensibles.
+- **Pantalla de Bloqueo (Auth Gate)**: Exige el PIN configurado para desbloquear la aplicación. Al habilitar la seguridad por primera vez se debe fijar un PIN propio (el PIN predeterminado `1234` de fábrica no es admitido).
 - **Perfiles de Acceso (RBAC)**:
   - **Operador**: Registro de ventas, confección de presupuestos, remitos e historial de clientes.
   - **Administrador**: Acceso completo, edición de API Keys de WooCommerce, purga de logs de auditoría y cambio de parámetros.
 - **Auto-Bloqueo por Inactividad**: Temporizador configurable (5, 15, 30 o 60 min) que bloquea la sesión automáticamente tras detectar inactividad.
+- **Auth Gate al iniciar la aplicación**: con la seguridad habilitada, la app arranca bloqueada pidiendo el PIN (no solo ante bloqueos manuales o por inactividad).
+- **Bloqueo progresivo ante intentos fallidos**: tras 3 intentos fallidos el login se bloquea 5 s, tras 5 por 30 s y desde 7 por 60 s (contador persistente en `sessionStorage`).
+- **PIN nunca en claro**: solo se persiste el hash (SHA-256). Al habilitar la seguridad no se admite el PIN predeterminado `1234`: se exige fijar un PIN nuevo.
 
 ---
 
@@ -286,13 +337,13 @@ El sistema incluye un gestor de seguridad integrado en el cliente React:
 Para impedir que usuarios no autorizados descarguen el paquete de la aplicación antes de autenticarse:
 
 ```nginx
-# En el archivo de configuración de Nginx (/etc/nginx/sites-available/gestion.dualsrl.com.ar)
+# En el archivo de configuración de Nginx (/etc/nginx/sites-available/gestion.miempresa.com.ar)
 server {
-    server_name gestion.dualsrl.com.ar;
+    server_name gestion.miempresa.com.ar;
 
     location / {
-        proxy_pass http://127.0.0.1:3000; # O la carpeta /dist si se sirve estático
-        auth_basic "Acceso Restringido - DUAL S.R.L.";
+        proxy_pass http://127.0.0.1:3000; # server.js (npm start): sirve dist/ y las APIs /api/*
+        auth_basic "Acceso Restringido";
         auth_basic_user_file /etc/nginx/.htpasswd;
     }
 }
@@ -308,10 +359,10 @@ Asegura la comunicación cifrada con la tienda WooCommerce en el mismo servidor:
 # Cifrado SSL mediante Let's Encrypt Certbot
 server {
     listen 443 ssl http2;
-    server_name gestion.dualsrl.com.ar;
+    server_name gestion.miempresa.com.ar;
 
-    ssl_certificate /etc/letsencrypt/live/gestion.dualsrl.com.ar/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/gestion.dualsrl.com.ar/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/gestion.miempresa.com.ar/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/gestion.miempresa.com.ar/privkey.pem;
 
     # Headers de Seguridad Estricta
     add_header X-Frame-Options "SAMEORIGIN";
@@ -324,7 +375,7 @@ server {
 ---
 
 ### 4. 🎯 Capa de Red: Restricción por Dirección IP en Nginx
-Permite limitar el acceso al subdominio únicamente desde las IPs estáticas del local u oficinas de DUAL S.R.L.:
+Permite limitar el acceso al subdominio únicamente desde las IPs estáticas del local u oficinas de la empresa:
 
 ```nginx
 location / {
@@ -336,10 +387,8 @@ location / {
 
 ---
 
-## 🔒 Licencia y Contacto
+## 🔒 Licencia y Autor
 
-Desarrollado para **DUAL S.R.L. - Equipamientos para Comercio y Hogar**.  
-📍 Estanislao Zeballos 3825, Santa Fe, Argentina.  
-📞 Teléfono: 0342-4883135 | 📧 Email: dualdesantafe@hotmail.com  
+Desarrollado por **Gerardo Maidana** — gerardomaidana@outlook.com
 
-Licencia MIT © 2026 DUAL S.R.L.
+Licencia MIT © 2026 Gerardo Maidana — ver [`LICENSE`](./LICENSE).

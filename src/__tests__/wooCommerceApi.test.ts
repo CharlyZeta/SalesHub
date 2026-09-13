@@ -1,13 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import {
-  buildWooApiUrl,
-  transformWooProduct,
-  transformWooCustomer,
-  fetchWooCommerceProducts,
-  fetchWooCommerceCustomers,
-  WooProductDTO,
-  WooCustomerDTO
-} from '../utils/wooCommerceApi';
+import { describe, it, expect, vi } from 'vitest';
+import { buildWooApiUrl, transformWooProduct, transformWooCustomer, fetchWooCommerceProducts, fetchWooCommerceCustomers, WooProductDTO, WooCustomerDTO } from '../utils/wooCommerceApi';
 
 describe('WooCommerce API Utility', () => {
 

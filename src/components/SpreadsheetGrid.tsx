@@ -1,38 +1,8 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { 
-  Search, 
-  Filter, 
-  ArrowUpDown, 
-  Edit3, 
-  Trash2, 
-  Copy, 
-  Check, 
-  ExternalLink, 
-  Eye, 
-  Plus, 
-  Columns, 
-  Download, 
-  X,
-  Truck,
-  CheckCircle2,
-  Clock,
-  AlertCircle,
-  ChevronDown,
-  RefreshCw,
-  ShoppingBag,
-  Store,
-  CreditCard,
-  Building2,
-  DollarSign,
-  Printer,
-  MessageSquare,
-  Instagram,
-  Phone,
-  FileText
-} from 'lucide-react';
-import { Sale, SaleChannel, PaymentMethod, ShippingMethod, ShippingStatus } from '../types';
+import React, { useState, useMemo, useEffect } from 'react';
+import { Search, ArrowUpDown, Edit3, Trash2, Copy, Check, ExternalLink, Plus, Columns, X, Truck, CheckCircle2, Clock, AlertCircle, RefreshCw, ShoppingBag, Store, CreditCard, Building2, DollarSign, Printer, MessageSquare, Instagram, Phone, FileText } from 'lucide-react';
+import { Sale, SaleChannel, PaymentMethod, ShippingStatus } from '../types';
 import { formatCurrency, formatDate, validateRequiredSaleFields } from '../utils/formatters';
-import { getAndreaniStatusConfig, mapAndreaniTrackingStatus, isTerminalStatus } from '../utils/andreaniStatusMapper';
+import { getAndreaniStatusConfig, isTerminalStatus } from '../utils/andreaniStatusMapper';
 
 interface SpreadsheetGridProps {
   sales: Sale[];
@@ -193,8 +163,8 @@ export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
         return true;
       })
       .sort((a, b) => {
-        let valA = a[sortField];
-        let valB = b[sortField];
+        const valA = a[sortField];
+        const valB = b[sortField];
 
         if (typeof valA === 'string' && typeof valB === 'string') {
           return sortDirection === 'asc' 
@@ -217,9 +187,6 @@ export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
     const startIndex = (currentPage - 1) * recordsPerPage;
     return filteredSales.slice(startIndex, startIndex + recordsPerPage);
   }, [filteredSales, currentPage, recordsPerPage, showAllRows]);
-
-  // Keep track of checked tracking numbers in this session to avoid duplicate auto requests
-  const autoCheckedRefs = useRef<Set<string>>(new Set());
 
   // Automatic localized background sync for visible non-terminal Andreani shipments (60s TTL cache)
   useEffect(() => {
@@ -417,10 +384,6 @@ export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
         <span>{config.label}</span>
       </span>
     );
-  };
-
-  const getShippingBadge = (status: ShippingStatus) => {
-    return getAndreaniStatusBadge(status);
   };
 
   return (
@@ -727,7 +690,7 @@ export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
                 </td>
               </tr>
             ) : (
-              paginatedSales.map((sale, idx) => {
+              paginatedSales.map((sale) => {
                 const isSelected = selectedIds.includes(sale.id);
                 const firstProduct = sale.productos[0];
                 const productCount = sale.productos.length;

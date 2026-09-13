@@ -1,31 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  X, 
-  FileText, 
-  Plus, 
-  Trash2, 
-  Printer, 
-  CheckCircle2, 
-  Search, 
-  UserCheck, 
-  UserPlus, 
-  DollarSign, 
-  Calendar, 
-  ArrowRight,
-  Eye,
-  List,
-  Sparkles,
-  Building,
-  RefreshCw,
-  MessageSquare,
-  Mail,
-  Send,
-  Download,
-  FileDown,
-  Loader2,
-  AlertCircle
-} from 'lucide-react';
-import { Budget, BudgetItem, Customer, CatalogProduct, Sale, AppConfig } from '../types';
+import { X, FileText, Plus, Trash2, Printer, CheckCircle2, Search, UserCheck, ArrowRight, Eye, List, MessageSquare, Mail, FileDown, Loader2, AlertCircle } from 'lucide-react';
+import { Budget, BudgetItem, Customer, CatalogProduct, AppConfig } from '../types';
 import { formatCurrency } from '../utils/formatters';
 import { ProductSearchPicker } from './ProductSearchPicker';
 import { numberToWordsSpanish } from '../utils/numberToWords';
@@ -58,17 +33,17 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({
   const [activeTab, setActiveTab] = useState<'create' | 'list' | 'preview'>('create');
   
   const empresa = config?.empresa || {
-    nombre: 'DUAL S.R.L.',
-    subtitulo: 'Para Comercio y Hogar',
+    nombre: 'Mi Empresa',
+    subtitulo: '',
     logoUrl: '',
     mostrarLogo: false,
-    domicilio: 'ESTANISLAO ZEBALLOS 3825, SANTA FE.',
-    telefono: '0342-4883135',
-    email: 'dualdesantafe@hotmail.com',
-    cuit: '30710642857',
-    iibb: '0111353853',
-    condicionIva: 'I.V.A. Responsable Inscripto',
-    inicioActividades: '01/07/2008'
+    domicilio: '',
+    telefono: '',
+    email: '',
+    cuit: '',
+    iibb: '',
+    condicionIva: '',
+    inicioActividades: ''
   };
 
   // Currently active budget for viewing / editing / previewing
@@ -365,7 +340,7 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({
       const { toPng } = await import('html-to-image');
       const { jsPDF } = await import('jspdf');
 
-      const numero = selectedBudget.numeroPresupuesto || 'DUAL';
+      const numero = selectedBudget.numeroPresupuesto || 'S/N';
       const clienteRaw = `${selectedBudget.razonSocialNombre || ''} ${selectedBudget.apellido || ''}`.trim() || 'SIN_CLIENTE';
       const cliente = clienteRaw.replace(/\s+/g, '_').replace(/[^\w\-áéíóúÁÉÍÓÚñÑ]/g, '');
       const fecha = (selectedBudget.fechaEmision || new Date().toISOString().split('T')[0]).replace(/-/g, '');
@@ -717,7 +692,7 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({
                     <input
                       type="text"
                       required
-                      placeholder="Ej: CONSUMIDOR FINAL o DUAL S.R.L."
+                      placeholder="Ej: CONSUMIDOR FINAL o Mi Empresa S.R.L."
                       value={razonSocialNombre}
                       onChange={(e) => setRazonSocialNombre(e.target.value)}
                       className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500 shadow-2xs font-medium"
@@ -739,7 +714,7 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({
                     <label className="block text-slate-500 dark:text-slate-400 mb-1">DNI / CUIT</label>
                     <input
                       type="text"
-                      placeholder="30710642857 / 20-30123456-7"
+                      placeholder="20-30123456-7 (DNI) / 30-71234567-8 (CUIT)"
                       value={dniCuit}
                       onChange={(e) => setDniCuit(e.target.value)}
                       className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1.5 text-slate-900 dark:text-slate-100 font-mono focus:outline-none focus:border-blue-500 shadow-2xs"
@@ -761,7 +736,7 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({
                     <label className="block text-slate-500 dark:text-slate-400 mb-1">Teléfono / WhatsApp</label>
                     <input
                       type="text"
-                      placeholder="342-4883135"
+                      placeholder="342-5551234"
                       value={telefono}
                       onChange={(e) => setTelefono(e.target.value)}
                       className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500 shadow-2xs"

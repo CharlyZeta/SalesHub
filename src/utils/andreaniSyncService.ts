@@ -1,4 +1,4 @@
-import { mapAndreaniTrackingStatus, isTerminalStatus } from './andreaniStatusMapper';
+import { mapAndreaniTrackingStatus } from './andreaniStatusMapper';
 import { ShippingStatus } from '../types';
 
 export interface AndreaniTrackResult {

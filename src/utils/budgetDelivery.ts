@@ -9,7 +9,7 @@ export function formatWhatsAppPhone(phone: string): string {
   if (!phone) return '';
   
   // Remove spaces, parentheses, dashes, plus signs
-  let cleaned = phone.replace(/[\s\(\)\-\+]/g, '');
+  let cleaned = phone.replace(/[\s()+-]/g, '');
 
   // If starts with 0 (e.g. 0342...), strip leading 0
   if (cleaned.startsWith('0')) {
@@ -44,7 +44,7 @@ export function generateBudgetWhatsAppText(budget: Budget): string {
 
   const fechaFormatted = budget.fechaEmision.split('-').reverse().join('/');
 
-  return `*DUAL S.R.L. - Presupuesto N° ${budget.numeroPresupuesto}*
+  return `*Presupuesto N° ${budget.numeroPresupuesto}*
 
 Hola *${budget.razonSocialNombre}*, le compartimos el detalle de su presupuesto:
 
@@ -60,17 +60,14 @@ ${itemsList}
 ${budget.descuentoTotal > 0 ? `*DESCUENTO:* -${formatCurrency(budget.descuentoTotal)}\n` : ''}${budget.percepciones > 0 ? `*PERCEPCIONES:* ${formatCurrency(budget.percepciones)}\n` : ''}💰 *TOTAL ESTIMADO: ${formatCurrency(budget.importeTotal)}*
 -------------------------------
 ${budget.observaciones ? `📌 *Observaciones:* ${budget.observaciones}\n` : ''}
-Cualquier consulta quedamos a su entera disposición.
-
-*DUAL S.R.L.* - Equipamientos para Comercio y Hogar
-Estanislao Zeballos 3825, Santa Fe | Tel: 0342-4883135`;
+Cualquier consulta quedamos a su entera disposición.`;
 }
 
 /**
  * Generates subject line for email delivery
  */
 export function generateBudgetEmailSubject(budget: Budget): string {
-  return `Presupuesto N° ${budget.numeroPresupuesto} - DUAL S.R.L.`;
+  return `Presupuesto N° ${budget.numeroPresupuesto}`;
 }
 
 /**
@@ -85,7 +82,7 @@ export function generateBudgetEmailBody(budget: Budget): string {
 
   return `Estimado/a ${budget.razonSocialNombre},
 
-Le enviamos el presupuesto solicitado correspondiente a DUAL S.R.L.
+Le enviamos el presupuesto solicitado:
 
 --------------------------------------------------
 RESUMEN DEL PRESUPUESTO N° ${budget.numeroPresupuesto}
@@ -105,10 +102,7 @@ ${budget.descuentoTotal > 0 ? `Descuento: -${formatCurrency(budget.descuentoTota
 
 ${budget.observaciones ? `Observaciones: ${budget.observaciones}\n\n` : ''}Quedamos a su entera disposición ante cualquier consulta.
 
-Atentamente,
-DUAL S.R.L. - Equipamientos para Comercio y Hogar
-Estanislao Zeballos 3825, Santa Fe
-Tel: 0342-4883135 | Email: dualdesantafe@hotmail.com`;
+Atentamente,`;
 }
 
 /**

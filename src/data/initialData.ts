@@ -1,4 +1,4 @@
-import { Sale, CatalogProduct, Customer, WooCommerceConfig, AppConfig, Budget, CompanyConfig } from '../types';
+import { Sale, CatalogProduct, WooCommerceConfig, AppConfig, Budget, CompanyConfig } from '../types';
 
 // Utility to generate recent dates
 const today = new Date();
@@ -9,17 +9,17 @@ const formatDateIso = (daysAgo: number) => {
 };
 
 export const INITIAL_COMPANY_CONFIG: CompanyConfig = {
-  nombre: 'DUAL S.R.L.',
-  subtitulo: 'Para Comercio y Hogar',
+  nombre: 'Mi Empresa',
+  subtitulo: '',
   logoUrl: '',
   mostrarLogo: false,
-  domicilio: 'ESTANISLAO ZEBALLOS 3825, SANTA FE.',
-  telefono: '0342-4883135',
-  email: 'dualdesantafe@hotmail.com',
-  cuit: '30710642857',
-  iibb: '0111353853',
-  condicionIva: 'I.V.A. Responsable Inscripto',
-  inicioActividades: '01/07/2008',
+  domicilio: '',
+  telefono: '',
+  email: '',
+  cuit: '',
+  iibb: '',
+  condicionIva: '',
+  inicioActividades: '',
   puntoVentaVenta: '0003',
   puntoVentaPresupuesto: '0001'
 };
@@ -78,7 +78,6 @@ export const INITIAL_BUDGETS: Budget[] = [
     creadoEn: new Date().toISOString()
   }
 ];
-
 
 export const INITIAL_SALES: Sale[] = [
   {

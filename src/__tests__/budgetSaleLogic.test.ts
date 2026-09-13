@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { Budget, Sale, Customer, CatalogProduct } from '../types';
+import { Budget, Sale } from '../types';
 
 describe('Budget and Sale Business Logic Helpers', () => {
 

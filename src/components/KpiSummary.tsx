@@ -1,17 +1,7 @@
 import React, { useState } from 'react';
-import { 
-  TrendingUp, 
-  ShoppingBag, 
-  Store, 
-  Truck, 
-  Receipt, 
-  DollarSign, 
-  ArrowUpRight,
-  Settings,
-  X
-} from 'lucide-react';
+import { ShoppingBag, Store, Truck, Receipt, DollarSign, ArrowUpRight, Settings, X } from 'lucide-react';
 import { Sale } from '../types';
-import { formatCurrency, getMonthYearLabel, getCurrentMonthISO } from '../utils/formatters';
+import { formatCurrency, getMonthYearLabel } from '../utils/formatters';
 
 interface KpiSummaryProps {
   sales: Sale[];
@@ -38,7 +28,7 @@ export const KpiSummary: React.FC<KpiSummaryProps> = ({
     if (saved) {
       try {
         return JSON.parse(saved);
-      } catch (e) {
+      } catch (_e) {
         // Fallback to default
       }
     }

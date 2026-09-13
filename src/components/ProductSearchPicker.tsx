@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, Image as ImageIcon, Package, AlertCircle, EyeOff, Check } from 'lucide-react';
+import { Search, Package, AlertCircle, EyeOff } from 'lucide-react';
 import { CatalogProduct } from '../types';
 import { formatCurrency } from '../utils/formatters';
 

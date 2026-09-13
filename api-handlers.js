@@ -1,0 +1,385 @@
+/**
+ * SalesHub - API surface compartida.
+ *
+ * Contiene los handlers HTTP de la capa de servicios (backups en disco y
+ * tracking de envíos Andreani). Se monta en DOS contextos distintos para
+ * no duplicar lógica:
+ *
+ *   1. Producción : `server.js` (servidor Node standalone que sirve `dist/`).
+ *   2. Desarrollo : middleware del dev server de Vite (`vite.config.ts`).
+ *
+ * Contrato: `handleApiRequest(req, res, options)` devuelve una Promise<boolean>.
+ *   - `true`  -> la petición pertenecía a `/api/*` y el handler ya escribió la
+ *                respuesta (incluye el 404 de rutas /api desconocidas).
+ *   - `false` -> la petición NO es de API; el llamador debe continuar
+ *                (next() en Vite o servir estáticos en server.js).
+ */
+
+import fs from 'node:fs';
+import path from 'node:path';
+
+// ---------------------------------------------------------------------------
+// Configuración por contexto (inyectada por cada host)
+// ---------------------------------------------------------------------------
+
+export const API_DEFAULTS = {
+  /** Directorio donde se persisten los backups JSON. */
+  backupsDir: 'backups',
+  /** Archivo donde se registran los errores de Andreani. */
+  logFile: 'andreani_error.log',
+};
+
+// ---------------------------------------------------------------------------
+// Utilidades de respuesta
+// ---------------------------------------------------------------------------
+
+function sendJson(res, status, payload) {
+  const data = JSON.stringify(payload);
+  res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8' });
+  res.end(data);
+}
+
+function readJsonBody(req) {
+  return new Promise((resolve, reject) => {
+    let body = '';
+    req.on('data', (chunk) => {
+      body += chunk;
+    });
+    req.on('end', () => {
+      if (!body.trim()) {
+        resolve(null);
+        return;
+      }
+      try {
+        resolve(JSON.parse(body));
+      } catch (err) {
+        err.isBadJson = true;
+        reject(err);
+      }
+    });
+    req.on('error', reject);
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Andreani: autenticación, normalización y cliente
+// ---------------------------------------------------------------------------
+
+const andreaniTokenCache = new Map();
+
+/**
+ * Obtiene (y cachea por 55 minutos) el token de acceso a la API de Andreani.
+ * El hash es el mismo `HASH_ANDREANI` provisto por Andreani en el header.
+ */
+async function getAndreaniToken(hash) {
+  const now = Date.now();
+  const cached = andreaniTokenCache.get(hash);
+  if (cached && cached.expires > now) {
+    return cached.token;
+  }
+
+  const res = await fetch('https://woocommerce-api-acom.andreani.com/api/v1/Login', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': hash,
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error(`Andreani authentication failed: ${res.statusText}`);
+  }
+
+  const contentType = res.headers.get('content-type') || '';
+  let token = '';
+  if (contentType.includes('application/json')) {
+    const data = await res.json();
+    token =
+      data.response?.accessToken ||
+      data.token ||
+      data.sessionToken ||
+      data.XAuthToken ||
+      data.key ||
+      String(Object.values(data)[0] || '');
+  } else {
+    token = (await res.text()).trim();
+  }
+
+  andreaniTokenCache.set(hash, {
+    token,
+    expires: now + 55 * 60 * 1000, // Cache for 55 minutes
+  });
+  return token;
+}
+
+function normalizeAndreaniShipment(data) {
+  const trackingNumber = data.trackingNumber || data.numeroSeguimiento || '';
+  const trackingStatus = data.trackingStatus || data.status || data.estado || '';
+  const status = data.status || '';
+  const deliveryMode = data.deliveryMode || '';
+  const salesOrderNumber = data.salesOrderNumber || '';
+  const pedidoId = data.pedidoId || '';
+  const events = data.events || data.eventos || [];
+  const updatedAt = data.trackingUpdatedAt || data.updatedAt || new Date().toISOString();
+
+  return {
+    tracking_number: trackingNumber,
+    tracking_status: trackingStatus,
+    status: trackingStatus || status || 'Pendiente de ingreso',
+    delivery_mode: deliveryMode,
+    sales_order_number: salesOrderNumber,
+    pedido_id: pedidoId,
+    events,
+    updated_at: updatedAt,
+  };
+}
+
+function normalizeAndreaniBulk(data) {
+  const shipments = Array.isArray(data) ? data : data.shipments || data.data || [];
+  return shipments.map((s) => normalizeAndreaniShipment(s));
+}
+
+function logAndreaniError(logFile, err) {
+  try {
+    fs.appendFileSync(
+      logFile,
+      `${new Date().toISOString()} - [ERROR] ${err.message}\n${err.stack || ''}\n\n`
+    );
+  } catch (writeErr) {
+    console.error('Failed to write to Andreani error log', writeErr);
+  }
+}
+
+async function fetchWithAuth(urlStr, hash) {
+  let activeToken = await getAndreaniToken(hash);
+  let trackingRes = await fetch(urlStr, {
+    method: 'GET',
+    headers: {
+      'X-Auth-Token': activeToken,
+    },
+  });
+
+  if (trackingRes.status === 401) {
+    andreaniTokenCache.delete(hash);
+    activeToken = await getAndreaniToken(hash);
+    trackingRes = await fetch(urlStr, {
+      method: 'GET',
+      headers: {
+        'X-Auth-Token': activeToken,
+      },
+    });
+  }
+  return trackingRes;
+}
+
+// ---------------------------------------------------------------------------
+// Handlers de backups en disco
+// ---------------------------------------------------------------------------
+
+async function handleBackupList(req, res, backupsDir) {
+  try {
+    if (!fs.existsSync(backupsDir)) {
+      sendJson(res, 200, []);
+      return;
+    }
+    const files = fs
+      .readdirSync(backupsDir)
+      .filter((f) => f.startsWith('backup-') && f.endsWith('.json'))
+      .map((filename) => {
+        const filePath = path.join(backupsDir, filename);
+        const stats = fs.statSync(filePath);
+        return {
+          filename,
+          date: stats.mtime.toISOString(),
+          size: stats.size,
+        };
+      })
+      .sort((a, b) => b.date.localeCompare(a.date));
+
+    sendJson(res, 200, files);
+  } catch (err) {
+    sendJson(res, 500, { error: err.message });
+  }
+}
+
+async function handleBackupSave(req, res, backupsDir) {
+  try {
+    const data = await readJsonBody(req);
+    if (!data) {
+      sendJson(res, 400, { error: 'Cuerpo de petición vacío o JSON inválido' });
+      return;
+    }
+
+    if (!fs.existsSync(backupsDir)) {
+      fs.mkdirSync(backupsDir, { recursive: true });
+    }
+
+    const dateStr = new Date().toISOString().split('T')[0];
+    const timeStr = new Date().toTimeString().split(' ')[0].replace(/:/g, '-');
+    const filename = `backup-${dateStr}-${timeStr}.json`;
+    fs.writeFileSync(path.join(backupsDir, filename), JSON.stringify(data, null, 2), 'utf-8');
+
+    sendJson(res, 200, { success: true, filename, timestamp: new Date().toISOString() });
+  } catch (err) {
+    sendJson(res, err && err.isBadJson ? 400 : 500, { error: err.message });
+  }
+}
+
+async function handleBackupRestore(req, res, backupsDir) {
+  try {
+    const parsed = await readJsonBody(req);
+    const filename = parsed && typeof parsed.filename === 'string' ? parsed.filename : '';
+    if (!filename) {
+      sendJson(res, 400, { error: 'Nombre de archivo inválido' });
+      return;
+    }
+
+    const safeFilename = path.basename(filename);
+    const filePath = path.join(backupsDir, safeFilename);
+    if (fs.existsSync(filePath) && safeFilename.startsWith('backup-') && safeFilename.endsWith('.json')) {
+      const data = fs.readFileSync(filePath, 'utf-8');
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(data);
+    } else {
+      sendJson(res, 404, { error: 'Archivo no encontrado' });
+    }
+  } catch (err) {
+    sendJson(res, err && err.isBadJson ? 400 : 500, { error: err.message });
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Handlers de tracking Andreani
+// ---------------------------------------------------------------------------
+
+async function handleAndreaniBulk(req, res, logFile) {
+  const hash = req.headers['x-andreani-hash'] || '';
+  if (!hash) {
+    sendJson(res, 400, { error: 'Falta HASH_ANDREANI' });
+    return;
+  }
+
+  try {
+    const parsed = await readJsonBody(req);
+    const trackingNumbers = parsed && Array.isArray(parsed.trackingNumbers) ? parsed.trackingNumbers : [];
+    if (trackingNumbers.length === 0) {
+      sendJson(res, 200, []);
+      return;
+    }
+
+    // Consulta en paralelo usando el endpoint de búsqueda por número de guía
+    const fetchPromises = trackingNumbers.map(async (num) => {
+      try {
+        const searchRes = await fetchWithAuth(
+          `https://woocommerce-api-acom.andreani.com/api/v1/Shipments?search=${encodeURIComponent(String(num).trim())}&page=1&pageSize=1`,
+          hash
+        );
+        if (!searchRes.ok) {
+          return null;
+        }
+        const data = await searchRes.json();
+        const items = data.response?.items || data.items || [];
+        return items[0] || null;
+      } catch (err) {
+        return null;
+      }
+    });
+
+    const rawShipments = (await Promise.all(fetchPromises)).filter(Boolean);
+    sendJson(res, 200, normalizeAndreaniBulk(rawShipments));
+  } catch (err) {
+    if (!err || !err.isBadJson) {
+      logAndreaniError(logFile, err);
+    }
+    sendJson(res, err && err.isBadJson ? 400 : 500, { error: err.message });
+  }
+}
+
+async function handleAndreaniSingle(req, res, trackingNumber, logFile) {
+  const hash = req.headers['x-andreani-hash'] || '';
+  if (!hash) {
+    sendJson(res, 400, { error: 'Falta HASH_ANDREANI' });
+    return;
+  }
+
+  try {
+    const searchRes = await fetchWithAuth(
+      `https://woocommerce-api-acom.andreani.com/api/v1/Shipments?search=${encodeURIComponent(trackingNumber.trim())}&page=1&pageSize=1`,
+      hash
+    );
+    if (!searchRes.ok) {
+      const errBody = await searchRes.text();
+      throw new Error(`Andreani tracking failed with status ${searchRes.status}: ${errBody}`);
+    }
+    const data = await searchRes.json();
+    const items = data.response?.items || data.items || [];
+    const shipment = items[0];
+    if (!shipment) {
+      sendJson(res, 404, { error: 'Guía no encontrada en Andreani' });
+      return;
+    }
+    sendJson(res, 200, normalizeAndreaniShipment(shipment));
+  } catch (err) {
+    logAndreaniError(logFile, err);
+    sendJson(res, 500, { error: err.message });
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Router principal
+// ---------------------------------------------------------------------------
+
+/**
+ * Atiende las rutas /api/* de SalesHub. Devuelve true si la petición era de API
+ * (en ese caso ya escribió una respuesta, incluidos los 404 de rutas desconocidas).
+ *
+ * @param {import('node:http').IncomingMessage} req
+ * @param {import('node:http').ServerResponse} res
+ * @param {{ backupsDir?: string, logFile?: string }} [options]
+ * @returns {Promise<boolean>}
+ */
+export async function handleApiRequest(req, res, options = {}) {
+  const { backupsDir, logFile } = { ...API_DEFAULTS, ...options };
+  const pathname = (req.url || '').split('?')[0];
+
+  // Solo se responsabiliza por el espacio /api/*
+  if (!pathname.startsWith('/api/')) {
+    return false;
+  }
+
+  // --- Backups ---
+  if (pathname === '/api/backup/list' && req.method === 'GET') {
+    await handleBackupList(req, res, backupsDir);
+    return true;
+  }
+
+  if (pathname.startsWith('/api/backup') && req.method === 'POST') {
+    if (pathname === '/api/backup/restore') {
+      await handleBackupRestore(req, res, backupsDir);
+    } else {
+      await handleBackupSave(req, res, backupsDir);
+    }
+    return true;
+  }
+
+  // --- Tracking Andreani ---
+  if (pathname === '/api/tracking/andreani/bulk' && req.method === 'POST') {
+    await handleAndreaniBulk(req, res, logFile);
+    return true;
+  }
+
+  if (pathname.startsWith('/api/tracking/andreani/') && req.method === 'GET') {
+    const segments = pathname.split('/').filter(Boolean);
+    const trackingNumber = segments[segments.length - 1] || '';
+    if (trackingNumber && trackingNumber !== 'bulk') {
+      await handleAndreaniSingle(req, res, trackingNumber, logFile);
+    } else {
+      sendJson(res, 404, { error: 'Ruta no encontrada' });
+    }
+    return true;
+  }
+
+  // Rutas /api/* desconocidas: responder 404 en vez de colgar la conexión.
+  sendJson(res, 404, { error: 'Ruta no encontrada' });
+  return true;
+}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Download, FileSpreadsheet, CheckCircle2 } from 'lucide-react';
+import { X, Download, FileSpreadsheet } from 'lucide-react';
 import { Sale } from '../types';
 import { exportSalesToCSV, getMonthYearLabel } from '../utils/formatters';
 
@@ -10,8 +10,12 @@ interface ExportModalProps {
   currentMonthIso: string;
 }
 
-export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, sales, currentMonthIso }) => {
-  if (!isOpen) return null;
+export const ExportModal: React.FC<ExportModalProps> = (props) => {
+  if (!props.isOpen) return null;
+  return <ExportModalInner {...props} />;
+};
+
+const ExportModalInner: React.FC<ExportModalProps> = ({ onClose, sales, currentMonthIso }) => {
 
   const [exportRange, setExportRange] = useState<'este_mes' | 'todos'>('este_mes');
   const [exportChannel, setExportChannel] = useState<string>('TODOS');

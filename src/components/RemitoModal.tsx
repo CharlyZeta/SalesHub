@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Printer, Truck, CheckCircle2, Copy, ExternalLink, Package, ShieldCheck, MapPin, User, FileText, FileDown, Loader2 } from 'lucide-react';
+import { X, Printer, Truck, Copy, ExternalLink, Package, ShieldCheck, User, FileDown, Loader2 } from 'lucide-react';
 import { Sale, Customer, AppConfig } from '../types';
 import { formatDate } from '../utils/formatters';
 import { addSystemLog } from '../utils/logger';
@@ -20,22 +20,22 @@ export const RemitoModal: React.FC<RemitoModalProps> = ({
   config
 }) => {
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
-  const [copiedMessage, setCopiedMessage] = useState(false);
+  const [, setCopiedMessage] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   if (!isOpen || !sale) return null;
 
   const empresa = config?.empresa || {
-    nombre: 'DUAL S.R.L.',
-    subtitulo: 'Para Comercio y Hogar',
+    nombre: 'Mi Empresa',
+    subtitulo: '',
     logoUrl: '',
     mostrarLogo: false,
-    domicilio: 'ESTANISLAO ZEBALLOS 3825, SANTA FE.',
-    telefono: '0342-4883135',
-    email: 'dualdesantafe@hotmail.com',
-    cuit: '30710642857',
-    iibb: '0111353853',
-    condicionIva: 'I.V.A. Responsable Inscripto',
+    domicilio: '',
+    telefono: '',
+    email: '',
+    cuit: '',
+    iibb: '',
+    condicionIva: '',
   };
 
   // Find customer in directory to get shipping address if available

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, ShoppingBag, RefreshCw, Key, CheckCircle2, Users, Search, Plus, ExternalLink, ShieldCheck, Download, AlertCircle, Loader2 } from 'lucide-react';
+import { X, ShoppingBag, RefreshCw, Key, CheckCircle2, Users, Search, Plus, AlertCircle, Loader2 } from 'lucide-react';
 import { CatalogProduct, Customer, WooCommerceConfig, UserRole } from '../types';
 import { formatCurrency } from '../utils/formatters';
 import { fetchWooCommerceProducts, fetchWooCommerceCustomers } from '../utils/wooCommerceApi';
@@ -18,8 +18,12 @@ interface WooCommerceModalProps {
   currentRole?: UserRole;
 }
 
-export const WooCommerceModal: React.FC<WooCommerceModalProps> = ({
-  isOpen,
+export const WooCommerceModal: React.FC<WooCommerceModalProps> = (props) => {
+  if (!props.isOpen) return null;
+  return <WooCommerceModalInner {...props} />;
+};
+
+const WooCommerceModalInner: React.FC<WooCommerceModalProps> = ({
   onClose,
   config,
   onUpdateConfig,
@@ -27,10 +31,8 @@ export const WooCommerceModal: React.FC<WooCommerceModalProps> = ({
   onAddCatalogProduct,
   customers = [],
   onSyncCustomers,
-  onSyncCatalog,
-  currentRole = 'OPERADOR'
+  onSyncCatalog
 }) => {
-  if (!isOpen) return null;
 
   const [url, setUrl] = useState(config.url);
   const [consumerKey, setConsumerKey] = useState(config.consumerKey);

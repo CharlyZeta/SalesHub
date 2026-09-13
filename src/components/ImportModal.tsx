@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Papa from 'papaparse';
 import { X, FileSpreadsheet, Upload, Clipboard, CheckCircle2, ArrowRight, AlertTriangle, Sparkles } from 'lucide-react';
-import { Sale, SaleChannel, PaymentMethod, ShippingMethod, ShippingStatus } from '../types';
+import { Sale, SaleChannel, PaymentMethod, ShippingMethod } from '../types';
 import { parseDateToISO, parseAmountString } from '../utils/formatters';
 
 interface ImportModalProps {
@@ -10,8 +10,12 @@ interface ImportModalProps {
   onImportSales: (importedSales: Sale[]) => void;
 }
 
-export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImportSales }) => {
-  if (!isOpen) return null;
+export const ImportModal: React.FC<ImportModalProps> = (props) => {
+  if (!props.isOpen) return null;
+  return <ImportModalInner {...props} />;
+};
+
+const ImportModalInner: React.FC<ImportModalProps> = ({ onClose, onImportSales }) => {
 
   const [activeTab, setActiveTab] = useState<'paste' | 'file'>('paste');
   const [pastedText, setPastedText] = useState('');

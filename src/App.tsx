@@ -14,14 +14,13 @@ import { RemitoModal } from './components/RemitoModal';
 import { SystemLogsModal } from './components/SystemLogsModal';
 import { AuthModal } from './components/AuthModal';
 
-import { Sale, Customer, CatalogProduct, WooCommerceConfig, AppConfig, Budget, UserRole, SecurityConfig } from './types';
+import { Sale, Customer, CatalogProduct, WooCommerceConfig, AppConfig, Budget, UserRole } from './types';
 import { INITIAL_SALES, INITIAL_CATALOG, INITIAL_WOO_CONFIG, INITIAL_CONFIG, INITIAL_BUDGETS } from './data/initialData';
 import { getCurrentMonthISO, generateSaleId } from './utils/formatters';
 import { addSystemLog } from './utils/logger';
 import { fetchWooCommerceProducts, fetchWooCommerceCustomers } from './utils/wooCommerceApi';
 import { BackupItem, listAllBackups, restoreBackup, runBackup, checkAndTriggerAutoBackup } from './utils/backupService';
 import { fetchAndreaniTrackingsBulk } from './utils/andreaniSyncService';
-import { mapAndreaniTrackingStatus, isTerminalStatus } from './utils/andreaniStatusMapper';
 
 export default function App() {
   // Load initial data from localStorage or default
@@ -118,6 +117,18 @@ export default function App() {
   const [currentRole, setCurrentRole] = useState<UserRole>('OPERADOR');
   const [isAuthLocked, setIsAuthLocked] = useState<boolean>(false);
 
+  // H1: si la seguridad está habilitada, la aplicación arranca BLOQUEADA
+  // (Auth Gate real en el inicio). Sin esto, el PIN solo se pedía al bloquear
+  // manualmente o por inactividad.
+  useEffect(() => {
+    if (config.seguridad?.seguridadHabilitada) {
+      setIsAuthLocked(true);
+      addSystemLog('INFO', 'Seguridad', 'Sesión iniciada bloqueada: se requiere PIN de acceso');
+    }
+    // Se evalúa una sola vez al montar, con la config ya cargada de localStorage.
+     
+  }, [config.seguridad?.seguridadHabilitada]);
+
   // Backup & Recovery States
   const [operationsCount, setOperationsCount] = useState(0);
   const [availableBackup, setAvailableBackup] = useState<BackupItem | null>(null);
@@ -138,8 +149,6 @@ export default function App() {
       document.documentElement.classList.remove('dark');
     }
   }, [theme]);
-
-
 
   const toggleTheme = () => {
     setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
@@ -277,29 +286,43 @@ export default function App() {
     }
 
     const timeoutMs = sec.tiempoInactividadMinutos * 60 * 1000;
-    let timer: NodeJS.Timeout;
+    let timer: NodeJS.Timeout | undefined;
 
-    const resetTimer = () => {
+    const scheduleLock = () => {
       clearTimeout(timer);
-      if (!isAuthLocked) {
-        timer = setTimeout(() => {
-          setIsAuthLocked(true);
-          addSystemLog('WARN', 'Seguridad', `Bloqueo automático activado por inactividad (${sec.tiempoInactividadMinutos} min)`);
-        }, timeoutMs);
+      // No bloquear si la app está en segundo plano: con la pestaña oculta el
+      // usuario no puede ver el aviso y al volver se encontraría la pantalla de PIN.
+      if (isAuthLocked || document.hidden) return;
+      timer = setTimeout(() => {
+        setIsAuthLocked(true);
+        addSystemLog('WARN', 'Seguridad', `Bloqueo automático activado por inactividad (${sec.tiempoInactividadMinutos} min)`);
+      }, timeoutMs);
+    };
+
+    // Volver de otra ventana/pestaña cuenta como actividad: se reinicia el conteo.
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        clearTimeout(timer);
+      } else {
+        scheduleLock();
       }
     };
 
-    window.addEventListener('mousemove', resetTimer);
-    window.addEventListener('keydown', resetTimer);
-    window.addEventListener('click', resetTimer);
+    window.addEventListener('mousemove', scheduleLock);
+    window.addEventListener('keydown', scheduleLock);
+    window.addEventListener('click', scheduleLock);
+    window.addEventListener('focus', scheduleLock);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
-    resetTimer();
+    scheduleLock();
 
     return () => {
       clearTimeout(timer);
-      window.removeEventListener('mousemove', resetTimer);
-      window.removeEventListener('keydown', resetTimer);
-      window.removeEventListener('click', resetTimer);
+      window.removeEventListener('mousemove', scheduleLock);
+      window.removeEventListener('keydown', scheduleLock);
+      window.removeEventListener('click', scheduleLock);
+      window.removeEventListener('focus', scheduleLock);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [config?.seguridad, isAuthLocked]);
 

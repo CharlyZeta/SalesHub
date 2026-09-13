@@ -1,0 +1,11 @@
+dist/
+node_modules/
+coverage/
+backups/
+andreini-shipping/
+graphify-out/
+.agents/
+.superpowers/
+*.log
+package-lock.json
+bun.lock

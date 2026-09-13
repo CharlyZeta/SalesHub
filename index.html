@@ -3,7 +3,23 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SalesHub Dual</title>
+    <title>SalesHub</title>
+    <script>
+      // Anti-FOUC: aplica el tema guardado ANTES del primer pintado para evitar
+      // el parpadeo claro -> oscuro (el efecto de React llega demasiado tarde).
+      (function () {
+        try {
+          var dark = localStorage.getItem('app_theme') === 'dark';
+          var root = document.documentElement;
+          if (dark) root.classList.add('dark');
+          root.style.colorScheme = dark ? 'dark' : 'light';
+          // Fondo base mientras React monta (slate-950 / slate-100)
+          root.style.backgroundColor = dark ? '#020617' : '#f1f5f9';
+        } catch (e) {
+          /* sin acceso a localStorage: se usa el tema por defecto */
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

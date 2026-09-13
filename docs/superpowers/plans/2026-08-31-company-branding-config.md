@@ -42,7 +42,7 @@
   In `AppConfig`, add `empresa?: CompanyConfig;`.
 
 - [ ] **Step 2: Definir INITIAL_COMPANY_CONFIG en initialData.ts**
-  Set default values matching DUAL S.R.L. and attach it to `INITIAL_CONFIG`.
+  Set default values matching the current company and attach it to `INITIAL_CONFIG`.
 
 - [ ] **Step 3: Verificar y commit**
   Run: `npx tsc --noEmit`

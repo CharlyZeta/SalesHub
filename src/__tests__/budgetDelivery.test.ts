@@ -60,11 +60,12 @@ describe('Budget Delivery Utility (WhatsApp & Email)', () => {
     const subject = generateBudgetEmailSubject(sampleBudget);
     const body = generateBudgetEmailBody(sampleBudget);
 
-    expect(subject).toBe('Presupuesto N° P0001-00000312 - DUAL S.R.L.');
+    expect(subject).toBe('Presupuesto N° P0001-00000312');
     expect(body).toContain('Estimado/a Pizzería Don Juan');
     expect(body).toContain('Horno Pizzero 12 Moldes');
     expect(body).toContain('30-71122334-9');
-    expect(body).toContain('dualdesantafe@hotmail.com');
+    expect(body).toContain('RESUMEN DEL PRESUPUESTO N° P0001-00000312');
+    expect(body).toContain('Atentamente,');
   });
 
   it('opens WhatsApp URL via window.open', () => {

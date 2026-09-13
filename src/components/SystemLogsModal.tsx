@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { X, Terminal, Trash2, Download, Filter, Search, RefreshCw, AlertCircle, Info, AlertTriangle, ShieldCheck, Database, ShoppingBag, FileText, CheckCircle2 } from 'lucide-react';
+import { X, Terminal, Trash2, Download, Filter, Search, RefreshCw, AlertCircle, Info, AlertTriangle, Database, ShoppingBag } from 'lucide-react';
 import { LogEntry, LogLevel, getSystemLogs, clearSystemLogs, filterSystemLogs, exportLogsJSON, exportLogsCSV } from '../utils/logger';
-import { formatDate } from '../utils/formatters';
 
 import { UserRole } from '../types';
 
@@ -14,7 +13,7 @@ interface SystemLogsModalProps {
 export const SystemLogsModal: React.FC<SystemLogsModalProps> = ({ isOpen, onClose, currentRole = 'OPERADOR' }) => {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [levelFilter, setLevelFilter] = useState<string>('ALL');
-  const [categoryFilter, setCategoryFilter] = useState<string>('ALL');
+  const [categoryFilter] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedLog, setSelectedLog] = useState<LogEntry | null>(null);
   const [clearConfirmOpen, setClearConfirmOpen] = useState<boolean>(false);
@@ -228,7 +227,7 @@ export const SystemLogsModal: React.FC<SystemLogsModalProps> = ({ isOpen, onClos
           </div>
         )}
 
-        {/* Body Content - Dual Pane */}
+        {/* Body Content - Split Pane */}
         <div className="grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-slate-200 dark:divide-slate-800 overflow-hidden flex-1">
           
           {/* Left: Log Entries Table */}

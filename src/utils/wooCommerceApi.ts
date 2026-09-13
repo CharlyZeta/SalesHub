@@ -125,7 +125,7 @@ export const fetchWithCorsProxy = async (targetUrl: string): Promise<Response> =
     if (response.ok) return response;
     // If response was received but not OK (e.g., 401, 403, 404), return it so caller can read status
     if (response.status >= 400 && response.status < 500) return response;
-  } catch (err) {
+  } catch (_err) {
     addSystemLog('WARN', 'WooCommerce', 'Bloqueo de red/CORS en fetch directo. Configura un proxy reverso same-origin (Nginx) para sincronizar desde el navegador.');
   }
 
