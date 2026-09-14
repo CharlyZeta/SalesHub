@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Search, MapPin, MessageSquare, Loader2 } from 'lucide-react';
@@ -46,8 +46,16 @@ export const SaleLocationMap: React.FC<SaleLocationMapProps> = ({
   const currentLat = coordinates?.lat ?? defaultLat;
   const currentLng = coordinates?.lng ?? defaultLng;
 
+  // El mapa se instancia UNA sola vez: se guardan el callback y las coordenadas
+  // iniciales en refs para no depender de props cambiantes ni recrear el mapa.
+  const onChangeCoordinatesRef = useRef(onChangeCoordinates);
+  useEffect(() => {
+    onChangeCoordinatesRef.current = onChangeCoordinates;
+  }, [onChangeCoordinates]);
+  const initialCoordsRef = useRef({ lat: currentLat, lng: currentLng });
+
   // Geolocate address using Nominatim OSM geocoding API
-  const geocodeAddress = async (addrStr: string) => {
+  const geocodeAddress = useCallback(async (addrStr: string) => {
     if (!addrStr.trim()) return;
     setIsSearching(true);
     setStatusText('Buscando dirección...');
@@ -62,7 +70,7 @@ export const SaleLocationMap: React.FC<SaleLocationMapProps> = ({
       if (data && data.length > 0) {
         const lat = parseFloat(data[0].lat);
         const lng = parseFloat(data[0].lon);
-        onChangeCoordinates({ lat, lng });
+        onChangeCoordinatesRef.current({ lat, lng });
         setStatusText('¡Dirección localizada!');
         addSystemLog('INFO', 'Maps', `Geolocalización exitosa para "${addrStr}"`, { lat, lng });
         if (mapRef.current) {
@@ -79,24 +87,25 @@ export const SaleLocationMap: React.FC<SaleLocationMapProps> = ({
     } finally {
       setIsSearching(false);
     }
-  };
+  }, []);
 
   // Instantiate map once
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
     try {
-      const map = L.map(mapContainerRef.current).setView([currentLat, currentLng], 15);
+      const { lat: startLat, lng: startLng } = initialCoordsRef.current;
+      const map = L.map(mapContainerRef.current).setView([startLat, startLng], 15);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors',
       }).addTo(map);
 
-      const marker = L.marker([currentLat, currentLng], { draggable: true }).addTo(map);
+      const marker = L.marker([startLat, startLng], { draggable: true }).addTo(map);
 
       marker.on('dragend', () => {
         try {
           const pos = marker.getLatLng();
-          onChangeCoordinates({ lat: pos.lat, lng: pos.lng });
+          onChangeCoordinatesRef.current({ lat: pos.lat, lng: pos.lng });
           addSystemLog('INFO', 'Maps', `Marcador de ubicación ajustado manualmente`, { lat: pos.lat, lng: pos.lng });
         } catch (err: any) {
           console.error('Error al arrastrar marcador:', err);
@@ -143,7 +152,7 @@ export const SaleLocationMap: React.FC<SaleLocationMapProps> = ({
       geocodeAddress(fullAddress);
     }, 1500);
     return () => clearTimeout(timer);
-  }, [address, city, province]);
+  }, [address, city, province, coordinates, geocodeAddress]);
 
   const handleManualSearch = () => {
     geocodeAddress(searchQuery);

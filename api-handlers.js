@@ -27,6 +27,13 @@ export const API_DEFAULTS = {
   backupsDir: 'backups',
   /** Archivo donde se registran los errores de Andreani. */
   logFile: 'andreani_error.log',
+  /** Política de retención de backups en disco. */
+  retention: {
+    /** Máximo de copias a conservar (0 = retención desactivada). */
+    maxFiles: Number(process.env.BACKUP_MAX_FILES ?? 30),
+    /** Nunca borrar copias más nuevas que esta cantidad de días. */
+    minAgeDays: Number(process.env.BACKUP_MIN_AGE_DAYS ?? 7),
+  },
 };
 
 // ---------------------------------------------------------------------------
@@ -176,6 +183,48 @@ async function fetchWithAuth(urlStr, hash) {
 // Handlers de backups en disco
 // ---------------------------------------------------------------------------
 
+/**
+ * Rotación de backups: conserva las `maxFiles` copias más recientes y elimina las
+ * más antiguas, respetando un piso de antigüedad (`minAgeDays`) para no borrar
+ * nunca respaldos recientes. `maxFiles <= 0` desactiva la rotación.
+ *
+ * @returns {string[]} nombres de archivo eliminados
+ */
+function pruneBackups(backupsDir, retention) {
+  const { maxFiles, minAgeDays } = retention || API_DEFAULTS.retention;
+  const removed = [];
+  if (!maxFiles || maxFiles <= 0 || !fs.existsSync(backupsDir)) {
+    return removed;
+  }
+
+  try {
+    const files = fs
+      .readdirSync(backupsDir)
+      .filter((f) => f.startsWith('backup-') && f.endsWith('.json'))
+      .map((filename) => {
+        const filePath = path.join(backupsDir, filename);
+        return { filename, filePath, mtime: fs.statSync(filePath).mtimeMs };
+      })
+      .sort((a, b) => b.mtime - a.mtime); // más recientes primero
+
+    const minAgeMs = Math.max(0, minAgeDays) * 24 * 60 * 60 * 1000;
+    const now = Date.now();
+
+    for (const file of files.slice(maxFiles)) {
+      if (now - file.mtime < minAgeMs) continue; // piso de antigüedad
+      fs.unlinkSync(file.filePath);
+      removed.push(file.filename);
+    }
+  } catch (err) {
+    // La rotación nunca debe romper el guardado de la copia.
+    console.warn('[backups] No se pudo aplicar la retención:', err.message);
+  }
+
+  return removed;
+}
+
+export { pruneBackups };
+
 async function handleBackupList(req, res, backupsDir) {
   try {
     if (!fs.existsSync(backupsDir)) {
@@ -202,7 +251,7 @@ async function handleBackupList(req, res, backupsDir) {
   }
 }
 
-async function handleBackupSave(req, res, backupsDir) {
+async function handleBackupSave(req, res, backupsDir, retention) {
   try {
     const data = await readJsonBody(req);
     if (!data) {
@@ -219,7 +268,10 @@ async function handleBackupSave(req, res, backupsDir) {
     const filename = `backup-${dateStr}-${timeStr}.json`;
     fs.writeFileSync(path.join(backupsDir, filename), JSON.stringify(data, null, 2), 'utf-8');
 
-    sendJson(res, 200, { success: true, filename, timestamp: new Date().toISOString() });
+    // Rotación: conserva las N copias más recientes y nunca borra las recientes.
+    const pruned = pruneBackups(backupsDir, retention);
+
+    sendJson(res, 200, { success: true, filename, timestamp: new Date().toISOString(), pruned });
   } catch (err) {
     sendJson(res, err && err.isBadJson ? 400 : 500, { error: err.message });
   }
@@ -335,11 +387,11 @@ async function handleAndreaniSingle(req, res, trackingNumber, logFile) {
  *
  * @param {import('node:http').IncomingMessage} req
  * @param {import('node:http').ServerResponse} res
- * @param {{ backupsDir?: string, logFile?: string }} [options]
+ * @param {{ backupsDir?: string, logFile?: string, retention?: { maxFiles?: number, minAgeDays?: number } }} [options]
  * @returns {Promise<boolean>}
  */
 export async function handleApiRequest(req, res, options = {}) {
-  const { backupsDir, logFile } = { ...API_DEFAULTS, ...options };
+  const { backupsDir, logFile, retention } = { ...API_DEFAULTS, ...options };
   const pathname = (req.url || '').split('?')[0];
 
   // Solo se responsabiliza por el espacio /api/*
@@ -357,7 +409,7 @@ export async function handleApiRequest(req, res, options = {}) {
     if (pathname === '/api/backup/restore') {
       await handleBackupRestore(req, res, backupsDir);
     } else {
-      await handleBackupSave(req, res, backupsDir);
+      await handleBackupSave(req, res, backupsDir, retention);
     }
     return true;
   }

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Printer, Truck, Copy, ExternalLink, Package, ShieldCheck, User, FileDown, Loader2 } from 'lucide-react';
+import { X, Printer, Truck, Copy, ExternalLink, Package, ShieldCheck, User, FileDown, Loader2, CheckCircle2 } from 'lucide-react';
 import { Sale, Customer, AppConfig } from '../types';
 import { formatDate } from '../utils/formatters';
 import { addSystemLog } from '../utils/logger';
@@ -20,7 +20,7 @@ export const RemitoModal: React.FC<RemitoModalProps> = ({
   config
 }) => {
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
-  const [, setCopiedMessage] = useState(false);
+  const [copiedMessage, setCopiedMessage] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   if (!isOpen || !sale) return null;
@@ -164,11 +164,19 @@ export const RemitoModal: React.FC<RemitoModalProps> = ({
     }
   };
 
-  const handleCopyTracking = () => {
-    if (sale.numeroSeguimiento) {
-      navigator.clipboard.writeText(sale.numeroSeguimiento);
+  const handleCopyTracking = async () => {
+    if (!sale.numeroSeguimiento) return;
+    try {
+      if (!navigator.clipboard?.writeText) {
+        throw new Error('API de portapapeles no disponible (requiere HTTPS o localhost)');
+      }
+      await navigator.clipboard.writeText(sale.numeroSeguimiento);
       setCopiedMessage(true);
       setTimeout(() => setCopiedMessage(false), 3000);
+      addSystemLog('INFO', 'Remitos', `Número de seguimiento copiado al portapapeles (Venta #${sale.id})`);
+    } catch (err: any) {
+      setErrorMsg('No se pudo copiar automáticamente. Seleccioná el número y copialo manualmente.');
+      addSystemLog('WARN', 'Remitos', `Fallo al copiar el número de seguimiento: ${err?.message || err}`);
     }
   };
 
@@ -276,6 +284,12 @@ export const RemitoModal: React.FC<RemitoModalProps> = ({
                     <Copy className="w-3.5 h-3.5 text-red-600" />
                     <span>Copiar Tracking</span>
                   </button>
+                  {copiedMessage && (
+                    <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 px-2 py-1 rounded flex items-center gap-1">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>¡Copiado!</span>
+                    </span>
+                  )}
                   <a
                     href={`https://www.andreani.com/envio/${encodeURIComponent(sale.numeroSeguimiento!.trim())}`}
                     target="_blank"

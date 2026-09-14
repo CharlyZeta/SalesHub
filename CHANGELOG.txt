@@ -4,6 +4,48 @@ Todas las mejoras y fixes notables del proyecto.
 
 El formato se basa en Keep a Changelog, y el proyecto respeta Versionado Semántico.
 
+## [0.0.18] - 2026-09-13
+
+### Fixes pendientes reparados (A1–A5, B3 parcial, B5, B6) + registro en docs/FIXES.md
+
+#### Corregido
+- **A1 - ESLint en CI**: el pipeline validaba tipos, tests y build pero no ejecutaba
+  ESLint. El paso ahora es `npm run lint` (tsc + eslint) en `.github/workflows/ci.yml`.
+- **A2 - Dependencias de hooks en `SaleLocationMap`**: los efectos usaban
+  `currentLat`/`currentLng`/`onChangeCoordinates`/`coordinates`/`geocodeAddress` sin
+  declararlas. Se estabilizaron con refs (`onChangeCoordinatesRef`, `initialCoordsRef`)
+  y `useCallback`, sin recrear el mapa en cada cambio. **0 warnings de lint en el archivo.**
+- **A3 - Feedback de "Copiar Tracking"** (`RemitoModal`): el estado `copiedMessage` no se
+  leía, así que nunca se veía confirmación. Ahora muestra "¡Copiado!" 3 s, el copiado es
+  `async` con control de errores (portapapeles no disponible) y queda registrado en el log.
+- **A4 - Retención de backups**: nuevo `pruneBackups()` en `api-handlers.js` (conserva las
+  30 copias más recientes y nunca borra las de menos de 7 días; `BACKUP_MAX_FILES=0`
+  desactiva; la respuesta incluye `pruned`) y `pruneIndexedDbBackups()` en
+  `src/utils/backupService.ts` con las mismas reglas para el navegador.
+- **A5 - Instalación nueva sin datos demo**: nuevo flag `VITE_SEED_DEMO` (por defecto
+  apagado) y tipado en `src/vite-env.d.ts`; los clientes de ejemplo se movieron a
+  `src/data/initialData.ts` (`INITIAL_DEMO_CUSTOMERS` + `DEMO_SEED_ENABLED`).
+
+#### Eliminado
+- **B5**: `bun.lock` (obsoleto/desincronizado; el proyecto usa `package-lock.json`).
+- **B6**: `.env.example` declaraba `GEMINI_API_KEY` y `APP_URL` sin uso real en el código.
+  Reescrito documentando `VITE_SEED_DEMO`, `PORT`, `HOST`, `DIST_DIR`, `BACKUP_MAX_FILES`
+  y `BACKUP_MIN_AGE_DAYS`, con nota de que las credenciales de WooCommerce/Andreani se
+  cargan dentro de la app (no por entorno).
+
+#### Añadido
+- **B3 (parcial) - Tests de la capa de API** (`src/__tests__/apiHandlers.test.ts`, 16
+  tests): enrutado, alta/listado/restauración de backups, JSON inválido y cuerpo vacío,
+  path traversal bloqueado, rotación (5 casos) y validaciones de Andreani.
+- **`docs/FIXES.md`**: registro profesional de correcciones con síntoma, causa, solución,
+  verificación y pendientes planificados (B1, B2, B4, B7, B8, B9).
+
+#### Calidad
+- `npm run lint`: **0 errores / 0 warnings** (antes 2 warnings).
+- Tests: **9 archivos / 90 tests** (antes 8/74). Cobertura: utils 81.6%, global 76.0%
+  (`security.ts` pasó de 55% a 95.5%).
+- Build de producción OK.
+
 ## [0.0.17] - 2026-09-09
 
 ### Fix: recargas del dev server, parpadeo de tema y pérdida de la venta en curso

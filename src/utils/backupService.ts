@@ -20,6 +20,13 @@ export interface BackupItem {
 const DB_NAME = 'SalesHubBackups';
 const STORE_NAME = 'backups';
 
+/**
+ * Retención de copias en el navegador (IndexedDB): se conservan las
+ * `maxFiles` más recientes, nunca se borran copias más nuevas que `minAgeDays`.
+ * Mismas reglas que la rotación de disco del servidor (`api-handlers.js`).
+ */
+export const IDB_RETENTION = { maxFiles: 30, minAgeDays: 7 };
+
 // Open IndexedDB connection
 const openDb = (): Promise<IDBDatabase> => {
   return new Promise((resolve, reject) => {
@@ -52,7 +59,11 @@ export const saveToIndexedDb = async (filename: string, data: FullAppState): Pro
     };
     
     const request = store.put(item);
-    request.onsuccess = () => resolve();
+    request.onsuccess = () => {
+      // Rotación best-effort: nunca bloquea ni invalida el guardado de la copia.
+      pruneIndexedDbBackups().catch(() => undefined);
+      resolve();
+    };
     request.onerror = () => reject(request.error);
   });
 };
@@ -109,6 +120,39 @@ export const deleteFromIndexedDb = async (filename: string): Promise<void> => {
     request.onsuccess = () => resolve();
     request.onerror = () => reject(request.error);
   });
+};
+
+/**
+ * Aplica la retención de copias en IndexedDB (rotación). Devuelve los nombres
+ * eliminados. `maxFiles <= 0` desactiva la rotación.
+ */
+export const pruneIndexedDbBackups = async (
+  maxFiles: number = IDB_RETENTION.maxFiles,
+  minAgeDays: number = IDB_RETENTION.minAgeDays
+): Promise<string[]> => {
+  if (!maxFiles || maxFiles <= 0) return [];
+
+  const removed: string[] = [];
+  try {
+    const items = await listFromIndexedDb(); // ordenados por fecha descendente
+    const minAgeMs = Math.max(0, minAgeDays) * 24 * 60 * 60 * 1000;
+    const now = Date.now();
+
+    for (const item of items.slice(maxFiles)) {
+      const age = now - new Date(item.date).getTime();
+      if (Number.isFinite(age) && age < minAgeMs) continue; // piso de antigüedad
+      try {
+        await deleteFromIndexedDb(item.filename);
+        removed.push(item.filename);
+      } catch (_e) {
+        // si una copia no se puede borrar, se continúa con las siguientes
+      }
+    }
+  } catch (_e) {
+    // la rotación nunca debe romper el flujo de backup
+  }
+
+  return removed;
 };
 
 // --- Backend API Integration ---

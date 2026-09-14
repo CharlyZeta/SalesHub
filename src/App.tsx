@@ -15,7 +15,7 @@ import { SystemLogsModal } from './components/SystemLogsModal';
 import { AuthModal } from './components/AuthModal';
 
 import { Sale, Customer, CatalogProduct, WooCommerceConfig, AppConfig, Budget, UserRole } from './types';
-import { INITIAL_SALES, INITIAL_CATALOG, INITIAL_WOO_CONFIG, INITIAL_CONFIG, INITIAL_BUDGETS } from './data/initialData';
+import { INITIAL_SALES, INITIAL_CATALOG, INITIAL_WOO_CONFIG, INITIAL_CONFIG, INITIAL_BUDGETS, DEMO_SEED_ENABLED, INITIAL_DEMO_CUSTOMERS } from './data/initialData';
 import { getCurrentMonthISO, generateSaleId } from './utils/formatters';
 import { addSystemLog } from './utils/logger';
 import { fetchWooCommerceProducts, fetchWooCommerceCustomers } from './utils/wooCommerceApi';
@@ -23,13 +23,14 @@ import { BackupItem, listAllBackups, restoreBackup, runBackup, checkAndTriggerAu
 import { fetchAndreaniTrackingsBulk } from './utils/andreaniSyncService';
 
 export default function App() {
-  // Load initial data from localStorage or default
+  // Los datos semilla son OPCIONALES (`VITE_SEED_DEMO=true`): por defecto la app
+  // arranca vacía para no mezclar registros de ejemplo con datos reales.
   const [sales, setSales] = useState<Sale[]>(() => {
     const saved = localStorage.getItem('app_sales_v1');
     if (saved) {
       try { return JSON.parse(saved); } catch (e) { console.error(e); }
     }
-    return INITIAL_SALES;
+    return DEMO_SEED_ENABLED ? INITIAL_SALES : [];
   });
 
   const [catalog, setCatalog] = useState<CatalogProduct[]>(() => {
@@ -37,7 +38,7 @@ export default function App() {
     if (saved) {
       try { return JSON.parse(saved); } catch (e) { console.error(e); }
     }
-    return INITIAL_CATALOG;
+    return DEMO_SEED_ENABLED ? INITIAL_CATALOG : [];
   });
 
   const [wooConfig, setWooConfig] = useState<WooCommerceConfig>(() => {
@@ -74,7 +75,7 @@ export default function App() {
     if (saved) {
       try { return JSON.parse(saved); } catch (e) { console.error(e); }
     }
-    return INITIAL_BUDGETS;
+    return DEMO_SEED_ENABLED ? INITIAL_BUDGETS : [];
   });
 
   const [customers, setCustomers] = useState<Customer[]>(() => {
@@ -82,14 +83,7 @@ export default function App() {
     if (saved) {
       try { return JSON.parse(saved); } catch (e) { console.error(e); }
     }
-    // Generate customer directory from initial sales
-    const initialCusts: Customer[] = [
-      { clienteId: 'CLI-1001', nombre: 'Gonzalo', apellido: 'Fernández', email: 'gonzalo.f@gmail.com', telefono: '11-5491-8821', dniCuit: '20-38491029-4', direccion: 'Av. Corrientes 1234', localidad: 'CABA', provincia: 'Buenos Aires', totalCompras: 243500, cantidadPedidos: 2, ultimaCompra: new Date().toISOString().split('T')[0] },
-      { clienteId: 'CLI-1008', nombre: 'Mariana', apellido: 'Rossi', email: 'marianarossi@hotmail.com', telefono: '342-4591029', dniCuit: '27-33104928-1', direccion: 'San Martín 450', localidad: 'Santa Fe', provincia: 'Santa Fe', totalCompras: 274500, cantidadPedidos: 2, ultimaCompra: new Date().toISOString().split('T')[0] },
-      { clienteId: 'CLI-1003', nombre: 'Esteban', apellido: 'Gómez', email: 'esteban_g@yahoo.com.ar', telefono: '341-8849102', dniCuit: '20-29184019-3', direccion: 'Pellegrini 2200', localidad: 'Rosario', provincia: 'Santa Fe', totalCompras: 164000, cantidadPedidos: 1, ultimaCompra: new Date().toISOString().split('T')[0] },
-      { clienteId: 'CLI-1012', nombre: 'Roberto', apellido: 'Martínez', email: 'martinez_construcciones@gmail.com', telefono: '11-3920-1928', dniCuit: '30-71940192-8', direccion: 'Belgrano 880', localidad: 'San Isidro', provincia: 'Buenos Aires', totalCompras: 349000, cantidadPedidos: 1, ultimaCompra: new Date().toISOString().split('T')[0] }
-    ];
-    return initialCusts;
+    return DEMO_SEED_ENABLED ? INITIAL_DEMO_CUSTOMERS : [];
   });
 
   // Current Month ISO

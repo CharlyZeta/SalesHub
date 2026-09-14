@@ -5,7 +5,7 @@
 [![Vite](https://img.shields.io/badge/Vite-6-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.1-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 [![Vitest](https://img.shields.io/badge/Vitest-4.1-6E9F18?style=for-the-badge&logo=vitest&logoColor=white)](https://vitest.dev/)
-[![Code Coverage](https://img.shields.io/badge/Coverage-78.6%25-yellowgreen?style=for-the-badge&logo=vitest)](./src/__tests__)
+[![Code Coverage](https://img.shields.io/badge/Coverage-76%25-yellowgreen?style=for-the-badge&logo=vitest)](./src/__tests__)
 [![CI](https://img.shields.io/github/actions/workflow/status/CharlyZeta/SalesHub/ci.yml?style=for-the-badge&logo=githubactions&logoColor=white&label=CI)](https://github.com/CharlyZeta/SalesHub/actions)
 [![Node](https://img.shields.io/badge/Node-20-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 [![Leaflet](https://img.shields.io/badge/Leaflet-1.9-199900?style=for-the-badge&logo=leaflet&logoColor=white)](https://leafletjs.com/)
@@ -69,7 +69,7 @@ Entidades tipadas en `src/types.ts` (Strict Typing Layer) que modelan el dominio
 | `ShippingStatus` | Estado de envío (Pendiente/En tránsito/Entregado) | 1 `Sale` |
 | `UserRole` | Perfil RBAC (OPERADOR / ADMINISTRADOR) | control de acceso |
 
-**Persistencia:** `localStorage` (claves `app_sales_v1`, `app_catalog_v1`, `app_budgets_v1`, `app_customers_v1`, `app_config_v1`, `app_woo_config_v1`, `app_theme`) con caché en el navegador — cero dependencia de servidor en operación.
+**Persistencia:** `localStorage` (claves `app_sales_v1`, `app_catalog_v1`, `app_budgets_v1`, `app_customers_v1`, `app_config_v1`, `app_woo_config_v1`, `app_theme`) con caché en el navegador — cero dependencia de servidor en operación. Las copias de seguridad se guardan en **IndexedDB** y en disco (`./backups` vía `server.js`), con **retención automática**: se conservan las 30 copias más recientes y nunca se eliminan las de menos de 7 días (`BACKUP_MAX_FILES` / `BACKUP_MIN_AGE_DAYS`, ver `.env.example`).
 
 ### Principales Problemas Resueltos:
 1. **Desfragmentación de Canales**: Agrupa en una sola planilla interactiva las operaciones del local físico, transferencias bancarias, pedidos e-commerce de WooCommerce y ventas de MercadoLibre con badges visuales de color e íconos dinámicos.
@@ -174,17 +174,19 @@ El proyecto cuenta con una suite completa de pruebas unitarias implementada con 
 | :--- | :---: | :---: | :---: |
 | `src/utils/numberToWords.ts` | **100%** | **100%** | PASSED |
 | `src/utils/budgetDelivery.ts` | **97.2%** | **97.1%** | PASSED |
+| `src/utils/security.ts` | **95.5%** | **94.6%** | PASSED |
 | `src/utils/andreaniStatusMapper.ts` | **89.3%** | **88.9%** | PASSED |
 | `src/utils/formatters.ts` | **88.5%** | **88.4%** | PASSED |
 | `src/utils/logger.ts` | **88.5%** | **90.9%** | PASSED |
+| `api-handlers.js` (capa de API) | **61.1%** | **61.2%** | PASSED |
 | `src/utils/wooCommerceApi.ts` | **60.4%** | **60.5%** | PASSED |
-| `src/utils/security.ts` | **55.2%** | **52.0%** | PASSED |
-| **TOTAL (módulos utils)** | **78.6%** | **78.2%** | **8/8 TEST SUITES PASSED (71/71 TESTS)** |
+| **TOTAL (módulos utils)** | **81.6%** | **81.1%** | **9/9 TEST SUITES PASSED (90/90 TESTS)** |
+| **TOTAL global (incluye API)** | **76.0%** | **75.4%** | — |
 
-> Nota: la cobertura mide los módulos de lógica pura (`src/utils`) ejercitados por los
-> tests; los componentes de UI (`src/components`) aún no tienen tests unitarios.
-> `wooCommerceApi.ts` y `security.ts` tienen rutas de fallback/simulación y hashing que
-> concentran la mayoría de las líneas no cubiertas.
+> Nota: la cobertura mide la lógica pura (`src/utils`) y la capa de API
+> (`api-handlers.js`) ejercitadas por los tests; los componentes de UI
+> (`src/components`) aún no tienen tests unitarios. `wooCommerceApi.ts` concentra las
+> líneas no cubiertas (rutas de fallback/simulación ante fallos de red).
 
 ### Ejecución de Pruebas:
 ```bash
@@ -229,6 +231,10 @@ npm run test:coverage
    >
    > Además, el formulario de venta autoguarda un borrador: si la página se recarga igual,
    > al reabrir el modal se recupera la venta a medio cargar (con aviso y opción de descartar).
+   >
+   > **Datos de demostración:** por defecto una instalación nueva arranca **vacía** (sin
+   > ventas/clientes de ejemplo). Para cargar los datos de ejemplo: `VITE_SEED_DEMO=true`
+   > (ver `.env.example`).
 
 3. **Verificar Calidad de Código (TypeScript Linter)**:
    ```bash
@@ -258,8 +264,9 @@ npm run test:coverage
 SalesHub/
 ├── .github/workflows/ci.yml  # Pipeline CI: typecheck + tests + build (GitHub Actions)
 ├── src/
-│   ├── __tests__/            # Tests unitarios con Vitest (8 suites / 71 tests)
+│   ├── __tests__/            # Tests unitarios con Vitest (9 suites / 90 tests)
 │   │   ├── andreaniStatusMapper.test.ts
+│   │   ├── apiHandlers.test.ts         # API de backups/tracking y rotación
 │   │   ├── budgetDelivery.test.ts
 │   │   ├── budgetSaleLogic.test.ts
 │   │   ├── formatters.test.ts
@@ -307,6 +314,7 @@ SalesHub/
 │   ├── types.ts              # Contratos e interfaces de TypeScript
 │   └── index.css             # Estilos globales con Tailwind CSS v4
 ├── api-handlers.js           # Handlers de API compartidos (dev server + server.js)
+├── docs/FIXES.md             # Registro de correcciones aplicadas y deuda pendiente
 ├── metadata.json             # Metadatos del applet en AI Studio
 ├── package.json              # Dependencias y scripts de compilación
 ├── server.js                 # Servidor de producción Node.js (dist/ + APIs /api/*)
