@@ -4,6 +4,18 @@ Todas las mejoras y fixes notables del proyecto.
 
 El formato se basa en Keep a Changelog, y el proyecto respeta Versionado Semántico.
 
+## [0.0.20] - 2026-09-13
+
+### Documentación: estado del proyecto y de la sesión (handoff)
+
+#### Añadido
+- **`docs/ESTADO-DEL-PROYECTO.md`**: documento de handoff con resumen ejecutivo, todo lo
+  entregado en la sesión (infraestructura, seguridad, UX, WooCommerce, marca y autoría),
+  el estado técnico actual (stack, calidad, persistencia), **pendientes priorizados**
+  (W2, W5, W3, B8, B3, B1, B2, B4, B7, B9 y el Carril 1 de UI), comandos útiles, notas
+  operativas y la guía para retomar el trabajo (con prompt sugerido).
+- Enlace al documento desde la estructura del proyecto en el README.
+
 ## [0.0.19] - 2026-09-13
 
 ### Fix A + Fix C: la sincronización automática de WooCommerce vuelve a respetar su programación

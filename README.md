@@ -329,6 +329,7 @@ SalesHub/
 │   ├── types.ts              # Contratos e interfaces de TypeScript
 │   └── index.css             # Estilos globales con Tailwind CSS v4
 ├── api-handlers.js           # Handlers de API compartidos (dev server + server.js)
+├── docs/ESTADO-DEL-PROYECTO.md # Estado de la sesión: entregado, pendientes y cómo retomar
 ├── docs/FIXES.md             # Registro de correcciones aplicadas y deuda pendiente
 ├── metadata.json             # Metadatos del applet en AI Studio
 ├── package.json              # Dependencias y scripts de compilación
