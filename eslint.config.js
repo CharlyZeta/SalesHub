@@ -19,11 +19,36 @@ export default tseslint.config(
       '*.log',
       'eslint.config.js',
       '.prettierrc*',
-      // JS de infraestructura raíz (servidor Node / Vite): se excluyen del scope
-      // por ahora (usan globals de Node no declarados en este config flat).
-      'server.js',
-      'api-handlers.js',
     ],
+  },
+
+  // Scripts e infraestructura en Node: se lintean con los globals de Node declarados
+  // explícitamente (evita depender del paquete `globals`).
+  {
+    files: ['scripts/**/*.mjs', 'server.js', 'api-handlers.js'],
+    languageOptions: {
+      globals: {
+        process: 'readonly',
+        console: 'readonly',
+        Buffer: 'readonly',
+        URL: 'readonly',
+        URLSearchParams: 'readonly',
+        fetch: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+        setInterval: 'readonly',
+        clearInterval: 'readonly',
+        __dirname: 'readonly',
+        __filename: 'readonly',
+      },
+    },
+    rules: {
+      // Misma convención que en TypeScript: `_` = intencionalmente sin usar.
+      'no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' },
+      ],
+    },
   },
 
   js.configs.recommended,

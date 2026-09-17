@@ -98,7 +98,7 @@ async function getAndreaniToken(hash) {
   }
 
   const contentType = res.headers.get('content-type') || '';
-  let token = '';
+  let token;
   if (contentType.includes('application/json')) {
     const data = await res.json();
     token =
@@ -332,7 +332,7 @@ async function handleAndreaniBulk(req, res, logFile) {
         const data = await searchRes.json();
         const items = data.response?.items || data.items || [];
         return items[0] || null;
-      } catch (err) {
+      } catch {
         return null;
       }
     });

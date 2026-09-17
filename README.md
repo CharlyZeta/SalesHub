@@ -277,7 +277,8 @@ npm run test:coverage
 
 ```
 SalesHub/
-├── .github/workflows/ci.yml  # Pipeline CI: typecheck + tests + build (GitHub Actions)
+├── .github/workflows/ci.yml  # Pipeline CI: typecheck + lint, tests, build, mapa y ciclos
+├── AGENTS.md                 # Protocolo de sesión para agentes (lectura mínima + ahorro de tokens)
 ├── src/
 │   ├── __tests__/            # Tests unitarios con Vitest (9 suites / 90 tests)
 │   │   ├── andreaniStatusMapper.test.ts
@@ -330,13 +331,36 @@ SalesHub/
 │   └── index.css             # Estilos globales con Tailwind CSS v4
 ├── api-handlers.js           # Handlers de API compartidos (dev server + server.js)
 ├── docs/ESTADO-DEL-PROYECTO.md # Estado de la sesión: entregado, pendientes y cómo retomar
+├── docs/MAPA-DEL-CODIGO.md   # Índice autogenerado del código (npm run map)
 ├── docs/FIXES.md             # Registro de correcciones aplicadas y deuda pendiente
+├── scripts/                  # Automatización: mapa del código, diagnóstico del grafo y hooks
 ├── metadata.json             # Metadatos del applet en AI Studio
 ├── package.json              # Dependencias y scripts de compilación
 ├── server.js                 # Servidor de producción Node.js (dist/ + APIs /api/*)
 ├── tsconfig.json             # Configuración del compilador de TypeScript
 └── vite.config.ts            # Configuración de empaquetado Vite
 ```
+
+---
+
+## 🧠 Flujo de trabajo y ahorro de tokens
+
+El proyecto incluye infraestructura para que **trabajar con agentes de IA cueste menos**:
+en lugar de explorar el repositorio leyendo archivos completos, el agente lee índices
+compactos y consulta el grafo de conocimiento.
+
+| Mecanismo | Qué aporta | Comando |
+|:--|:--|:--|
+| **`AGENTS.md`** | Protocolo que el agente lee automáticamente al iniciar: orden de lectura, límites y reglas de economía de tokens | — (automático) |
+| **Mapa del código** | Índice con 1 fila por archivo (responsabilidad + exports): ~5 KB en lugar de abrir decenas de archivos | `npm run map` · `npm run map:check` |
+| **Grafo de conocimiento** (Graphify) | Grafo del código y reporte de arquitectura; permite preguntar por relaciones sin leer archivos | `npm run graph:doctor` |
+| **Hooks de git** | `pre-commit` regenera y agrega el mapa; `post-commit` (Graphify) reconstruye el grafo en segundo plano | se instalan solos en `npm install` |
+| **Chequeos en CI sin costo de IA** | Verifica que el mapa esté al día y que no haya dependencias circulares | `npm run map:check` · `npm run deps:circular` |
+| **Compactación de sesión** | El harness resume el historial para no reenviarlo en cada pedido | `/compact` |
+
+**Reglas de oro** (detalladas en `AGENTS.md`): localizar con `grep`/grafo antes de leer,
+leer solo el tramo necesario, editar de forma quirúrgica, no volcar logs completos en el
+chat y cerrar cada milestone con `/compact` + actualización de `docs/ESTADO-DEL-PROYECTO.md`.
 
 ---
 

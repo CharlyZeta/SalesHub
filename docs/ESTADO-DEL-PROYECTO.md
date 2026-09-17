@@ -5,8 +5,8 @@ Pensado para retomar el trabajo en cualquier momento (o para que otra persona en
 el punto exacto en el que está el desarrollo).
 
 **Última actualización:** 2026-09-13
-**Versión del proyecto:** 0.0.19
-**Commit de referencia:** `cc0bd74`
+**Versión del proyecto:** 0.0.21
+**Commit de cierre:** el último de `master` (`git log -1 --oneline`)
 **Repositorio:** https://github.com/CharlyZeta/SalesHub (rama `master`)
 
 ---
@@ -128,7 +128,28 @@ npm run build         # bundle de producción
 
 ---
 
-## 6. Notas operativas (cosas que conviene recordar)
+## 6. Ahorro de tokens (infraestructura automática)
+
+Objetivo: que cada pedido cueste menos, evitando que el agente "relea" el repositorio.
+
+| Mecanismo | Qué hace | Se activa |
+|:--|:--|:--|
+| `AGENTS.md` | Protocolo de sesión (orden de lectura, límites, reglas de economía) | automático: el harness lo carga en cada sesión |
+| `docs/MAPA-DEL-CODIGO.md` | Índice de 1 fila por archivo (responsabilidad + exports, ~5 KB) | `npm run map` (se regenera y agrega en cada commit vía hook) |
+| Graphify (`graphify-out/`) | Grafo del código + `GRAPH_REPORT.md` para relaciones y panorama | `post-commit` reconstruye en segundo plano |
+| `scripts/graph-doctor.mjs` | Diagnóstico: grafo, hooks, artefactos, CLI | `npm run graph:doctor` (inicio de sesión) |
+| `scripts/install-hooks.mjs` | Instala los hooks de git (idempotente) | automático en `npm install` (`prepare`) |
+| CI | Verifica mapa al día (`map:check`) y dependencias circulares (`madge`) | en cada push/PR |
+| `/compact` | Resume el historial para no reenviarlo en cada pedido | manual, al cerrar cada milestone |
+
+**Reglas de oro para el agente** (están en `AGENTS.md`): localizar antes de leer (grep o
+`graphify explain`), no abrir archivos de más de ~300 líneas completos, pedir salidas de
+comandos digeridas, editar de forma quirúrgica, delegar exploraciones amplias a subagentes
+y no volcar archivos ni JSON enteros en el chat.
+
+---
+
+## 7. Notas operativas (cosas que conviene recordar)
 
 - **Recargas en desarrollo:** el cliente de Vite recarga la página al reconectar su
   WebSocket (pestaña en segundo plano, suspensión de la PC o reinicio del server). Para
@@ -146,15 +167,17 @@ npm run build         # bundle de producción
 
 ---
 
-## 7. Cómo retomar
+## 8. Cómo retomar
 
-1. `git pull` y `npm install` (si hubo cambios de dependencias).
-2. `npm run lint && npm test` para confirmar que el punto de partida está sano.
-3. Elegir el pendiente por ID desde `docs/FIXES.md` (recomendado empezar por **W2/Fix E** o
+1. `git pull` y `npm install` (los hooks se reinstalan solos con el script `prepare`).
+2. `npm run graph:doctor` → estado del grafo, hooks y artefactos (sin costo de tokens).
+3. `npm run lint && npm test` para confirmar que el punto de partida está sano.
+4. Elegir el pendiente por ID desde `docs/FIXES.md` (recomendado empezar por **W2/Fix E** o
    **W5/Fix D**) y actualizar el tablero al cerrarlo.
-4. Al terminar: actualizar este documento (versión, commit de referencia y pendientes),
-   `CHANGELOG.txt` y commitear.
+5. Al terminar: `npm run map` (o lo hace el hook), actualizar este documento,
+   `CHANGELOG.txt`, commitear, pushear y verificar el CI. Cerrar con **`/compact`**.
 
 ### Prompt sugerido para la próxima sesión
-> “Retomamos SalesHub. Leé `docs/ESTADO-DEL-PROYECTO.md` y `docs/FIXES.md`, confirmá que el
-> repo está sincronizado y seguimos con **[W2/Fix E] | [W5/Fix D] | [otro]**.”
+> “Retomamos SalesHub. Leé `AGENTS.md`, `docs/ESTADO-DEL-PROYECTO.md` y
+> `docs/MAPA-DEL-CODIGO.md`, confirmá con `npm run graph:doctor` que está todo en orden y
+> seguimos con **[W2/Fix E] | [W5/Fix D] | [otro]**.”

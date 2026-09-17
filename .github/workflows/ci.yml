@@ -30,6 +30,12 @@ jobs:
       - name: Typecheck & Lint (tsc + ESLint)
         run: npm run lint
 
+      - name: Mapa del código actualizado (sin costo de tokens)
+        run: npm run map:check
+
+      - name: Dependencias circulares (madge)
+        run: npm run deps:circular
+
       - name: Run Automated Tests (Vitest)
         run: npm test
 

@@ -4,6 +4,43 @@ Todas las mejoras y fixes notables del proyecto.
 
 El formato se basa en Keep a Changelog, y el proyecto respeta Versionado Semántico.
 
+## [0.0.21] - 2026-09-17
+
+### Ahorro de tokens: infraestructura automática para trabajar con agentes de IA
+
+#### Añadido
+- **`AGENTS.md`** (raíz): protocolo de sesión que el agente lee automáticamente al iniciar.
+  Define el orden de lectura mínimo (ESTADO → MAPA → FIXES → GRAPH_REPORT), límites de
+  lectura de archivos grandes, reglas de economía de tokens (localizar antes de leer,
+  salidas de comandos digeridas, ediciones quirúrgicas, subagentes para exploraciones) y el
+  ciclo de trabajo con verificación previa al commit.
+- **`docs/MAPA-DEL-CODIGO.md` + `npm run map`**: índice autogenerado con una fila por
+  archivo (responsabilidad + exports principales) y resumen por directorio. Determinista,
+  sin dependencias, ~5 KB: reemplaza la lectura de decenas de archivos. `npm run map:check`
+  falla si quedó desactualizado.
+- **`scripts/graph-doctor.mjs` (`npm run graph:doctor`)**: diagnóstico del grafo de
+  conocimiento (Graphify), de los hooks de git y de los artefactos para agentes.
+- **`scripts/install-hooks.mjs` (`npm run hooks:install` + script `prepare`)**: instala los
+  hooks de git de forma idempotente y **automática en cada `npm install`**:
+  - `pre-commit`: regenera y agrega `docs/MAPA-DEL-CODIGO.md` al commit (el índice nunca
+    queda viejo).
+  - `post-commit` de Graphify: se preserva tal cual (reconstruye el grafo en segundo plano).
+- **Chequeos de CI sin costo de IA**: `npm run map:check` (mapa al día) y
+  `npm run deps:circular` (madge: **sin dependencias circulares** en `src/`).
+
+#### Cambiado
+- ESLint ahora **también lintea la infraestructura Node** (`server.js`, `api-handlers.js` y
+  `scripts/*.mjs`) con los globals de Node declarados explícitamente; se corrigieron los dos
+  avisos detectados al incorporarlos.
+- README: nueva sección “Flujo de trabajo y ahorro de tokens” y actualización de la
+  estructura del proyecto.
+- `docs/ESTADO-DEL-PROYECTO.md`: nueva sección 6 con la infraestructura de ahorro y guía de
+  retomada actualizada (incluye `graph:doctor` y `/compact`).
+
+#### Notas
+- Pendiente menor: actualizar el skill de Graphify (0.9.25 → 0.9.39) con `graphify install`.
+- Los chequeos de CI son deterministas y no consumen tokens de modelo.
+
 ## [0.0.20] - 2026-09-13
 
 ### Documentación: estado del proyecto y de la sesión (handoff)
