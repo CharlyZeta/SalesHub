@@ -4,6 +4,46 @@ Todas las mejoras y fixes notables del proyecto.
 
 El formato se basa en Keep a Changelog, y el proyecto respeta Versionado Semántico.
 
+## [0.0.19] - 2026-09-13
+
+### Fix A + Fix C: la sincronización automática de WooCommerce vuelve a respetar su programación
+
+#### Corregido
+- **Fix A - El flag de seguridad apagaba toda la automatización** (`App.tsx`,
+  `WooCommerceModal.tsx`): el efecto de sincronización programada cortaba si
+  `config.seguridad.bloquearSincronizacionWooCommerce` estaba activo, aunque ese
+  interruptor está rotulado como "Bloquear edición de API Keys WooCommerce a
+  Operadores". Ahora la programación depende **solo** de `autoSync` + `url` +
+  `conectado`, y el flag cumple su función real: deshabilita la edición de
+  URL/Consumer Key/Secret en el modal cuando el perfil no es ADMIN, con aviso en pantalla.
+- **Fix C - Fallos silenciosos y sin backoff** (`App.tsx`): antes, un error de
+  sincronización solo quedaba en el log y se reintentaba cada 60 s sin límite. Ahora:
+  - **Backoff exponencial** (1, 2, 4, 8, 16 y hasta 30 minutos entre reintentos).
+  - Log explícito del motivo y del próximo reintento:
+    `Fallo en sincronización automática (intento N): <error>. Próximo reintento en X min.`
+  - En éxito se registra además la próxima corrida programada.
+  - **Banner de aviso en la app** con el error, la hora del próximo intento y accesos
+    directos a "Revisar WooCommerce" / "Ocultar" (el fallo deja de ser invisible).
+
+#### Añadido
+- Indicador de estado de la automatización en el modal de WooCommerce
+  ("Automatización: Activa cada N h / Inactiva", con la aclaración de que se persiste
+  con "Guardar Ajustes") y aviso de claves bloqueadas para Operadores.
+- `docs/FIXES.md`: nueva sección 3 con el análisis de las **6 causas** por las que la
+  sincronización no respetaba la configuración (W1–W6), con su estado y plan.
+
+#### Notas
+- **Validado en uso real:** el usuario confirmó que, tras el Fix A, la sincronización
+  programada se ejecuta según el intervalo configurado (W1 y W4 verificados).
+- **Limitación vigente (W2 / Fix E pendiente):** la programación vive en el navegador,
+  así que sólo sincroniza con la app abierta. La solución propuesta es moverla al
+  servidor (`server.js`) para que corra también con la app cerrada.
+- Pendientes del análisis: W3 (autoguardado de la config), W5 (evitar el catálogo demo
+  como "éxito" y hacer *merge* por SKU en lugar de reemplazar el catálogo).
+
+#### Calidad
+- `npm run lint`: 0 errores / 0 warnings. Tests: **9 archivos / 90 tests**. Build OK.
+
 ## [0.0.18] - 2026-09-13
 
 ### Fixes pendientes reparados (A1–A5, B3 parcial, B5, B6) + registro en docs/FIXES.md

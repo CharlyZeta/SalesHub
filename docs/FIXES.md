@@ -31,6 +31,12 @@ proyecto, con su estado, causa, solución aplicada y forma de verificarla.
 | **B7** | 24 `console.*` fuera del logger propio | Baja | ⏳ Pendiente |
 | **B8** | Claves WooCommerce precargadas en el modal / defaults de seguridad | Media | ⏳ Pendiente |
 | **B9** | Residuos del entorno original (metadata AI Studio, cachés de agentes) | Baja | ⏳ Pendiente |
+| **W1** | El flag de seguridad apagaba la sincronización automática de WooCommerce | **Alta** | ✅ Reparado |
+| **W4** | Fallos de sincronización silenciosos y sin backoff | **Alta** | ✅ Reparado |
+| **W2** | La programación sólo existe con la app abierta (no hay cron en el servidor) | Alta | ⏳ Pendiente |
+| **W3** | La config de automatización podía no guardarse (botón poco visible) | Media | 🟡 Parcial |
+| **W5** | Fallback a catálogo **demo** contado como éxito + reemplazo total del catálogo | Media | ⏳ Pendiente |
+| **W6** | Faltan indicadores (próxima corrida / último error) | Baja | 🟡 Parcial |
 
 **Estado global de calidad:** `npm run lint` → 0 errores / **0 warnings** ·
 tests **9 archivos / 90 tests** · build de producción OK · CI en verde.
@@ -125,7 +131,74 @@ tests **9 archivos / 90 tests** · build de producción OK · CI en verde.
 
 ---
 
-## 3. Pendientes con plan propuesto
+## 3. Sincronización automática de WooCommerce (análisis y estado)
+
+Causas detectadas de que la sincronización **no respetara la programación configurada**,
+con su estado actual:
+
+### W1 — El flag de seguridad apagaba toda la automatización ✅ Reparado y **validado en uso real** (Fix A)
+- **Qué se notaba:** se configuraba "cada 2 h" y la sincronización no corría nunca.
+- **Causa:** `App.tsx` cortaba el efecto si `config.seguridad.bloquearSincronizacionWooCommerce`
+  estaba activo, pero ese interruptor en la UI dice **"Bloquear edición de API Keys a
+  Operadores"** (su alcance debería ser sólo edición). Peor: `ConfigModal` lo define en
+  `true` por defecto cuando `config.seguridad` no existe, así que con sólo guardar la
+  configuración la automatización quedaba muerta, sin aviso.
+- **Solución:** la programación ahora depende **únicamente** de `autoSync` + `url` +
+  `conectado`; el flag pasó a cumplir su función real: en `WooCommerceModal` deshabilita
+  los campos de URL/Consumer Key/Secret y muestra un aviso cuando el perfil es OPERADOR.
+- **Verificación:** con `bloquearSincronizacionWooCommerce: true` en la configuración, el
+  log muestra `Iniciando sincronización automática programada (cada N hora/s)`.
+- **Validado en uso real (13/09/2026):** el usuario confirmó que la sincronización
+  programada se ejecuta según el intervalo configurado.
+
+### W4 — Fallos silenciosos y sin backoff ✅ Reparado y **validado en uso real** (Fix C)
+- **Qué se notaba:** la sincronización "no hacía nada" y no había forma de enterarse.
+- **Causa:** el `catch` sólo escribía en el log de auditoría y reintentaba cada 60 s
+  indefinidamente; el usuario no veía el error salvo abriendo los logs.
+- **Solución:** **backoff exponencial** (1, 2, 4, … hasta 30 min), registro explícito en
+  el log con el motivo y el próximo reintento, y **banner de aviso en pantalla** con el
+  error, la hora del próximo intento y accesos a "Revisar WooCommerce" / "Ocultar".
+  En éxito se registra también la próxima corrida programada.
+- **Validado en uso real (13/09/2026):** verificado junto con W1 en la operación diaria.
+
+### W2 — La programación sólo existe con la app abierta ⏳ Pendiente
+El chequeo es un `setInterval` en el navegador (`App.tsx`): si la app está cerrada, la
+pestaña fue descartada por el navegador o la PC se suspendió, **no hay sincronización**;
+al volver corre un chequeo y sincroniza si el intervalo venció. Solución propuesta (**Fix E**):
+mover la programación al servidor (`server.js`), que ya sirve la app y puede consultar la
+API de WooCommerce con un temporizador propio.
+
+### W3 — La configuración podía no guardarse 🟡 Parcial
+`WooCommerceModal` mantiene el checkbox y la frecuencia en estado local; sólo se persisten
+con **"Guardar Ajustes"** o al hacer una sync manual. Se agregó un indicador
+**"Automatización: Activa cada N h / Inactiva"** (con la aclaración "se guarda con Guardar
+Ajustes"). Pendiente: autoguardado o aviso de cambios sin guardar al cerrar.
+
+### W5 — Fallback a catálogo *demo* y reemplazo total del catálogo ⏳ Pendiente
+`wooCommerceApi.ts` devuelve productos/clientes de ejemplo cuando la petición falla y la
+URL contiene `demo`/`ejemplo` o falta la Consumer Key, y el flujo lo registra como éxito;
+además `handleSyncCatalog` **reemplaza** todo el catálogo, borrando productos locales.
+Propuesta (**Fix D**): exigir un flag explícito para el modo demo y hacer *merge* por SKU.
+
+### W6 — Indicadores 🟡 Parcial
+Cubierto por el banner de fallo y el badge de automatización. Pendiente: mostrar la
+**próxima corrida** también cuando todo funciona (hoy se informa en el log).
+
+### Cómo confirmar en tu instalación
+1. Consola del navegador (F12), con la app abierta:
+   ```js
+   JSON.parse(localStorage.getItem('app_woo_config_v1'))   // autoSync, syncIntervalHours, conectado, ultimoSync
+   JSON.parse(localStorage.getItem('app_config_v1')).seguridad
+   ```
+2. **Configuración → Logs del sistema**, categoría `WooCommerce`: deben verse
+   `Iniciando sincronización automática programada…` y, si falla,
+   `Fallo en sincronización automática (intento N): … Próximo reintento en X min`.
+3. Dejar la app abierta más que el intervalo configurado y observar "Última sync" en el
+   modal de WooCommerce (y el banner si hubo error).
+
+---
+
+## 4. Pendientes con plan propuesto
 
 | ID | Pendiente | Plan propuesto |
 |:--|:--|:--|
@@ -139,7 +212,7 @@ tests **9 archivos / 90 tests** · build de producción OK · CI en verde.
 
 ---
 
-## 4. Cómo verificar todo
+## 5. Cómo verificar todo
 
 ```bash
 npm run lint          # tsc --noEmit + eslint (0 errores / 0 warnings)
@@ -154,8 +227,10 @@ build en cada push a `master`; el estado se ve en la pestaña **Actions** y en e
 
 ---
 
-## 5. Historial del documento
+## 6. Historial del documento
 
 | Fecha | Cambio |
 |:--|:--|
 | 2026-09-13 | Creación: registro de fixes A1–A5, B3 (parcial), B5, B6 aplicados; B1, B2, B4, B7, B8, B9 documentados como pendientes |
+| 2026-09-13 | Sección 3 (WooCommerce): análisis de las 6 causas de que la programación no se cumpliera; **W1 (Fix A)** y **W4 (Fix C)** reparados; W2/W3/W5/W6 documentados con plan |
+| 2026-09-13 | **W1 y W4 validados en uso real**: la sincronización programada se ejecuta según el intervalo configurado. Documentado también en README (sección 7) |

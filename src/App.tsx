@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Header } from './components/Header';
 import { KpiSummary } from './components/KpiSummary';
 import { SpreadsheetGrid } from './components/SpreadsheetGrid';
@@ -354,43 +354,88 @@ export default function App() {
   };
 
   // Automated scheduled sync for WooCommerce based on configured hours
+  //
+  // Fix A: la programación depende ÚNICAMENTE de la configuración de WooCommerce
+  // (autoSync + url + conectado). El flag `bloquearSincronizacionWooCommerce` ya NO
+  // apaga la automatización: su alcance real es impedir que un OPERADOR edite las
+  // claves de API (ver WooCommerceModal).
+  // Fix C: ante errores se aplica backoff exponencial (1, 2, 4, ... hasta 30 min),
+  // se registra el motivo en el log de auditoría y se muestra un aviso en pantalla.
+  const wooSyncBackoffRef = useRef<number>(0); // reintentos consecutivos
+  const wooSyncNextAttemptRef = useRef<number>(0); // epoch ms del próximo intento
+  const [wooSyncStatus, setWooSyncStatus] = useState<{
+    failureCount: number;
+    lastError?: string;
+    lastSuccessAt?: string;
+    nextAttemptAt?: string;
+  }>({ failureCount: 0 });
+
   useEffect(() => {
-    if (!wooConfig.autoSync || !wooConfig.url || !wooConfig.conectado || config?.seguridad?.bloquearSincronizacionWooCommerce) {
+    if (!wooConfig.autoSync || !wooConfig.url || !wooConfig.conectado) {
       return;
     }
 
+    const intervalHours = wooConfig.syncIntervalHours || 1;
+    const intervalMs = intervalHours * 60 * 60 * 1000;
+    const BASE_RETRY_MS = 60 * 1000; // 1 min
+    const MAX_RETRY_MS = 30 * 60 * 1000; // tope de 30 min
+
     const checkAutoSync = async () => {
-      const intervalHours = wooConfig.syncIntervalHours || 1;
-      const intervalMs = intervalHours * 60 * 60 * 1000;
-      const lastSyncTime = wooConfig.ultimoSync ? new Date(wooConfig.ultimoSync).getTime() : 0;
       const now = Date.now();
 
-      if (now - lastSyncTime >= intervalMs) {
-        try {
-          addSystemLog('SYNC', 'WooCommerce', `Iniciando sincronización automática programada (cada ${intervalHours} hora/s)...`);
-          const fetchedProds = await fetchWooCommerceProducts(wooConfig);
-          handleSyncCatalog(fetchedProds);
+      // Backoff activo: todavía no corresponde reintentar
+      if (now < wooSyncNextAttemptRef.current) return;
 
-          const fetchedCusts = await fetchWooCommerceCustomers(wooConfig);
-          handleSyncCustomers(fetchedCusts);
+      const lastSyncTime = wooConfig.ultimoSync ? new Date(wooConfig.ultimoSync).getTime() : 0;
+      if (now - lastSyncTime < intervalMs) return;
 
-          const nowIso = new Date().toISOString();
-          setWooConfig(prev => ({
-            ...prev,
-            ultimoSync: nowIso
-          }));
+      try {
+        addSystemLog('SYNC', 'WooCommerce', `Iniciando sincronización automática programada (cada ${intervalHours} hora/s)...`);
+        const fetchedProds = await fetchWooCommerceProducts(wooConfig);
+        handleSyncCatalog(fetchedProds);
 
-          addSystemLog('SYNC', 'WooCommerce', `Sincronización automática periódica exitosa: ${fetchedProds.length} productos actualizados`);
-        } catch (err: any) {
-          addSystemLog('ERROR', 'WooCommerce', `Fallo en sincronización automática periódica: ${err.message}`);
-        }
+        const fetchedCusts = await fetchWooCommerceCustomers(wooConfig);
+        handleSyncCustomers(fetchedCusts);
+
+        const nowIso = new Date().toISOString();
+        setWooConfig(prev => ({
+          ...prev,
+          ultimoSync: nowIso
+        }));
+
+        wooSyncBackoffRef.current = 0;
+        wooSyncNextAttemptRef.current = 0;
+        setWooSyncStatus({ failureCount: 0, lastSuccessAt: nowIso });
+        addSystemLog(
+          'SYNC',
+          'WooCommerce',
+          `Sincronización automática exitosa: ${fetchedProds.length} productos y ${fetchedCusts.length} clientes. Próxima corrida programada en ${intervalHours} hora/s.`
+        );
+      } catch (err: any) {
+        const message = err?.message || String(err);
+        const failures = wooSyncBackoffRef.current + 1;
+        wooSyncBackoffRef.current = failures;
+        const retryMs = Math.min(BASE_RETRY_MS * Math.pow(2, failures - 1), MAX_RETRY_MS);
+        wooSyncNextAttemptRef.current = Date.now() + retryMs;
+
+        setWooSyncStatus(prev => ({
+          ...prev,
+          failureCount: failures,
+          lastError: message,
+          nextAttemptAt: new Date(wooSyncNextAttemptRef.current).toISOString(),
+        }));
+        addSystemLog(
+          'ERROR',
+          'WooCommerce',
+          `Fallo en sincronización automática (intento ${failures}): ${message}. Próximo reintento en ${Math.round(retryMs / 60000)} min.`
+        );
       }
     };
 
     checkAutoSync();
     const intervalTimer = setInterval(checkAutoSync, 60000); // Check every 60s
     return () => clearInterval(intervalTimer);
-  }, [wooConfig, config?.seguridad?.bloquearSincronizacionWooCommerce]);
+  }, [wooConfig]);
 
   // Sync state to LocalStorage
   useEffect(() => {
@@ -662,6 +707,38 @@ export default function App() {
         </div>
       )}
 
+      {/* WooCommerce Auto-Sync Failure Banner (Fix C: el fallo deja de ser silencioso) */}
+      {wooSyncStatus.failureCount > 0 && wooConfig.autoSync && (
+        <div className="bg-amber-100 dark:bg-amber-950/70 text-amber-900 dark:text-amber-100 border-b border-amber-300 dark:border-amber-800 px-4 py-2 flex flex-wrap items-center justify-between gap-2 text-xs shrink-0">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="text-sm">⚠️</span>
+            <span className="truncate">
+              <strong>Sincronización automática con WooCommerce fallando</strong> (intento {wooSyncStatus.failureCount}).
+              {wooSyncStatus.lastError ? <> Último error: <span className="font-mono">{wooSyncStatus.lastError}</span>.</> : null}
+              {wooSyncStatus.nextAttemptAt ? <> Próximo reintento: <strong>{new Date(wooSyncStatus.nextAttemptAt).toLocaleTimeString()}</strong>.</> : null}
+            </span>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => setIsWooCommerceOpen(true)}
+              className="bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700 hover:bg-amber-50 dark:hover:bg-amber-900/40 font-bold px-3 py-1 rounded transition-colors cursor-pointer"
+            >
+              Revisar WooCommerce
+            </button>
+            <button
+              onClick={() => {
+                wooSyncBackoffRef.current = 0;
+                wooSyncNextAttemptRef.current = 0;
+                setWooSyncStatus({ failureCount: 0 });
+              }}
+              className="font-bold px-2 py-1 opacity-80 hover:opacity-100 cursor-pointer"
+            >
+              Ocultar
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* 2. Monthly Cumulative KPI Banner */}
       <KpiSummary
         sales={sales}
@@ -751,6 +828,7 @@ export default function App() {
         onSyncCatalog={handleSyncCatalog}
         onSyncCustomers={handleSyncCustomers}
         currentRole={currentRole}
+        blockCredentialEditing={Boolean(config?.seguridad?.bloquearSincronizacionWooCommerce)}
       />
 
       <ExportModal

@@ -16,6 +16,8 @@ interface WooCommerceModalProps {
   onSyncCustomers?: (newCustomers: Customer[]) => void;
   onSyncCatalog?: (newProducts: CatalogProduct[]) => void;
   currentRole?: UserRole;
+  /** Fix A: la config de seguridad puede impedir que un OPERADOR edite las claves de API. */
+  blockCredentialEditing?: boolean;
 }
 
 export const WooCommerceModal: React.FC<WooCommerceModalProps> = (props) => {
@@ -31,8 +33,13 @@ const WooCommerceModalInner: React.FC<WooCommerceModalProps> = ({
   onAddCatalogProduct,
   customers = [],
   onSyncCustomers,
-  onSyncCatalog
+  onSyncCatalog,
+  currentRole = 'OPERADOR',
+  blockCredentialEditing = false
 }) => {
+  // Fix A: el flag de seguridad restringe la edición de claves al Administrador
+  // (ya no apaga la sincronización automática, que depende de `autoSync`).
+  const credentialsLocked = blockCredentialEditing && currentRole !== 'ADMIN';
 
   const [url, setUrl] = useState(config.url);
   const [consumerKey, setConsumerKey] = useState(config.consumerKey);
@@ -191,8 +198,9 @@ const WooCommerceModalInner: React.FC<WooCommerceModalProps> = ({
                   type="text"
                   placeholder="https://mitienda-ecommerce.com"
                   value={url}
+                  disabled={credentialsLocked}
                   onChange={(e) => setUrl(e.target.value)}
-                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded px-2.5 py-1.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-purple-500"
+                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded px-2.5 py-1.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-purple-500 disabled:opacity-60 disabled:cursor-not-allowed"
                 />
               </div>
 
@@ -201,8 +209,9 @@ const WooCommerceModalInner: React.FC<WooCommerceModalProps> = ({
                 <input
                   type="password"
                   value={consumerKey}
+                  disabled={credentialsLocked}
                   onChange={(e) => setConsumerKey(e.target.value)}
-                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded px-2.5 py-1.5 text-slate-900 dark:text-slate-100 font-mono focus:outline-none"
+                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded px-2.5 py-1.5 text-slate-900 dark:text-slate-100 font-mono focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
                 />
               </div>
 
@@ -211,8 +220,9 @@ const WooCommerceModalInner: React.FC<WooCommerceModalProps> = ({
                 <input
                   type="password"
                   value={consumerSecret}
+                  disabled={credentialsLocked}
                   onChange={(e) => setConsumerSecret(e.target.value)}
-                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded px-2.5 py-1.5 text-slate-900 dark:text-slate-100 font-mono focus:outline-none"
+                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded px-2.5 py-1.5 text-slate-900 dark:text-slate-100 font-mono focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
                 />
               </div>
 
@@ -228,6 +238,16 @@ const WooCommerceModalInner: React.FC<WooCommerceModalProps> = ({
                 </button>
               </div>
             </div>
+
+            {credentialsLocked && (
+              <div className="bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded p-2.5 text-[11px] text-slate-600 dark:text-slate-300 flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0 text-slate-500 dark:text-slate-400" />
+                <span>
+                  Las claves de API están bloqueadas para el perfil <strong>Operador</strong> (Configuración → Seguridad).
+                  Un Administrador puede editarlas. La sincronización programada sigue funcionando con las claves guardadas.
+                </span>
+              </div>
+            )}
 
             {/* Auto-Sync & Schedule Configuration Bar */}
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-3 flex flex-wrap items-center justify-between gap-3 text-xs">
@@ -261,11 +281,26 @@ const WooCommerceModalInner: React.FC<WooCommerceModalProps> = ({
                 )}
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 flex-wrap">
                 <div className="text-[11px] text-slate-500 dark:text-slate-400">
                   <span>Última sync: </span>
                   <span className="font-semibold text-slate-800 dark:text-slate-200">
                     {config.ultimoSync ? new Date(config.ultimoSync).toLocaleString() : 'Nunca'}
+                  </span>
+                </div>
+                <div className="text-[11px]">
+                  <span className="text-slate-500 dark:text-slate-400">Automatización: </span>
+                  <span
+                    className={`font-bold px-2 py-0.5 rounded border ${
+                      autoSync
+                        ? 'bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+                    }`}
+                  >
+                    {autoSync ? `Activa cada ${syncIntervalHours} h` : 'Inactiva'}
+                  </span>
+                  <span className="text-slate-400 dark:text-slate-500 ml-1">
+                    (se guarda con «Guardar Ajustes»)
                   </span>
                 </div>
                 <button

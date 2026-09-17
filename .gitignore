@@ -31,3 +31,7 @@ graphify-out/
 .agents/
 .superpowers/
 scratch/
+
+# Archivos temporales de mensajes de commit
+commit-msg*.txt
+commit-message*.txt
