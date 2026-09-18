@@ -4,6 +4,21 @@ Todas las mejoras y fixes notables del proyecto.
 
 El formato se basa en Keep a Changelog, y el proyecto respeta Versionado Semántico.
 
+## [0.0.24] - 2026-09-17
+
+### Documentación: estado de la sesión al día tras W2 (Fix E) y W5 (Fix D)
+
+#### Cambiado
+- **`docs/ESTADO-DEL-PROYECTO.md`**: versión 0.0.23, sección de sincronización actualizada
+  (Fix A + C + E + D), **pendientes reordenados** (W5 cerrado, W6 agregado como mejora menor),
+  notas operativas con el modo servidor, el merge sin borrados, `data/` y el servidor mock de
+  verificación, y **bitácora de los 9 commits de la sesión**.
+- **`README.md`**: `server-woo.js` en la estructura del proyecto.
+
+#### Notas
+- El código de W2 y W5 ya estaba en `master` (commits `9f06645`, `7d11d9e`, `d0bdbec`); esta
+  entrada documenta el cierre y deja el estado del proyecto consistente para retomar.
+
 ## [0.0.23] - 2026-09-17
 
 ### W5 / Fix D: la sincronización combina en lugar de reemplazar (y el modo demo deja de simular)

@@ -5,7 +5,7 @@ Pensado para retomar el trabajo en cualquier momento (o para que otra persona en
 el punto exacto en el que está el desarrollo).
 
 **Última actualización:** 2026-09-17
-**Versión del proyecto:** 0.0.22
+**Versión del proyecto:** 0.0.23
 **Commit de cierre:** el último de `master` (`git log -1 --oneline`)
 **Repositorio:** https://github.com/CharlyZeta/SalesHub (rama `master`)
 
@@ -51,12 +51,20 @@ documentado, con lint/CI reales y los problemas de sincronización resueltos**.
 - **Auto-bloqueo consciente de visibilidad**: cambiar de ventana ya no bloquea la app.
 - **Rotación de backups**: 30 copias / mínimo 7 días (disco e IndexedDB), configurable.
 
-### 2.4 Sincronización WooCommerce (Fix A + Fix C)
-- La programación **depende solo de `autoSync` + URL + credenciales**; el flag de seguridad
-  pasó a restringir únicamente la edición de claves a Operadores (con aviso en el modal).
-- **Backoff exponencial** (1 → 30 min) ante fallos, log explícito del motivo y **banner en
-  pantalla** con el próximo reintento.
-- **Validado en uso real:** la sincronización se ejecuta según el intervalo configurado.
+### 2.4 Sincronización WooCommerce (Fix A + Fix C + Fix E + Fix D) ✅
+- **Fix A**: la programación depende solo de `autoSync` + URL + credenciales; el flag de
+  seguridad pasó a restringir únicamente la edición de claves a Operadores.
+- **Fix C**: **backoff exponencial** (1 → 30 min) ante fallos, con motivo en el log de
+  auditoría y **banner en pantalla** con el próximo reintento.
+- **Fix E (W2)**: la sincronización ahora corre **en el servidor** (`server-woo.js` +
+  temporizador en `server.js`), así que **funciona con la app cerrada** y **sin CORS**. La
+  app publica la configuración, importa el snapshot automáticamente y, si no hay servidor,
+  mantiene el modo navegador como respaldo.
+- **Fix D (W5)**: la sincronización **combina (merge) en lugar de reemplazar** — conserva
+  productos manuales e historial de clientes; y el **modo demo dejó de simular**: ante un
+  fallo de la API el error se propaga (el demo requiere `VITE_WOO_DEMO=true`).
+- **Validado en uso real:** la sincronización se ejecuta según el intervalo configurado
+  (W1 y W4 verificados por el usuario con los logs).
 
 ### 2.5 Neutralización de marca y autoría
 - Sin rastro de datos del cliente en archivos versionados; defaults neutros; producto
@@ -76,6 +84,12 @@ documentado, con lint/CI reales y los problemas de sincronización resueltos**.
 | `c19abc5` | Servidor de producción, endurecimiento de PIN, refactor de UI, lint y neutralización de marca |
 | `928c756` | Fixes pendientes (CI lint, hooks del mapa, copiado de tracking, retención de backups, datos demo) |
 | `cc0bd74` | Sincronización WooCommerce: respeta la configuración y los fallos dejan de ser silenciosos (Fix A + C) |
+| `5989c8c` | Documento de estado del proyecto y de la sesión (handoff) |
+| `b00f84a` | Infraestructura automática de ahorro de tokens (AGENTS.md, mapa del código, hooks, chequeos CI) |
+| `0ea7ba2` | Ajuste del diagnóstico del grafo y corrección de un `&` literal en JSX |
+| `9f06645` | **W2 / Fix E paso 1**: sincronización de WooCommerce del lado del servidor |
+| `7d11d9e` | **W2 / Fix E paso 2**: programación en el servidor + importación del snapshot en la app |
+| `d0bdbec` | **W5 / Fix D**: merge en lugar de reemplazo y fin del catálogo demo como falso éxito |
 
 ---
 
@@ -99,7 +113,6 @@ Detalle completo, con causa y plan, en `docs/FIXES.md`.
 
 | Prioridad | ID | Pendiente |
 |:--:|:--|:--|
-| Alta | **W5 / Fix D** | Evitar el catálogo *demo* contado como éxito y hacer *merge* por SKU en lugar de reemplazar el catálogo |
 | Media | **W3** | Autoguardado de la configuración de WooCommerce (hoy requiere "Guardar Ajustes") |
 | Media | **B8** | Endurecimiento: no precargar claves en el modal + revisar defaults de seguridad |
 | Media | **B3 (resto)** | Tests de componentes UI (requiere `@testing-library/react` + jsdom) y completar cobertura de `wooCommerceApi` |
@@ -108,11 +121,14 @@ Detalle completo, con causa y plan, en `docs/FIXES.md`.
 | Baja | **B4** | Refactor de `BudgetModal.tsx` (~1.400 líneas) y `App.tsx` |
 | Baja | **B7** | Reemplazar 24 `console.*` por el logger propio o silenciarlos por entorno |
 | Baja | **B9** | Quitar residuos del entorno original (`metadata.json`, `.agents/`, `.superpowers/`, `graphify-out/`) |
+| Baja | **W6** | Mostrar la "próxima corrida" también cuando todo funciona (hoy se informa en el log) |
 | Baja | — | Actualizar el skill de Graphify (0.9.25 → 0.9.39) con `graphify install` |
 | Aparte | **Carril 1 UI** | Esc/foco accesible en modales + toasts en lugar de `alert()` (pausado a pedido del usuario) |
 
-> **Cerrado en esta sesión:** W1 y W4 (validados en uso real) y **W2 / Fix E**
-> (sincronización programada en el servidor: corre con la app cerrada y sin CORS).
+> **Cerrado y probado:** W1 y W4 (validados en uso real), **W2 / Fix E** (sincronización
+> programada en el servidor, con prueba real del temporizador) y **W5 / Fix D** (merge sin
+> borrados + fin del catálogo demo como falso éxito, verificado end-to-end con
+> `scripts/mock-woo-server.mjs`).
 
 ---
 
@@ -158,9 +174,17 @@ y no volcar archivos ni JSON enteros en el chat.
   WebSocket (pestaña en segundo plano, suspensión de la PC o reinicio del server). Para
   carga de datos sin interrupciones usar `npm run stable`. El borrador de venta evita
   perder lo cargado en cualquier caso.
-- **Sincronización WooCommerce:** corre mientras la app está abierta (W2 pendiente para el
-  modo con la app cerrada). El estado se ve en el modal ("Automatización: Activa cada N h")
-  y los errores en el banner + log de auditoría (categoría `WooCommerce`).
+- **Sincronización WooCommerce:** corre en el **servidor** (`server-woo.js` más el
+  temporizador de `server.js`), así que sincroniza con la app cerrada y sin CORS. La app
+  publica la configuración al guardar y **importa el snapshot** al abrirse; si el servidor no
+  está disponible, sigue el modo navegador. Estado en el modal ("Servidor: sincroniza solo ·
+  próxima HH:MM") y errores en el banner + log de auditoría (categoría `WooCommerce`).
+- **La sincronización no borra nada (merge):** los productos manuales se conservan, los que
+  coinciden por SKU se actualizan manteniendo su id local, y los clientes conservan su
+  historial de compras. Los datos del servidor viven en `data/` (config, estado y snapshot),
+  **excluido de git**.
+- **Verificación sin tienda real:** `node scripts/mock-woo-server.mjs` levanta una API falsa
+  de WooCommerce en `http://127.0.0.1:4141` para probar el merge de punta a punta.
 - **Backups:** se rotan solos (30 copias / 7 días). `BACKUP_MAX_FILES=0` desactiva la
   rotación.
 - **PIN:** si una instalación tenía un PIN en texto plano, se migra a hash al guardar la

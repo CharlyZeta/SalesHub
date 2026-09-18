@@ -338,6 +338,7 @@ SalesHub/
 │   ├── types.ts              # Contratos e interfaces de TypeScript
 │   └── index.css             # Estilos globales con Tailwind CSS v4
 ├── api-handlers.js           # Handlers de API compartidos (dev server + server.js)
+├── server-woo.js             # Sincronización de WooCommerce del lado del servidor (W2/Fix E)
 ├── docs/ESTADO-DEL-PROYECTO.md # Estado de la sesión: entregado, pendientes y cómo retomar
 ├── docs/MAPA-DEL-CODIGO.md   # Índice autogenerado del código (npm run map)
 ├── docs/FIXES.md             # Registro de correcciones aplicadas y deuda pendiente
