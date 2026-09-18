@@ -35,7 +35,7 @@ proyecto, con su estado, causa, solución aplicada y forma de verificarla.
 | **W4** | Fallos de sincronización silenciosos y sin backoff | **Alta** | ✅ Reparado |
 | **W2** | La programación sólo existía con la app abierta (sin cron en el servidor) | Alta | ✅ Reparado |
 | **W3** | La config de automatización podía no guardarse (botón poco visible) | Media | 🟡 Parcial |
-| **W5** | Fallback a catálogo **demo** contado como éxito + reemplazo total del catálogo | Media | ⏳ Pendiente |
+| **W5** | Fallback a catálogo **demo** como éxito + reemplazo total del catálogo | Media | ✅ Reparado |
 | **W6** | Faltan indicadores (próxima corrida / último error) | Baja | 🟡 Parcial |
 
 **Estado global de calidad:** `npm run lint` → 0 errores / **0 warnings** ·
@@ -184,11 +184,31 @@ con **"Guardar Ajustes"** o al hacer una sync manual. Se agregó un indicador
 **"Automatización: Activa cada N h / Inactiva"** (con la aclaración "se guarda con Guardar
 Ajustes"). Pendiente: autoguardado o aviso de cambios sin guardar al cerrar.
 
-### W5 — Fallback a catálogo *demo* y reemplazo total del catálogo ⏳ Pendiente
-`wooCommerceApi.ts` devuelve productos/clientes de ejemplo cuando la petición falla y la
-URL contiene `demo`/`ejemplo` o falta la Consumer Key, y el flujo lo registra como éxito;
-además `handleSyncCatalog` **reemplaza** todo el catálogo, borrando productos locales.
-Propuesta (**Fix D**): exigir un flag explícito para el modo demo y hacer *merge* por SKU.
+### W5 — Catálogo *demo* como "éxito" y reemplazo total del catálogo ✅ Reparado (Fix D)
+**Qué pasaba:** si la petición a WooCommerce fallaba y la URL contenía `demo`/`ejemplo` o
+faltaba la Consumer Key, la app devolvía **productos y clientes ficticios** y el flujo lo
+registraba como sincronización exitosa; además el catálogo se **reemplazaba** por completo,
+borrando productos manuales y el historial de compras de los clientes.
+
+**Solución:**
+1. **El modo demo ya no simula**: los datos de demostración están desactivados por defecto y
+   solo se habilitan con `VITE_WOO_DEMO=true` (para demos sin conexión). Ante un fallo, el
+   error se propaga y queda en el log de auditoría.
+2. **Merge en lugar de reemplazo**, en los dos lados:
+   - `server-woo.js`: `mergeCatalog()` / `mergeCustomers()` combinan lo descargado con el
+     catálogo/clientes locales — actualiza por SKU (o nombre) **conservando el id local**,
+     agrega los nuevos, y **nunca borra** productos manuales ni el historial
+     (`totalCompras`, `cantidadPedidos`, `ultimaCompra`).
+   - `App.tsx`: `handleSyncCatalog()` combina en el navegador (modo sin servidor) y
+     `localMergePayload()` envía los datos locales al servidor al sincronizar.
+3. El snapshot guarda las listas combinadas y un resumen del merge
+   (`productsAdded`, `productsUpdated`, `productsLocalKept`, `customersAdded/Updated`),
+   visible en el resultado del modal y en `/api/woo/sync`.
+
+**Verificado:** 3 tests unitarios del merge + **prueba end-to-end** contra una API falsa
+(`scripts/mock-woo-server.mjs`): producto manual conservado, coincidencia por SKU actualizada
+(precio 2000→2500, stock 2→7, mismo id local), producto nuevo agregado y cliente local con su
+historial intacto (500.000 de compras).
 
 ### W6 — Indicadores 🟡 Parcial
 Cubierto por el banner de fallo y el badge de automatización. Pendiente: mostrar la

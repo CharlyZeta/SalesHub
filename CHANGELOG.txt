@@ -4,6 +4,38 @@ Todas las mejoras y fixes notables del proyecto.
 
 El formato se basa en Keep a Changelog, y el proyecto respeta Versionado Semántico.
 
+## [0.0.23] - 2026-09-17
+
+### W5 / Fix D: la sincronización combina en lugar de reemplazar (y el modo demo deja de simular)
+
+#### Corregido
+- **El catálogo demo ya no se devuelve como si fuera una sincronización real**: ante un fallo
+  de la API, `wooCommerceApi.ts` propaga el error (antes devolvía productos/clientes
+  ficticios cuando la URL contenía `demo`/`ejemplo` o faltaba la Consumer Key, y el flujo lo
+  registraba como éxito). El modo demo queda disponible solo con `VITE_WOO_DEMO=true`.
+- **La sincronización ya no borra datos locales**: el catálogo se **combina** (merge) en vez
+  de reemplazarse, tanto en el servidor (`mergeCatalog` / `mergeCustomers` en `server-woo.js`)
+  como en el navegador (`handleSyncCatalog`); si un producto coincide por SKU o nombre se
+  actualiza conservando su **id local**, y los productos manuales o que ya no están en la
+  tienda se mantienen. Los clientes conservan su historial de compras
+  (`totalCompras`, `cantidadPedidos`, `ultimaCompra`).
+
+#### Añadido
+- `POST /api/woo/sync` acepta el catálogo y los clientes locales (`{ products, customers }`)
+  para que el merge del servidor no pierda datos; el snapshot incluye un resumen del merge
+  (`productsAdded`, `productsUpdated`, `productsLocalKept`, `customersAdded/Updated`) que el
+  modal muestra al sincronizar.
+- `scripts/mock-woo-server.mjs`: API falsa de WooCommerce para verificar el merge de forma
+  end-to-end sin tocar la tienda real.
+- Tests: **+3** del merge (conserva locales y agrega nuevos, actualiza por SKU manteniendo el
+  id, preserva el historial del cliente) y 2 actualizados al comportamiento nuevo
+  (el error se propaga en lugar de simular) → **10 suites / 104 tests**.
+
+#### Verificado
+- Prueba end-to-end con la API falsa: producto manual conservado, coincidencia por SKU
+  actualizada (2000→2500 y stock 2→7, mismo id), producto nuevo agregado y cliente local con
+  su historial intacto.
+
 ## [0.0.22] - 2026-09-17
 
 ### W2 / Fix E completo: sincronización con la app cerrada (programación en el servidor)

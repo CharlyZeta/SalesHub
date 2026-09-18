@@ -153,6 +153,12 @@ El sistema ha sido estructurado siguiendo los principios **SOLID** y una arquite
 - Configuración de credenciales de API (Consumer Key / Consumer Secret).
 - Sincronización bidireccional del catálogo de productos (precios, stock y SKUs).
 - Importación automática de clientes de la tienda online al directorio local con extracción proactiva de CUIT/DNI y teléfonos secundarios desde `meta_data`.
+- **Combina en lugar de reemplazar**: si un producto coincide por SKU (o nombre) se
+  actualizan precio y stock conservando su id local, y los productos manuales o que ya no
+  están en la tienda **se conservan**; los clientes mantienen su historial de compras.
+- **Sin datos ficticios**: el modo demo está desactivado por defecto (`VITE_WOO_DEMO=true`
+  para demos offline); ante un fallo de la API el error se informa en lugar de simular una
+  sincronización exitosa.
 
 #### Sincronización automática programada
 - **Frecuencia configurable** (1, 2, 4, 6, 12 o 24 h) desde el modal de WooCommerce;

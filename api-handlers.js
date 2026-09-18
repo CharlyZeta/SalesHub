@@ -433,10 +433,15 @@ async function handleWooClearConfig(req, res, svc) {
   sendJson(res, 200, { success: true, status: svc.clearConfig() });
 }
 
-/** POST /api/woo/sync → fuerza una sincronización inmediata */
+/** POST /api/woo/sync → fuerza una sincronización inmediata (acepta datos locales para el merge) */
 async function handleWooSyncNow(req, res, svc) {
   try {
-    const result = await svc.runSync('manual');
+    const body = await readJsonBody(req).catch(() => null);
+    const localData = {
+      products: Array.isArray(body?.products) ? body.products : [],
+      customers: Array.isArray(body?.customers) ? body.customers : [],
+    };
+    const result = await svc.runSync({ reason: 'manual', localData });
     sendJson(res, result.ok ? 200 : 500, result);
   } catch (err) {
     sendJson(res, 500, { error: err.message });

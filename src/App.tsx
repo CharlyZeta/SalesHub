@@ -330,10 +330,84 @@ export default function App() {
     addSystemLog('INFO', 'Seguridad', 'Sesión bloqueada manualmente por el usuario');
   };
 
-  // Sync WooCommerce catalog products - completely replaces current catalog with the synced products list
+  /**
+   * Aplica el catálogo recibido (de la tienda) **combinándolo** con el local: nunca borra
+   * productos manuales ni los que ya no están en la tienda (Fix D / W5). Si el SKU coincide,
+   * se actualizan precio/stock conservando el id local.
+   */
   const handleSyncCatalog = (syncedProducts: CatalogProduct[]) => {
-    setCatalog(syncedProducts);
+    setCatalog(prevCatalog => {
+      const merged = prevCatalog.map(p => ({ ...p }));
+      const bySku = new Map<string, CatalogProduct>();
+      const byName = new Map<string, CatalogProduct>();
+      merged.forEach(p => {
+        if (p.sku) bySku.set(p.sku.trim().toLowerCase(), p);
+        if (p.nombre) byName.set(p.nombre.trim().toLowerCase(), p);
+      });
+
+      let added = 0;
+      for (const incoming of syncedProducts) {
+        const key = incoming.sku?.trim().toLowerCase();
+        const nameKey = incoming.nombre?.trim().toLowerCase();
+        const existing = (key && bySku.get(key)) || (nameKey && byName.get(nameKey));
+        if (existing) {
+          existing.precio = incoming.precio;
+          existing.stock = incoming.stock;
+          existing.nombre = incoming.nombre || existing.nombre;
+          if (incoming.categoria) existing.categoria = incoming.categoria;
+          if (incoming.imagenUrl) existing.imagenUrl = incoming.imagenUrl;
+          existing.estadoWoo = incoming.estadoWoo || existing.estadoWoo;
+        } else {
+          const product = { ...incoming };
+          merged.push(product);
+          if (product.sku) bySku.set(product.sku.trim().toLowerCase(), product);
+          if (product.nombre) byName.set(product.nombre.trim().toLowerCase(), product);
+          added++;
+        }
+      }
+
+      addSystemLog(
+        'SYNC',
+        'WooCommerce',
+        `Catálogo combinado: ${syncedProducts.length} de la tienda, ${added} nuevos, ${prevCatalog.length} locales conservados (sin borrados).`
+      );
+      return merged;
+    });
   };
+
+  /**
+   * Datos locales que el servidor necesita para combinar sin perder nada (Fix D / W5).
+   * Se pasan al modal de WooCommerce, que los envía al sincronizar contra el servidor.
+   */
+  const localMergePayload = () => ({    products: catalog.map(p => ({
+      id: p.id,
+      sku: p.sku,
+      nombre: p.nombre,
+      precio: p.precio,
+      stock: p.stock,
+      categoria: p.categoria,
+      origen: p.origen,
+      imagenUrl: p.imagenUrl,
+    })),
+    customers: customers.map(c => ({
+      clienteId: c.clienteId,
+      id: c.id,
+      nombre: c.nombre,
+      apellido: c.apellido,
+      razonSocialNombre: c.razonSocialNombre,
+      dniCuit: c.dniCuit,
+      telefono: c.telefono,
+      email: c.email,
+      direccion: c.direccion,
+      localidad: c.localidad,
+      provincia: c.provincia,
+      totalCompras: c.totalCompras,
+      cantidadPedidos: c.cantidadPedidos,
+      ultimaCompra: c.ultimaCompra,
+      canalHabitual: c.canalHabitual,
+      origen: c.origen,
+    })),
+  });
 
   // Sync WooCommerce customers - appends only new customers that do not already exist in directory
   const handleSyncCustomers = (syncedCustomers: Customer[]) => {
@@ -379,7 +453,9 @@ export default function App() {
     lastSync: string | null;
     lastError: string | null;
     nextRunAt: string | null;
+    mergeSummary?: { productsAdded: number; productsUpdated: number; productsLocalKept: number; customersAdded: number } | null;
   }>({ available: false, autoSync: false, lastSync: null, lastError: null, nextRunAt: null });
+
 
   useEffect(() => {
     let cancelled = false;
@@ -391,13 +467,14 @@ export default function App() {
         const status = await statusRes.json();
         if (cancelled) return;
 
-        setServerSync({
+        setServerSync(prev => ({
+          ...prev,
           available: true,
           autoSync: Boolean(status.autoSync),
           lastSync: status.lastSync ?? null,
           lastError: status.lastError ?? null,
           nextRunAt: status.nextRunAt ?? null,
-        });
+        }));
 
         if (!status.autoSync || !status.hasSnapshot) return;
 
@@ -411,18 +488,20 @@ export default function App() {
         const localTime = wooConfig.ultimoSync ? new Date(wooConfig.ultimoSync).getTime() : 0;
         if (!Number.isFinite(remoteTime) || remoteTime <= localTime) return;
 
+        // El snapshot del servidor ya viene combinado con los datos locales que le enviamos,
+        // así que se aplica tal cual (sin volver a mezclar).
         if (Array.isArray(snapshot.products) && snapshot.products.length > 0) {
-          handleSyncCatalog(snapshot.products);
+          setCatalog(snapshot.products);
         }
         if (Array.isArray(snapshot.customers) && snapshot.customers.length > 0) {
-          handleSyncCustomers(snapshot.customers);
+          setCustomers(snapshot.customers);
         }
         const fetchedAt = snapshot.fetchedAt;
         setWooConfig(prev => ({ ...prev, ultimoSync: fetchedAt }));
         addSystemLog(
           'SYNC',
           'WooCommerce',
-          `Sincronización aplicada desde el servidor: ${snapshot.products?.length ?? 0} productos, ${snapshot.customers?.length ?? 0} clientes (traídos sin necesidad de tener la app abierta).`
+          `Sincronización aplicada desde el servidor: ${snapshot.products?.length ?? 0} productos y ${snapshot.customers?.length ?? 0} clientes (traídos con la app cerrada).`
         );
       } catch {
         if (!cancelled) {
@@ -913,6 +992,7 @@ export default function App() {
         onSyncCustomers={handleSyncCustomers}
         currentRole={currentRole}
         blockCredentialEditing={Boolean(config?.seguridad?.bloquearSincronizacionWooCommerce)}
+        localData={localMergePayload()}
       />
 
       <ExportModal

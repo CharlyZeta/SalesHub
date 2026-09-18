@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { handleApiRequest } from '../../api-handlers.js';
-import { createWooService } from '../../server-woo.js';
+import { createWooService, mergeCatalog, mergeCustomers } from '../../server-woo.js';
 
 /**
  * Sincronización de WooCommerce del lado del servidor (Fix E / W2).
@@ -224,6 +224,55 @@ describe('API WooCommerce del servidor (Fix E)', () => {
   it('rechaza configuración con JSON inválido', async () => {
     const res = await call(createReq({ method: 'POST', url: '/api/woo/config', body: '{roto' }), { dataDir });
     expect(res.statusCode).toBe(400);
+  });
+});
+
+describe('Merge de catálogo y clientes (Fix D / W5)', () => {
+  const localProducts = [
+    { id: 'manual-1', sku: 'MAN-1', nombre: 'Producto Manual', precio: 1000, stock: 5, origen: 'Manual' },
+    { id: 'woo-prod-10', sku: 'SKU-10', nombre: 'Producto de tienda', precio: 2000, stock: 2, origen: 'WooCommerce' },
+  ];
+
+  const wooProducts = [
+    { id: 'woo-prod-10', sku: 'SKU-10', nombre: 'Producto de tienda', precio: 2500, stock: 7, origen: 'WooCommerce' },
+    { id: 'woo-prod-11', sku: 'SKU-11', nombre: 'Producto nuevo', precio: 500, stock: 1, origen: 'WooCommerce' },
+  ];
+
+  it('conserva los productos locales y agrega los nuevos (sin borrar nada)', () => {
+    const result = mergeCatalog(localProducts, wooProducts);
+
+    expect(result.merged).toHaveLength(3); // 2 locales (uno actualizado) + 1 nuevo
+    expect(result.added).toBe(1);
+    expect(result.updated).toBe(1);
+    expect(result.localKept).toBe(2); // los 2 productos locales siguen existiendo
+
+    const manual = result.merged.find((p: any) => p.sku === 'MAN-1');
+    expect(manual).toMatchObject({ nombre: 'Producto Manual', precio: 1000, origen: 'Manual' });
+
+    const existing = result.merged.find((p: any) => p.sku === 'SKU-10');
+    expect(existing).toMatchObject({ id: 'woo-prod-10', precio: 2500, stock: 7 });
+  });
+
+  it('actualiza por SKU aunque cambie el nombre y conserva el id local', () => {
+    const result = mergeCatalog(
+      [{ id: 'local-9', sku: 'SKU-9', nombre: 'Nombre viejo', precio: 100, stock: 1 }],
+      [{ id: 'woo-prod-9', sku: 'SKU-9', nombre: 'Nombre nuevo', precio: 300, stock: 4 }]
+    );
+    expect(result.merged).toHaveLength(1);
+    expect(result.merged[0]).toMatchObject({ id: 'local-9', nombre: 'Nombre nuevo', precio: 300, stock: 4 });
+    expect(result.added).toBe(0);
+  });
+
+  it('preserva el historial de compras de los clientes locales', () => {
+    const result = mergeCustomers(
+      [{ clienteId: 'WC-5', nombre: 'Ana', email: 'ana@x.com', totalCompras: 500000, cantidadPedidos: 3, ultimaCompra: '2026-01-01' }],
+      [{ clienteId: 'WC-5', nombre: 'Ana María', email: 'ana@x.com', telefono: '3425551234' }, { clienteId: 'WC-6', nombre: 'Luis' }]
+    );
+
+    expect(result.merged).toHaveLength(2);
+    expect(result.added).toBe(1);
+    const ana = result.merged.find((c: any) => c.clienteId === 'WC-5');
+    expect(ana).toMatchObject({ totalCompras: 500000, cantidadPedidos: 3, telefono: '3425551234' });
   });
 });
 

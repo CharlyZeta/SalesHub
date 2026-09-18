@@ -4,15 +4,15 @@
 > Es el índice que conviene leer **antes** de abrir archivos: una fila por módulo
 > con su responsabilidad y sus exports principales.
 
-**Resumen:** 37 archivos · 13.406 líneas.
+**Resumen:** 38 archivos · 13.604 líneas.
 
 | Directorio | Archivos | Líneas |
 |:--|--:|--:|
-| `scripts/` | 3 | 408 |
-| `src/` | 3 | 1.230 |
-| `src/components/` | 21 | 9.645 |
+| `scripts/` | 4 | 445 |
+| `src/` | 3 | 1.310 |
+| `src/components/` | 21 | 9.733 |
 | `src/data/` | 1 | 358 |
-| `src/utils/` | 9 | 1.765 |
+| `src/utils/` | 9 | 1.758 |
 
 ## `scripts/`
 
@@ -21,12 +21,13 @@
 | `generate-code-map.mjs` | 197 | Generador de este mapa (npm run map / map:check) | — |
 | `graph-doctor.mjs` | 114 | Diagnóstico del grafo de conocimiento y de los hooks (npm run graph:doctor) | — |
 | `install-hooks.mjs` | 97 | Instalación automática de hooks de git (npm install / npm run hooks:install) | — |
+| `mock-woo-server.mjs` | 37 | Servidor falso que imita la API REST de WooCommerce (solo para probar el merge). | — |
 
 ## `src/`
 
 | Archivo | Líneas | Responsabilidad | Exports |
 |:--|--:|:--|:--|
-| `App.tsx` | 988 | Orquestador principal: estado global, persistencia, efectos de sync y montaje de modales | (default) |
+| `App.tsx` | 1068 | Orquestador principal: estado global, persistencia, efectos de sync y montaje de modales | (default) |
 | `main.tsx` | 11 | Punto de entrada de React (render del árbol en #root) | — |
 | `types.ts` | 231 | Modelo de dominio tipado (Sale, Budget, Customer, CatalogProduct, AppConfig, seguridad) | SaleProductItem, Sale, Customer, CatalogProduct, WooCommerceConfig, ColumnMapping, DateFilterRange, BudgetItem, Budget, SecurityConfig, BackupConfig, CompanyConfig, AppConfig, SaleChannel, PaymentMethod, ShippingMethod, ShippingStatus, InvoiceType, UserRole |
 
@@ -54,7 +55,7 @@
 | `SendBudgetModal.tsx` | 367 | Envío omnicanal de presupuestos por WhatsApp (wa.me) y correo (mailto) | SendBudgetModal |
 | `SpreadsheetGrid.tsx` | 1081 | Planilla interactiva de ventas: edición inline, filtros, paginación y tracking Andreani | SpreadsheetGrid |
 | `SystemLogsModal.tsx` | 367 | Consola de auditoría: filtros por nivel/categoría/fecha y exportación | SystemLogsModal |
-| `WooCommerceModal.tsx` | 651 | Sincronización WooCommerce: credenciales, catálogo, clientes y programación | WooCommerceModal |
+| `WooCommerceModal.tsx` | 739 | Sincronización WooCommerce: credenciales, catálogo, clientes y programación | WooCommerceModal |
 
 ## `src/data/`
 
@@ -74,7 +75,7 @@
 | `logger.ts` | 125 | Motor de auditoría (localStorage + eventos) con filtros y exportación | getSystemLogs, addSystemLog, clearSystemLogs, filterSystemLogs, exportLogsJSON, exportLogsCSV, LogEntry, LogFilterOptions, LogLevel |
 | `numberToWords.ts` | 71 | Conversión de importes a texto (para comprobantes) | numberToWordsSpanish |
 | `security.ts` | 92 | Hash de PIN (SHA-256), verificación retrocompatible y escalada de bloqueo | PIN_SALT, isHashedPin, authLockWaitMs, hashPin, verifyPin |
-| `wooCommerceApi.ts` | 428 | Cliente REST de WooCommerce: productos y clientes paginados | buildWooApiUrl, transformWooProduct, transformWooCustomer, fetchWithCorsProxy, fetchWooCommerceProducts, fetchWooCommerceCustomers, WooProductDTO, WooCustomerDTO |
+| `wooCommerceApi.ts` | 421 | Cliente REST de WooCommerce: productos y clientes paginados | buildWooApiUrl, transformWooProduct, transformWooCustomer, fetchWithCorsProxy, fetchWooCommerceProducts, fetchWooCommerceCustomers, WooProductDTO, WooCustomerDTO |
 
 ## Documentación de referencia
 

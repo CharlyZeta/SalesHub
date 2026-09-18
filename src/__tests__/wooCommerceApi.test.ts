@@ -112,33 +112,38 @@ describe('WooCommerce API Utility', () => {
     globalFetchSpy.mockRestore();
   });
 
-  it('returns fallback demo catalog when credentials are placeholders and fetch fails', async () => {
+  it('propaga el error en lugar de devolver catálogo demo (Fix D / W5)', async () => {
+    // Antes, un fallo de red con URL "ejemplo"/"demo" o sin credenciales devolvía productos
+    // ficticios como si la sincronización hubiera funcionado. Ahora el error se propaga.
     vi.spyOn(globalThis, 'fetch').mockRejectedValue(new TypeError('Failed to fetch'));
 
-    const result = await fetchWooCommerceProducts({
-      url: 'https://ejemplo.tienda.com',
-      consumerKey: '',
-      consumerSecret: '',
-      autoSync: false,
-      conectado: false
-    });
-    expect(result.length).toBeGreaterThan(0);
-    expect(result[0].origen).toBe('WooCommerce');
+    await expect(
+      fetchWooCommerceProducts({
+        url: 'https://ejemplo.tienda.com',
+        consumerKey: '',
+        consumerSecret: '',
+        autoSync: false,
+        conectado: false
+      })
+    ).rejects.toThrow();
+
     (globalThis.fetch as any).mockRestore();
   });
 
-  it('fetches products via WooCommerce API or fallback simulation', async () => {
-    const config = {
-      url: 'https://demo-tienda.com',
-      consumerKey: 'ck_test',
-      consumerSecret: 'cs_test',
-      autoSync: false,
-      conectado: true
-    };
+  it('propaga el error de la API sin simular datos (Fix D / W5)', async () => {
+    vi.spyOn(globalThis, 'fetch').mockRejectedValue(new TypeError('Failed to fetch'));
 
-    const products = await fetchWooCommerceProducts(config);
-    expect(products.length).toBeGreaterThan(0);
-    expect(products[0].origen).toBe('WooCommerce');
+    await expect(
+      fetchWooCommerceProducts({
+        url: 'https://demo-tienda.com',
+        consumerKey: 'ck_test',
+        consumerSecret: 'cs_test',
+        autoSync: false,
+        conectado: true
+      })
+    ).rejects.toThrow();
+
+    (globalThis.fetch as any).mockRestore();
   });
 
   it('throws error when URL is empty for products or customers', async () => {

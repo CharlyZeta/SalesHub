@@ -18,6 +18,11 @@ interface WooCommerceModalProps {
   currentRole?: UserRole;
   /** Fix A: la config de seguridad puede impedir que un OPERADOR edite las claves de API. */
   blockCredentialEditing?: boolean;
+  /**
+   * Fix D / W5: catálogo y clientes locales que se envían al servidor al sincronizar, para
+   * que combine (merge) en lugar de reemplazar y no se pierdan datos locales.
+   */
+  localData?: { products?: any[]; customers?: any[] };
 }
 
 export const WooCommerceModal: React.FC<WooCommerceModalProps> = (props) => {
@@ -35,7 +40,8 @@ const WooCommerceModalInner: React.FC<WooCommerceModalProps> = ({
   onSyncCustomers,
   onSyncCatalog,
   currentRole = 'OPERADOR',
-  blockCredentialEditing = false
+  blockCredentialEditing = false,
+  localData
 }) => {
   // Fix A: el flag de seguridad restringe la edición de claves al Administrador
   // (ya no apaga la sincronización automática, que depende de `autoSync`).
@@ -84,7 +90,66 @@ const WooCommerceModalInner: React.FC<WooCommerceModalProps> = ({
     };
   }, []);
 
-  /** Publica la configuración al servidor para que él se encargue de la programación. */
+  /**
+   * Sincroniza a través del servidor (Fix D / W5 + Fix E): publica la configuración, dispara
+   * la sincronización enviando el catálogo/clientes locales y devuelve el snapshot combinado.
+   * Si el servidor no está disponible, informa `available: false` para usar el modo navegador.
+   */
+  const syncThroughServer = async (
+    cfg: WooCommerceConfig
+  ): Promise<{ available: boolean; snapshot?: any }> => {
+    try {
+      const configRes = await fetch('/api/woo/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          url: cfg.url,
+          consumerKey: cfg.consumerKey,
+          consumerSecret: cfg.consumerSecret,
+          autoSync: cfg.autoSync,
+          intervalHours: cfg.syncIntervalHours || 1,
+        }),
+      });
+      if (!configRes.ok) throw new Error(`HTTP ${configRes.status}`);
+      const statusData = await configRes.json();
+      setServerStatus({
+        available: true,
+        autoSync: Boolean(statusData?.status?.autoSync),
+        lastSync: statusData?.status?.lastSync ?? null,
+        lastError: statusData?.status?.lastError ?? null,
+        nextRunAt: statusData?.status?.nextRunAt ?? null,
+      });
+
+      const syncRes = await fetch('/api/woo/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(localData || {}),
+      });
+      if (!syncRes.ok) throw new Error(`HTTP ${syncRes.status}`);
+
+      const snapshotRes = await fetch('/api/woo/snapshot');
+      const snapshotData = snapshotRes.ok ? await snapshotRes.json() : null;
+
+      const statusAfter = await fetch('/api/woo/status');
+      if (statusAfter.ok) {
+        const st = await statusAfter.json();
+        setServerStatus({
+          available: true,
+          autoSync: Boolean(st.autoSync),
+          lastSync: st.lastSync ?? null,
+          lastError: st.lastError ?? null,
+          nextRunAt: st.nextRunAt ?? null,
+        });
+      }
+
+      return { available: true, snapshot: snapshotData?.snapshot ?? null };
+    } catch {
+      setServerStatus(prev => ({ ...prev, available: false }));
+      return { available: false };
+    }
+  };
+
+  /** Publica solo la configuración (sin sincronizar) para que el servidor programe. */
   const publishConfigToServer = async (cfg: WooCommerceConfig) => {
     try {
       const res = await fetch('/api/woo/config', {
@@ -152,7 +217,7 @@ const WooCommerceModalInner: React.FC<WooCommerceModalProps> = ({
 
   const handleSyncAll = async () => {
     setIsSyncing(true);
-    setSyncStatus('Sincronizando catálogo completo (paginado) y clientes desde la API...');
+    setSyncStatus('Sincronizando catálogo y clientes desde WooCommerce...');
 
     try {
       const activeConfig: WooCommerceConfig = {
@@ -165,13 +230,35 @@ const WooCommerceModalInner: React.FC<WooCommerceModalProps> = ({
         conectado: true
       };
 
-      // 1. Fetch Products
-      const fetchedProducts = await fetchWooCommerceProducts(activeConfig);
-      if (onSyncCatalog) {
-        onSyncCatalog(fetchedProducts);
+      // Fix D / W5: se intenta primero la sincronización EN EL SERVIDOR, que combina
+      // (merge) lo de la tienda con el catálogo/clientes locales y evita borrados.
+      // Si el servidor no está disponible, se cae al modo navegador (merge local igual).
+      const serverResult = await syncThroughServer(activeConfig);
+
+      if (serverResult.available && serverResult.snapshot) {
+        const snap = serverResult.snapshot;
+        if (Array.isArray(snap.products) && onSyncCatalog) onSyncCatalog(snap.products);
+        if (Array.isArray(snap.customers)) {
+          setWooCustomers(snap.customers);
+          if (onSyncCustomers) onSyncCustomers(snap.customers);
+        }
+        onUpdateConfig({ ...activeConfig, ultimoSync: snap.fetchedAt || activeConfig.ultimoSync });
+        const merge = snap.merge || {};
+        setSyncStatus(
+          `¡Sincronización exitosa en el servidor! ${snap.wooCounts?.products ?? 0} productos de la tienda ` +
+            `(+${merge.productsAdded ?? 0} nuevos, ${merge.productsUpdated ?? 0} actualizados, ` +
+            `${merge.productsLocalKept ?? 0} locales conservados) y ${snap.customers?.length ?? 0} clientes.`
+        );
+        addSystemLog('SYNC', 'WooCommerce', 'Sincronización WooCommerce ejecutada por el servidor (con merge, sin borrados)');
+        return;
       }
 
-      // 2. Fetch Customers
+      // --- Modo navegador (sin servidor) ---
+      const fetchedProducts = await fetchWooCommerceProducts(activeConfig);
+      if (onSyncCatalog) {
+        onSyncCatalog(fetchedProducts); // handleSyncCatalog combina, no reemplaza (Fix D)
+      }
+
       const fetchedCustomers = await fetchWooCommerceCustomers(activeConfig);
       setWooCustomers(fetchedCustomers);
       if (onSyncCustomers) {
@@ -179,9 +266,10 @@ const WooCommerceModalInner: React.FC<WooCommerceModalProps> = ({
       }
 
       onUpdateConfig(activeConfig);
-      void publishConfigToServer(activeConfig);
-      setSyncStatus(`¡Sincronización exitosa! Reemplazados ${fetchedProducts.length} productos y agregados clientes nuevos (${fetchedCustomers.length} procesados).`);
-      addSystemLog('SYNC', 'WooCommerce', `Sincronización WooCommerce exitosa: ${fetchedProducts.length} productos, ${fetchedCustomers.length} clientes`);
+      setSyncStatus(
+        `¡Sincronización exitosa! ${fetchedProducts.length} productos de la tienda combinados con el catálogo local y ${fetchedCustomers.length} clientes procesados.`
+      );
+      addSystemLog('SYNC', 'WooCommerce', `Sincronización (navegador) exitosa: ${fetchedProducts.length} productos, ${fetchedCustomers.length} clientes`);
     } catch (error: any) {
       setSyncStatus(`Error de sincronización: ${error.message}`);
       addSystemLog('ERROR', 'WooCommerce', `Fallo al sincronizar WooCommerce: ${error.message}`);

@@ -1,6 +1,73 @@
 import { CatalogProduct, Customer, WooCommerceConfig } from '../types';
 import { addSystemLog } from './logger';
 
+/**
+ * Fix D / W5: el catálogo de demostración está **desactivado por defecto**. Ante un fallo
+ * de la API ya no se devuelven datos ficticios como si fueran reales (eso podía reemplazar
+ * el catálogo de la tienda). Solo se activa explícitamente con `VITE_WOO_DEMO=true`,
+ * pensado para demos sin conexión.
+ */
+const DEMO_DATA_ENABLED: boolean = import.meta.env?.VITE_WOO_DEMO === 'true';
+
+/** Productos ficticios para demos offline (requiere VITE_WOO_DEMO=true). */
+function getDemoCatalog(): CatalogProduct[] {
+  const base = (id: string, sku: string, nombre: string, precio: number, stock: number, categoria: string, imagenUrl: string, estadoWoo = 'publish'): CatalogProduct => ({
+    id,
+    sku,
+    nombre: `${nombre} (demo)`,
+    precio,
+    stock,
+    categoria,
+    origen: 'WooCommerce',
+    imagenUrl,
+    estadoWoo,
+  });
+
+  return [
+    base('woo-prod-demo-1', 'WOO-DEMO-1', 'Heladera Comercial Doble Puerta Inox', 1850000, 4, 'Comercial', 'https://images.unsplash.com/photo-1584992236310-6edddc08acff?w=150&auto=format&fit=crop&q=80'),
+    base('woo-prod-demo-2', 'WOO-DEMO-2', 'Freezer Horizontal 500L', 920000, 0, 'Comercial', 'https://images.unsplash.com/photo-1571175443880-49e1d25b2bc5?w=150&auto=format&fit=crop&q=80'),
+    base('woo-prod-demo-3', 'WOO-DEMO-3', 'Cocina Industrial 6 Hornallas + Horno', 1450000, 3, 'Equipamiento', 'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?w=150&auto=format&fit=crop&q=80'),
+    base('woo-prod-demo-4', 'WOO-DEMO-4', 'Balanza Electrónica Digital 30kg', 280000, 12, 'Accesorios', 'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=150&auto=format&fit=crop&q=80'),
+    base('woo-prod-demo-5', 'WOO-DEMO-5', 'Cortadora de Fiambre Hoja 300mm', 680000, 2, 'Maquinaria', 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=150&auto=format&fit=crop&q=80', 'draft'),
+  ];
+}
+
+/** Clientes ficticios para demos offline (requiere VITE_WOO_DEMO=true). */
+function getDemoCustomers(): Customer[] {
+  return [
+    {
+      id: 'woo-cust-demo-1',
+      clienteId: 'WC-DEMO-1',
+      nombre: 'Gastronomía',
+      apellido: 'Rosario',
+      razonSocialNombre: 'Gastronomía Rosario S.A. (demo)',
+      dniCuit: '30-71122334-8',
+      telefono: '0341-4221100',
+      email: 'demo.ventas@gastronomiarosario.com',
+      direccion: 'Av. Pellegrini 1450',
+      localidad: 'Rosario',
+      provincia: 'Santa Fe',
+      canalHabitual: 'WooCommerce',
+      origen: 'WooCommerce',
+    },
+    {
+      id: 'woo-cust-demo-2',
+      clienteId: 'WC-DEMO-2',
+      nombre: 'Panadería',
+      apellido: 'La Estación',
+      razonSocialNombre: 'Panadería La Estación (demo)',
+      dniCuit: '20-28990112-4',
+      telefono: '0342-4558822',
+      email: 'demo.estacion@panaderia.com',
+      direccion: 'Bv. Gálvez 1820',
+      localidad: 'Santa Fe',
+      provincia: 'Santa Fe',
+      canalHabitual: 'WooCommerce',
+      origen: 'WooCommerce',
+    },
+  ];
+}
+
 export interface WooProductDTO {
   id: number;
   name: string;
@@ -234,69 +301,19 @@ export const fetchWooCommerceProducts = async (config: WooCommerceConfig): Promi
   } catch (error: any) {
     addSystemLog('ERROR', 'WooCommerce', `Fallo en consulta de productos reales: ${error.message}`);
 
-    // If credentials/URL are explicit test placeholders or user requested, provide fallback demo catalog
-    if (config.url.includes('ejemplo') || config.url.includes('demo') || !config.consumerKey) {
-      addSystemLog('WARN', 'WooCommerce', 'Usando catálogo de demostración simulado por configuración de prueba');
-      return [
-        { 
-          id: 'woo-p-101', 
-          sku: 'WOO-EXT-101', 
-          nombre: 'Heladera Comercial Doble Puerta Inox (Demo)', 
-          precio: 1850000, 
-          stock: 4, 
-          categoria: 'Comercial', 
-          origen: 'WooCommerce',
-          imagenUrl: 'https://images.unsplash.com/photo-1584992236310-6edddc08acff?w=150&auto=format&fit=crop&q=80',
-          estadoWoo: 'publish'
-        },
-        { 
-          id: 'woo-p-102', 
-          sku: 'WOO-EXT-102', 
-          nombre: 'Freezer Horizontal 500L Anafes Pro (Demo)', 
-          precio: 920000, 
-          stock: 0, 
-          categoria: 'Comercial', 
-          origen: 'WooCommerce',
-          imagenUrl: 'https://images.unsplash.com/photo-1571175443880-49e1d25b2bc5?w=150&auto=format&fit=crop&q=80',
-          estadoWoo: 'publish'
-        },
-        { 
-          id: 'woo-p-103', 
-          sku: 'WOO-EXT-103', 
-          nombre: 'Cocina Industrial 6 Hornallas + Horno (Demo)', 
-          precio: 1450000, 
-          stock: 3, 
-          categoria: 'Equipamiento', 
-          origen: 'WooCommerce',
-          imagenUrl: 'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?w=150&auto=format&fit=crop&q=80',
-          estadoWoo: 'publish'
-        },
-        { 
-          id: 'woo-p-104', 
-          sku: 'WOO-EXT-104', 
-          nombre: 'Balanza Electrónica Digital 30kg (Demo)', 
-          precio: 280000, 
-          stock: 12, 
-          categoria: 'Accesorios', 
-          origen: 'WooCommerce',
-          imagenUrl: 'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=150&auto=format&fit=crop&q=80',
-          estadoWoo: 'publish'
-        },
-        { 
-          id: 'woo-p-105', 
-          sku: 'WOO-EXT-105', 
-          nombre: 'Cortadora de Fiambre Hoja 300mm (Demo)', 
-          precio: 680000, 
-          stock: 2, 
-          categoria: 'Maquinaria', 
-          origen: 'WooCommerce',
-          imagenUrl: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=150&auto=format&fit=crop&q=80',
-          estadoWoo: 'draft'
-        }
-      ];
+    // Fix D / W5: el catálogo de demostración YA NO se devuelve como si la sincronización
+    // hubiera sido exitosa. Antes, un fallo de red con una URL "demo"/"ejemplo" o sin
+    // credenciales devolvía productos ficticios y la app los tomaba como reales (llegando a
+    // reemplazar el catálogo). Ahora el error se propaga y queda registrado.
+    if (DEMO_DATA_ENABLED && (config.url.includes('ejemplo') || config.url.includes('demo') || !config.consumerKey)) {
+      addSystemLog(
+        'WARN',
+        'WooCommerce',
+        'Datos de demostración habilitados explícitamente (VITE_WOO_DEMO=true): se devuelve catálogo simulado. NO es una sincronización real.'
+      );
+      return getDemoCatalog();
     }
 
-    // Throw actual error to UI so user knows why sync failed
     throw error;
   }
 };
@@ -387,39 +404,15 @@ export const fetchWooCommerceCustomers = async (config: WooCommerceConfig): Prom
   } catch (error: any) {
     addSystemLog('ERROR', 'WooCommerce', `Fallo en consulta de clientes reales: ${error.message}`);
 
-    if (config.url.includes('ejemplo') || config.url.includes('demo') || !config.consumerKey) {
-      return [
-        {
-          id: 'woo-c-201',
-          clienteId: 'WC-201',
-          nombre: 'Gastronomía Rosario',
-          apellido: 'Gómez',
-          razonSocialNombre: 'Gastronomía Rosario S.A.',
-          dniCuit: '30-71122334-8',
-          telefono: '0341-4221100',
-          email: 'ventas@gastronomiarosario.com',
-          direccion: 'Av. Pellegrini 1450',
-          localidad: 'Rosario',
-          provincia: 'Santa Fe',
-          canalHabitual: 'WooCommerce',
-          origen: 'WooCommerce'
-        },
-        {
-          id: 'woo-c-202',
-          clienteId: 'WC-202',
-          nombre: 'Panadería La Estación',
-          apellido: 'Rodríguez',
-          razonSocialNombre: 'Panadería La Estación',
-          dniCuit: '20-28990112-4',
-          telefono: '0342-4558822',
-          email: 'estacion_panaderia@gmail.com',
-          direccion: 'Bv. Gálvez 1820',
-          localidad: 'Santa Fe',
-          provincia: 'Santa Fe',
-          canalHabitual: 'WooCommerce',
-          origen: 'WooCommerce'
-        }
-      ];
+    // Fix D / W5: igual que con el catálogo, los clientes de demostración solo se devuelven
+    // si el modo demo está habilitado explícitamente; si no, el error se propaga.
+    if (DEMO_DATA_ENABLED && (config.url.includes('ejemplo') || config.url.includes('demo') || !config.consumerKey)) {
+      addSystemLog(
+        'WARN',
+        'WooCommerce',
+        'Datos de demostración habilitados explícitamente (VITE_WOO_DEMO=true): se devuelven clientes simulados. NO es una sincronización real.'
+      );
+      return getDemoCustomers();
     }
 
     throw error;

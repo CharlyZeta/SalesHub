@@ -101,6 +101,107 @@ function mapCustomer(item) {
   };
 }
 
+/** Normaliza una clave de comparación (SKU o nombre). */
+function normalizeKey(value) {
+  return String(value || '')
+    .trim()
+    .toLowerCase();
+}
+
+/**
+ * Combina el catálogo local con el descargado de WooCommerce **sin perder datos**
+ * (Fix D / W5). Reglas:
+ *  - Producto de WooCommerce: si coincide por SKU (o nombre) con uno existente, se
+ *    actualizan precio/stock/nombre **conservando el `id` local**; si no existe, se agrega.
+ *  - Producto manual/local: se conserva siempre, incluso si ya no está en la tienda.
+ *
+ * @returns {{ merged: any[], wooCount: number, localKept: number, updated: number, added: number }}
+ */
+export function mergeCatalog(localProducts = [], wooProducts = []) {
+  const bySku = new Map();
+  const byName = new Map();
+  const index = (product) => {
+    if (product.sku) bySku.set(normalizeKey(product.sku), product);
+    if (product.nombre) byName.set(normalizeKey(product.nombre), product);
+  };
+
+  const merged = [];
+  for (const local of Array.isArray(localProducts) ? localProducts : []) {
+    const copy = { ...local };
+    merged.push(copy);
+    index(copy);
+  }
+
+  let updated = 0;
+  let added = 0;
+
+  for (const woo of Array.isArray(wooProducts) ? wooProducts : []) {
+    const existing = (woo.sku && bySku.get(normalizeKey(woo.sku))) || byName.get(normalizeKey(woo.nombre));
+    if (existing) {
+      existing.precio = woo.precio;
+      existing.stock = woo.stock;
+      existing.nombre = woo.nombre || existing.nombre;
+      if (woo.categoria) existing.categoria = woo.categoria;
+      if (woo.imagenUrl) existing.imagenUrl = woo.imagenUrl;
+      existing.estadoWoo = woo.estadoWoo || existing.estadoWoo;
+      updated++;
+    } else {
+      const product = { ...woo };
+      merged.push(product);
+      index(product);
+      added++;
+    }
+  }
+
+  const wooCountRaw = (Array.isArray(wooProducts) ? wooProducts : []).length;
+  // Locales conservados: cuántos de los productos locales siguen presentes en el resultado.
+  const localKept = (Array.isArray(localProducts) ? localProducts : []).length;
+  return { merged, wooCount: wooCountRaw, localKept, updated, added };
+}
+
+/**
+ * Combina clientes locales con los de la tienda conservando el historial de compras
+ * (`totalCompras`, `cantidadPedidos`, `ultimaCompra`) y agregando solo los nuevos.
+ */
+export function mergeCustomers(localCustomers = [], wooCustomers = []) {
+  const byId = new Map();
+  const byEmail = new Map();
+  const index = (customer) => {
+    if (customer.clienteId) byId.set(normalizeKey(customer.clienteId), customer);
+    if (customer.email) byEmail.set(normalizeKey(customer.email), customer);
+  };
+
+  const merged = [];
+  for (const local of Array.isArray(localCustomers) ? localCustomers : []) {
+    const copy = { ...local };
+    merged.push(copy);
+    index(copy);
+  }
+
+  let added = 0;
+  let updated = 0;
+
+  for (const woo of Array.isArray(wooCustomers) ? wooCustomers : []) {
+    const existing = (woo.clienteId && byId.get(normalizeKey(woo.clienteId))) || byEmail.get(normalizeKey(woo.email));
+    if (existing) {
+      existing.nombre = woo.nombre || existing.nombre;
+      existing.apellido = woo.apellido || existing.apellido;
+      existing.telefono = woo.telefono || existing.telefono;
+      existing.direccion = woo.direccion || existing.direccion;
+      existing.localidad = woo.localidad || existing.localidad;
+      existing.provincia = woo.provincia || existing.provincia;
+      updated++;
+    } else {
+      const customer = { ...woo };
+      merged.push(customer);
+      index(customer);
+      added++;
+    }
+  }
+
+  return { merged, added, updated };
+}
+
 export function createWooService(options = {}) {
   const dataDir = options.dataDir;
   const log = options.log || console;
@@ -203,10 +304,18 @@ export function createWooService(options = {}) {
   }
 
   /**
-   * Ejecuta una sincronización completa y deja el snapshot en disco.
-   * @returns {Promise<{ ok: boolean, fetchedAt?: string, products?: number, customers?: number, error?: string }>}
+   * Ejecuta una sincronización completa y guarda el snapshot en disco.
+   *
+   * Fix D / W5: si la app envía su catálogo/clientes locales (`localData`), el snapshot
+   * guarda **las listas combinadas** — así una sincronización nunca borra productos
+   * manuales ni el historial de compras de los clientes. Sin datos locales, el snapshot
+   * contiene solo lo descargado de la tienda.
+   *
+   * @param {{ reason?: string, localData?: { products?: any[], customers?: any[] } }} [options]
+   * @returns {Promise<{ ok: boolean, fetchedAt?: string, products?: number, customers?: number, error?: string, counts?: any }>}
    */
-  async function runSync(reason = 'manual') {
+  async function runSync(options = {}) {
+    const { reason = 'manual', localData = {} } = options;
     if (running) return { ok: false, error: 'Ya hay una sincronización en curso' };
     const config = readConfig();
     if (!config?.url) return { ok: false, error: 'WooCommerce no está configurado en el servidor' };
@@ -215,22 +324,48 @@ export function createWooService(options = {}) {
     running = true;
     try {
       log.info?.(`[woo] Sincronizando catálogo y clientes (${reason})...`);
-      const products = await fetchPaged(config, 'products', mapProduct);
-      const customers = await fetchPaged(config, 'customers', mapCustomer);
+      const wooProducts = await fetchPaged(config, 'products', mapProduct);
+      const wooCustomers = await fetchPaged(config, 'customers', mapCustomer);
+
+      const catalog = mergeCatalog(localData.products, wooProducts);
+      const directory = mergeCustomers(localData.customers, wooCustomers);
 
       const fetchedAt = new Date().toISOString();
-      const snapshot = { fetchedAt, products, customers };
+      const snapshot = {
+        fetchedAt,
+        products: catalog.merged,
+        customers: directory.merged,
+        wooCounts: { products: catalog.wooCount, customers: wooCustomers.length },
+        merge: {
+          productsAdded: catalog.added,
+          productsUpdated: catalog.updated,
+          productsLocalKept: catalog.localKept,
+          customersAdded: directory.added,
+          customersUpdated: directory.updated,
+        },
+      };
       writeJson(snapshotPath, snapshot);
 
       writeState({
         lastSync: fetchedAt,
         lastError: null,
-        lastCounts: { products: products.length, customers: customers.length },
+        lastCounts: { products: catalog.merged.length, customers: directory.merged.length },
         lastReason: reason,
         failures: 0,
       });
-      log.info?.(`[woo] Sincronización OK: ${products.length} productos, ${customers.length} clientes`);
-      return { ok: true, fetchedAt, products: products.length, customers: customers.length };
+      log.info?.(
+        `[woo] Sincronización OK: ${catalog.wooCount} productos de la tienda ` +
+          `(+${catalog.added} nuevos, ${catalog.updated} actualizados, ${catalog.localKept} locales conservados) · ` +
+          `${wooCustomers.length} clientes de la tienda (+${directory.added} nuevos)`
+      );
+      return {
+        ok: true,
+        fetchedAt,
+        products: catalog.merged.length,
+        customers: directory.merged.length,
+        counts: { products: catalog.wooCount, customers: wooCustomers.length },
+        merge: snapshot.merge,
+      };
     } catch (err) {
       const message = err?.message || String(err);
       writeState({
@@ -266,7 +401,7 @@ export function createWooService(options = {}) {
       return { ran: false, reason: 'todavía no corresponde' };
     }
 
-    const result = await runSync('programada');
+    const result = await runSync({ reason: 'programada' });
     return { ran: true, ...result };
   }
 
