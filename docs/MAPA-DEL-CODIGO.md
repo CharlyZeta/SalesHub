@@ -4,11 +4,11 @@
 > Es el índice que conviene leer **antes** de abrir archivos: una fila por módulo
 > con su responsabilidad y sus exports principales.
 
-**Resumen:** 37 archivos · 13.210 líneas.
+**Resumen:** 37 archivos · 13.224 líneas.
 
 | Directorio | Archivos | Líneas |
 |:--|--:|--:|
-| `scripts/` | 3 | 394 |
+| `scripts/` | 3 | 408 |
 | `src/` | 3 | 1.146 |
 | `src/components/` | 21 | 9.547 |
 | `src/data/` | 1 | 358 |
@@ -19,7 +19,7 @@
 | Archivo | Líneas | Responsabilidad | Exports |
 |:--|--:|:--|:--|
 | `generate-code-map.mjs` | 197 | Generador de este mapa (npm run map / map:check) | — |
-| `graph-doctor.mjs` | 100 | Diagnóstico del grafo de conocimiento y de los hooks (npm run graph:doctor) | — |
+| `graph-doctor.mjs` | 114 | Diagnóstico del grafo de conocimiento y de los hooks (npm run graph:doctor) | — |
 | `install-hooks.mjs` | 97 | Instalación automática de hooks de git (npm install / npm run hooks:install) | — |
 
 ## `src/`

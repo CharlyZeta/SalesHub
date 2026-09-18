@@ -27,14 +27,6 @@ function kb(file) {
   return `${Math.round(fs.statSync(file).size / 1024)} KB`;
 }
 
-function git(args) {
-  try {
-    return execFileSync('git', args, { cwd: ROOT, encoding: 'utf8' }).trim();
-  } catch {
-    return '';
-  }
-}
-
 // 1. Grafo presente y tamaño
 if (fs.existsSync(GRAPH)) {
   ok(`Grafo presente: graphify-out/graph.json (${kb(GRAPH)})`);
@@ -48,15 +40,37 @@ if (fs.existsSync(REPORT)) {
   warn('Falta graphify-out/GRAPH_REPORT.md (se genera con el análisis de Graphify)');
 }
 
-// 2. Frescura respecto del último commit
+// 2. Frescura: el grafo debe ser más nuevo que el archivo de código más reciente.
+//    (Comparar contra la fecha del commit daba falsos positivos: el hook puede
+//    reconstruir y decidir "sin cambios topológicos", dejando las salidas intactas.)
 if (fs.existsSync(GRAPH)) {
   const graphTime = fs.statSync(GRAPH).mtime;
-  const lastCommit = git(['log', '-1', '--format=%cI']);
-  if (lastCommit) {
-    const commitTime = new Date(lastCommit);
-    const hours = (graphTime - commitTime) / 36e5;
-    if (hours >= -0.1) ok(`Grafo al día respecto del último commit (${git(['log', '-1', '--format=%h %s']).slice(0, 60)})`);
-    else warn(`El grafo es más viejo que el último commit (${Math.round(-hours)} h). El hook post-commit debería reconstruirlo; revisá ${path.join(process.env.HOME || '', '.cache', 'graphify-rebuild.log')}`);
+  let newestSource = null;
+  let newestTime = 0;
+  const scan = (dir) => {
+    if (!fs.existsSync(dir)) return;
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) scan(full);
+      else if (/\.(ts|tsx)$/.test(entry.name)) {
+        const t = fs.statSync(full).mtimeMs;
+        if (t > newestTime) {
+          newestTime = t;
+          newestSource = path.relative(ROOT, full);
+        }
+      }
+    }
+  };
+  scan(path.join(ROOT, 'src'));
+
+  if (!newestSource || graphTime.getTime() >= newestTime) {
+    ok('Grafo al día respecto del código fuente');
+  } else {
+    warn(
+      `El grafo todavía no cubre el último cambio: ${newestSource} (${new Date(newestTime).toLocaleString()}) ` +
+        `es más nuevo que graph.json (${graphTime.toLocaleString()}). Se reconstruye solo al commitear; ` +
+        `log: ${path.join(process.env.HOME || process.env.USERPROFILE || '', '.cache', 'graphify-rebuild.log')}`
+    );
   }
 }
 
