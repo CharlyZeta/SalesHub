@@ -33,7 +33,7 @@ proyecto, con su estado, causa, solución aplicada y forma de verificarla.
 | **B9** | Residuos del entorno original (metadata AI Studio, cachés de agentes) | Baja | ⏳ Pendiente |
 | **W1** | El flag de seguridad apagaba la sincronización automática de WooCommerce | **Alta** | ✅ Reparado |
 | **W4** | Fallos de sincronización silenciosos y sin backoff | **Alta** | ✅ Reparado |
-| **W2** | La programación sólo existe con la app abierta (no hay cron en el servidor) | Alta | ⏳ Pendiente |
+| **W2** | La programación sólo existía con la app abierta (sin cron en el servidor) | Alta | ✅ Reparado |
 | **W3** | La config de automatización podía no guardarse (botón poco visible) | Media | 🟡 Parcial |
 | **W5** | Fallback a catálogo **demo** contado como éxito + reemplazo total del catálogo | Media | ⏳ Pendiente |
 | **W6** | Faltan indicadores (próxima corrida / último error) | Baja | 🟡 Parcial |
@@ -161,12 +161,22 @@ con su estado actual:
   En éxito se registra también la próxima corrida programada.
 - **Validado en uso real (13/09/2026):** verificado junto con W1 en la operación diaria.
 
-### W2 — La programación sólo existe con la app abierta ⏳ Pendiente
-El chequeo es un `setInterval` en el navegador (`App.tsx`): si la app está cerrada, la
-pestaña fue descartada por el navegador o la PC se suspendió, **no hay sincronización**;
-al volver corre un chequeo y sincroniza si el intervalo venció. Solución propuesta (**Fix E**):
-mover la programación al servidor (`server.js`), que ya sirve la app y puede consultar la
-API de WooCommerce con un temporizador propio.
+### W2 — La programación sólo existía con la app abierta ✅ Reparado (Fix E)
+El chequeo era un `setInterval` en el navegador, así que si la app estaba cerrada no había
+sincronización. **Solución implementada en dos pasos:**
+
+1. **Servicio en el servidor** (`server-woo.js`): cliente REST de WooCommerce con
+   paginación, mapeo a `CatalogProduct`/`Customer`, y persistencia en `data/`
+   (config, estado y snapshot; excluido de git). Rutas: `GET /api/woo/status`,
+   `GET /api/woo/snapshot`, `POST|DELETE /api/woo/config`, `POST /api/woo/sync`.
+2. **Programación real** (`server.js`): temporizador que evalúa cada 60 s
+   (`WOO_TICK_MS`, `WOO_SCHEDULER=off` para desactivar) y consulta WooCommerce desde Node —
+   **corre con la aplicación cerrada** y sin CORS. Con backoff de 1 → 30 min ante fallos.
+   La app, al abrirse, importa el snapshot si es más nuevo que su `ultimoSync` y lo registra
+   en el log; si el servidor no está disponible, sigue operando el modo navegador.
+
+**Verificado:** 10 tests de la capa de API/programación, prueba real del temporizador
+(registró solo un error de red con una URL inválida) y prueba de endpoints contra `server.js`.
 
 ### W3 — La configuración podía no guardarse 🟡 Parcial
 `WooCommerceModal` mantiene el checkbox y la frecuencia en estado local; sólo se persisten

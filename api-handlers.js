@@ -387,7 +387,12 @@ async function handleAndreaniSingle(req, res, trackingNumber, logFile) {
 /** Instancias por dataDir (dev y producción usan el mismo directorio `data/`). */
 const wooServices = new Map();
 
-function getWooService(dataDir) {
+/**
+ * Devuelve el servicio de WooCommerce: usa el inyectado (`options.woo`, una sola
+ * instancia en producción con el temporizador) o crea/recicla uno por `dataDir`.
+ */
+function getWooService(dataDir, injected) {
+  if (injected) return injected;
   const key = path.resolve(dataDir);
   if (!wooServices.has(key)) {
     wooServices.set(key, createWooService({ dataDir: key }));
@@ -396,17 +401,17 @@ function getWooService(dataDir) {
 }
 
 /** GET /api/woo/status → estado público (sin credenciales) */
-async function handleWooStatus(req, res, dataDir) {
-  sendJson(res, 200, getWooService(dataDir).getStatus());
+async function handleWooStatus(req, res, svc) {
+  sendJson(res, 200, svc.getStatus());
 }
 
 /** GET /api/woo/snapshot → último catálogo/clientes descargados por el servidor */
-async function handleWooSnapshot(req, res, dataDir) {
-  sendJson(res, 200, { snapshot: getWooService(dataDir).getSnapshot() });
+async function handleWooSnapshot(req, res, svc) {
+  sendJson(res, 200, { snapshot: svc.getSnapshot() });
 }
 
 /** POST /api/woo/config → la app publica URL, credenciales y programación */
-async function handleWooSetConfig(req, res, dataDir) {
+async function handleWooSetConfig(req, res, svc) {
   try {
     const body = await readJsonBody(req);
     if (!body || typeof body !== 'object') {
@@ -417,21 +422,21 @@ async function handleWooSetConfig(req, res, dataDir) {
       sendJson(res, 400, { error: 'URL inválida' });
       return;
     }
-    sendJson(res, 200, { success: true, status: getWooService(dataDir).setConfig(body) });
+    sendJson(res, 200, { success: true, status: svc.setConfig(body) });
   } catch (err) {
     sendJson(res, err && err.isBadJson ? 400 : 500, { error: err.message });
   }
 }
 
 /** DELETE /api/woo/config → desactiva la sincronización del servidor */
-async function handleWooClearConfig(req, res, dataDir) {
-  sendJson(res, 200, { success: true, status: getWooService(dataDir).clearConfig() });
+async function handleWooClearConfig(req, res, svc) {
+  sendJson(res, 200, { success: true, status: svc.clearConfig() });
 }
 
 /** POST /api/woo/sync → fuerza una sincronización inmediata */
-async function handleWooSyncNow(req, res, dataDir) {
+async function handleWooSyncNow(req, res, svc) {
   try {
-    const result = await getWooService(dataDir).runSync('manual');
+    const result = await svc.runSync('manual');
     sendJson(res, result.ok ? 200 : 500, result);
   } catch (err) {
     sendJson(res, 500, { error: err.message });
@@ -452,7 +457,7 @@ async function handleWooSyncNow(req, res, dataDir) {
  * @returns {Promise<boolean>}
  */
 export async function handleApiRequest(req, res, options = {}) {
-  const { backupsDir, logFile, retention, dataDir } = { ...API_DEFAULTS, ...options };
+  const { backupsDir, logFile, retention, dataDir, woo } = { ...API_DEFAULTS, ...options };
   const pathname = (req.url || '').split('?')[0];
 
   // Solo se responsabiliza por el espacio /api/*
@@ -493,28 +498,30 @@ export async function handleApiRequest(req, res, options = {}) {
   }
 
   // --- Sincronización de WooCommerce (servidor) ---
+  const wooSvc = getWooService(dataDir, woo);
+
   if (pathname === '/api/woo/status' && req.method === 'GET') {
-    await handleWooStatus(req, res, dataDir);
+    await handleWooStatus(req, res, wooSvc);
     return true;
   }
 
   if (pathname === '/api/woo/snapshot' && req.method === 'GET') {
-    await handleWooSnapshot(req, res, dataDir);
+    await handleWooSnapshot(req, res, wooSvc);
     return true;
   }
 
   if (pathname === '/api/woo/config' && req.method === 'POST') {
-    await handleWooSetConfig(req, res, dataDir);
+    await handleWooSetConfig(req, res, wooSvc);
     return true;
   }
 
   if (pathname === '/api/woo/config' && req.method === 'DELETE') {
-    await handleWooClearConfig(req, res, dataDir);
+    await handleWooClearConfig(req, res, wooSvc);
     return true;
   }
 
   if (pathname === '/api/woo/sync' && req.method === 'POST') {
-    await handleWooSyncNow(req, res, dataDir);
+    await handleWooSyncNow(req, res, wooSvc);
     return true;
   }
 

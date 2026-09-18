@@ -4,8 +4,8 @@ Documento de **handoff**: qué se hizo, cómo quedó el repositorio y qué sigue
 Pensado para retomar el trabajo en cualquier momento (o para que otra persona entienda
 el punto exacto en el que está el desarrollo).
 
-**Última actualización:** 2026-09-13
-**Versión del proyecto:** 0.0.21
+**Última actualización:** 2026-09-17
+**Versión del proyecto:** 0.0.22
 **Commit de cierre:** el último de `master` (`git log -1 --oneline`)
 **Repositorio:** https://github.com/CharlyZeta/SalesHub (rama `master`)
 
@@ -99,7 +99,6 @@ Detalle completo, con causa y plan, en `docs/FIXES.md`.
 
 | Prioridad | ID | Pendiente |
 |:--:|:--|:--|
-| Alta | **W2 / Fix E** | Mover la programación de WooCommerce a `server.js` para sincronizar **con la app cerrada** |
 | Alta | **W5 / Fix D** | Evitar el catálogo *demo* contado como éxito y hacer *merge* por SKU en lugar de reemplazar el catálogo |
 | Media | **W3** | Autoguardado de la configuración de WooCommerce (hoy requiere "Guardar Ajustes") |
 | Media | **B8** | Endurecimiento: no precargar claves en el modal + revisar defaults de seguridad |
@@ -109,7 +108,11 @@ Detalle completo, con causa y plan, en `docs/FIXES.md`.
 | Baja | **B4** | Refactor de `BudgetModal.tsx` (~1.400 líneas) y `App.tsx` |
 | Baja | **B7** | Reemplazar 24 `console.*` por el logger propio o silenciarlos por entorno |
 | Baja | **B9** | Quitar residuos del entorno original (`metadata.json`, `.agents/`, `.superpowers/`, `graphify-out/`) |
+| Baja | — | Actualizar el skill de Graphify (0.9.25 → 0.9.39) con `graphify install` |
 | Aparte | **Carril 1 UI** | Esc/foco accesible en modales + toasts en lugar de `alert()` (pausado a pedido del usuario) |
+
+> **Cerrado en esta sesión:** W1 y W4 (validados en uso real) y **W2 / Fix E**
+> (sincronización programada en el servidor: corre con la app cerrada y sin CORS).
 
 ---
 

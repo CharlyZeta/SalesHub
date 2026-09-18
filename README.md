@@ -158,16 +158,18 @@ El sistema ha sido estructurado siguiendo los principios **SOLID** y una arquite
 - **Frecuencia configurable** (1, 2, 4, 6, 12 o 24 h) desde el modal de WooCommerce;
   se persiste con **"Guardar Ajustes"** (el indicador del modal muestra si está
   `Activa cada N h` o `Inactiva`).
+- **La programación corre en el servidor** (`server.js`): sincroniza **aunque la aplicación
+  esté cerrada** y sin problemas de CORS, porque consulta la API desde Node. La app, al
+  abrirse, importa el snapshot resultante. Controlable con `WOO_TICK_MS` y
+  `WOO_SCHEDULER=off` (ver `.env.example`).
+- **Si no hay servidor** (build estático servido de otra forma), la app mantiene su propio
+  programador en el navegador como respaldo.
 - **Depende solo de la configuración de WooCommerce** (`autoSync` + URL + credenciales).
   El interruptor *"Bloquear edición de API Keys a Operadores"* restringe únicamente la
   edición de las claves (perfil Operador); **no** desactiva la automatización.
-- **Backoff ante fallos**: si la sincronización falla, se reintenta a los 1, 2, 4, 8, 16
-  y hasta 30 minutos, se registra el motivo en el log de auditoría y se muestra un
-  **banner en pantalla** con el error y la hora del próximo intento.
-- **Limitación conocida:** el chequeo corre en el navegador, por lo que la sincronización
-  programada opera **con la aplicación abierta**; al volver a abrirla, sincroniza si el
-  intervalo ya venció. Para sincronizar con la app cerrada hay que mover la programación
-  al servidor (`server.js`) — ver `docs/FIXES.md` (W2 / Fix E).
+- **Backoff ante fallos** (navegador y servidor): reintentos a 1, 2, 4, 8, 16 y hasta 30
+  minutos, con el motivo registrado en el log de auditoría y un **banner en pantalla** con
+  el error y la hora del próximo intento.
 
 ### 8. 📈 Panel de Analítica Comercial (`AnalyticsModal` & `KpiSummary`)
 - Métricas clave en tiempo real: Facturación mensual total, ticket promedio, total de ventas y canales destacados.

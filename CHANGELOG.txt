@@ -4,6 +4,37 @@ Todas las mejoras y fixes notables del proyecto.
 
 El formato se basa en Keep a Changelog, y el proyecto respeta Versionado Semántico.
 
+## [0.0.22] - 2026-09-17
+
+### W2 / Fix E completo: sincronización con la app cerrada (programación en el servidor)
+
+#### Añadido
+- **Temporizador de sincronización en `server.js`**: evalúa cada 60 s si corresponde
+  sincronizar (`runSyncIfDue`) y consulta la API de WooCommerce desde el proceso Node, por
+  lo que **funciona con la aplicación cerrada**. Configurable con `WOO_TICK_MS` (frecuencia
+  de chequeo) y `WOO_SCHEDULER=off` (desactivar).
+- **Backoff del lado del servidor**: ante fallos reintenta a 1, 2, 4, … hasta 30 minutos,
+  y vuelve al intervalo normal al primer éxito.
+- **La app importa el snapshot automáticamente**: al abrirse (y cada 60 s) consulta
+  `/api/woo/status` y `/api/woo/snapshot`; si el servidor trajo datos más nuevos, actualiza
+  catálogo y clientes, guarda `ultimoSync` y lo registra en el log de auditoría.
+- **Convivencia de modos**: si el servidor está disponible y con programación activa, la app
+  **no duplica** consultas (solo importa); si no hay servidor (build estático), sigue
+  funcionando el modo navegador como hasta ahora.
+- **Publicación automática de la configuración**: al guardar los ajustes (o sincronizar
+  manualmente) en el modal de WooCommerce, la app publica URL, credenciales y programación
+  al servidor.
+- **Indicador en el modal**: "Servidor: sincroniza solo · próxima HH:MM" o
+  "no disponible · modo navegador"; el banner de error ahora también refleja los fallos del
+  servidor (`lastError` + próximo intento).
+- Tests: **+4** (programación desactivada, intervalo no vencido, sincronización cuando vence
+  con snapshot en disco, y backoff tras fallo) → **10 suites / 101 tests**.
+
+#### Notas
+- `DATA_DIR` (por defecto `data/`, excluido de git) guarda configuración, estado y snapshot
+  del servidor; las credenciales nunca se devuelven en las respuestas de la API.
+- Documentado en `.env.example`, README (sección 7) y `docs/FIXES.md` (W2 ✅).
+
 ## [0.0.21] - 2026-09-17
 
 ### Ahorro de tokens: infraestructura automática para trabajar con agentes de IA

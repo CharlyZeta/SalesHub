@@ -4,13 +4,13 @@
 > Es el índice que conviene leer **antes** de abrir archivos: una fila por módulo
 > con su responsabilidad y sus exports principales.
 
-**Resumen:** 37 archivos · 13.224 líneas.
+**Resumen:** 37 archivos · 13.406 líneas.
 
 | Directorio | Archivos | Líneas |
 |:--|--:|--:|
 | `scripts/` | 3 | 408 |
-| `src/` | 3 | 1.146 |
-| `src/components/` | 21 | 9.547 |
+| `src/` | 3 | 1.230 |
+| `src/components/` | 21 | 9.645 |
 | `src/data/` | 1 | 358 |
 | `src/utils/` | 9 | 1.765 |
 
@@ -26,7 +26,7 @@
 
 | Archivo | Líneas | Responsabilidad | Exports |
 |:--|--:|:--|:--|
-| `App.tsx` | 904 | Orquestador principal: estado global, persistencia, efectos de sync y montaje de modales | (default) |
+| `App.tsx` | 988 | Orquestador principal: estado global, persistencia, efectos de sync y montaje de modales | (default) |
 | `main.tsx` | 11 | Punto de entrada de React (render del árbol en #root) | — |
 | `types.ts` | 231 | Modelo de dominio tipado (Sale, Budget, Customer, CatalogProduct, AppConfig, seguridad) | SaleProductItem, Sale, Customer, CatalogProduct, WooCommerceConfig, ColumnMapping, DateFilterRange, BudgetItem, Budget, SecurityConfig, BackupConfig, CompanyConfig, AppConfig, SaleChannel, PaymentMethod, ShippingMethod, ShippingStatus, InvoiceType, UserRole |
 
@@ -54,7 +54,7 @@
 | `SendBudgetModal.tsx` | 367 | Envío omnicanal de presupuestos por WhatsApp (wa.me) y correo (mailto) | SendBudgetModal |
 | `SpreadsheetGrid.tsx` | 1081 | Planilla interactiva de ventas: edición inline, filtros, paginación y tracking Andreani | SpreadsheetGrid |
 | `SystemLogsModal.tsx` | 367 | Consola de auditoría: filtros por nivel/categoría/fecha y exportación | SystemLogsModal |
-| `WooCommerceModal.tsx` | 553 | Sincronización WooCommerce: credenciales, catálogo, clientes y programación | WooCommerceModal |
+| `WooCommerceModal.tsx` | 651 | Sincronización WooCommerce: credenciales, catálogo, clientes y programación | WooCommerceModal |
 
 ## `src/data/`
 

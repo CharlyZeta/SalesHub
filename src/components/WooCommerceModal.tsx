@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, ShoppingBag, RefreshCw, Key, CheckCircle2, Users, Search, Plus, AlertCircle, Loader2 } from 'lucide-react';
 import { CatalogProduct, Customer, WooCommerceConfig, UserRole } from '../types';
 import { formatCurrency } from '../utils/formatters';
@@ -50,6 +50,76 @@ const WooCommerceModalInner: React.FC<WooCommerceModalProps> = ({
   const [activeTab, setActiveTab] = useState<'products' | 'customers'>('products');
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncStatus, setSyncStatus] = useState<string | null>(null);
+  // Fix E: estado de la sincronización del servidor (corre con la app cerrada).
+  const [serverStatus, setServerStatus] = useState<{
+    available: boolean;
+    autoSync: boolean;
+    lastSync: string | null;
+    lastError: string | null;
+    nextRunAt: string | null;
+  }>({ available: false, autoSync: false, lastSync: null, lastError: null, nextRunAt: null });
+
+  // Al abrir el modal, consultamos el estado del servidor (si está disponible).
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/woo/status');
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const status = await res.json();
+        if (cancelled) return;
+        setServerStatus({
+          available: true,
+          autoSync: Boolean(status.autoSync),
+          lastSync: status.lastSync ?? null,
+          lastError: status.lastError ?? null,
+          nextRunAt: status.nextRunAt ?? null,
+        });
+      } catch {
+        if (!cancelled) setServerStatus(prev => ({ ...prev, available: false }));
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  /** Publica la configuración al servidor para que él se encargue de la programación. */
+  const publishConfigToServer = async (cfg: WooCommerceConfig) => {
+    try {
+      const res = await fetch('/api/woo/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          url: cfg.url,
+          consumerKey: cfg.consumerKey,
+          consumerSecret: cfg.consumerSecret,
+          autoSync: cfg.autoSync,
+          intervalHours: cfg.syncIntervalHours || 1,
+        }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      setServerStatus({
+        available: true,
+        autoSync: Boolean(data?.status?.autoSync),
+        lastSync: data?.status?.lastSync ?? null,
+        lastError: data?.status?.lastError ?? null,
+        nextRunAt: data?.status?.nextRunAt ?? null,
+      });
+      addSystemLog(
+        'SYNC',
+        'WooCommerce',
+        `Configuración publicada al servidor: la sincronización programada (cada ${cfg.syncIntervalHours || 1} h) correrá aunque la aplicación esté cerrada.`
+      );
+      return true;
+    } catch {
+      // Sin servidor (por ejemplo, build estático servido por otro medio) se sigue
+      // usando la programación del navegador.
+      setServerStatus(prev => ({ ...prev, available: false }));
+      return false;
+    }
+  };
 
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -76,6 +146,8 @@ const WooCommerceModalInner: React.FC<WooCommerceModalProps> = ({
     onUpdateConfig(updatedConfig);
     setSyncStatus('Configuración de WooCommerce y automatización guardadas.');
     addSystemLog('INFO', 'WooCommerce', `Configuración actualizada (AutoSync: ${autoSync ? `Activo cada ${syncIntervalHours}h` : 'Inactivo'})`);
+    // Fix E: el servidor se encarga de la programación (corre con la app cerrada)
+    void publishConfigToServer(updatedConfig);
   };
 
   const handleSyncAll = async () => {
@@ -107,6 +179,7 @@ const WooCommerceModalInner: React.FC<WooCommerceModalProps> = ({
       }
 
       onUpdateConfig(activeConfig);
+      void publishConfigToServer(activeConfig);
       setSyncStatus(`¡Sincronización exitosa! Reemplazados ${fetchedProducts.length} productos y agregados clientes nuevos (${fetchedCustomers.length} procesados).`);
       addSystemLog('SYNC', 'WooCommerce', `Sincronización WooCommerce exitosa: ${fetchedProducts.length} productos, ${fetchedCustomers.length} clientes`);
     } catch (error: any) {
@@ -302,6 +375,31 @@ const WooCommerceModalInner: React.FC<WooCommerceModalProps> = ({
                   <span className="text-slate-400 dark:text-slate-500 ml-1">
                     (se guarda con «Guardar Ajustes»)
                   </span>
+                </div>
+                <div className="text-[11px]">
+                  <span className="text-slate-500 dark:text-slate-400">Servidor: </span>
+                  {serverStatus.available ? (
+                    <span
+                      className={`font-bold px-2 py-0.5 rounded border ${
+                        serverStatus.autoSync
+                          ? 'bg-blue-100 dark:bg-blue-950/70 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-800'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+                      }`}
+                      title={
+                        serverStatus.autoSync
+                          ? 'El servidor sincroniza solo, aunque la aplicación esté cerrada'
+                          : 'La configuración se publicará al guardar; después el servidor sincroniza con la app cerrada'
+                      }
+                    >
+                      {serverStatus.autoSync
+                        ? `sincroniza solo${serverStatus.nextRunAt ? ` · próxima ${new Date(serverStatus.nextRunAt).toLocaleTimeString()}` : ''}`
+                        : 'disponible (programación inactiva)'}
+                    </span>
+                  ) : (
+                    <span className="font-bold px-2 py-0.5 rounded border bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700">
+                      no disponible · modo navegador
+                    </span>
+                  )}
                 </div>
                 <button
                   type="button"

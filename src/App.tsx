@@ -370,7 +370,79 @@ export default function App() {
     nextAttemptAt?: string;
   }>({ failureCount: 0 });
 
+  // Fix E (W2): estado de la sincronización del SERVIDOR. Si está activa, es el servidor
+  // quien consulta WooCommerce (incluso con la app cerrada) y la app solo importa el
+  // snapshot resultante. Si el servidor no está disponible, se usa el modo navegador.
+  const [serverSync, setServerSync] = useState<{
+    available: boolean;
+    autoSync: boolean;
+    lastSync: string | null;
+    lastError: string | null;
+    nextRunAt: string | null;
+  }>({ available: false, autoSync: false, lastSync: null, lastError: null, nextRunAt: null });
+
   useEffect(() => {
+    let cancelled = false;
+
+    const pollServerSync = async () => {
+      try {
+        const statusRes = await fetch('/api/woo/status');
+        if (!statusRes.ok) throw new Error(`HTTP ${statusRes.status}`);
+        const status = await statusRes.json();
+        if (cancelled) return;
+
+        setServerSync({
+          available: true,
+          autoSync: Boolean(status.autoSync),
+          lastSync: status.lastSync ?? null,
+          lastError: status.lastError ?? null,
+          nextRunAt: status.nextRunAt ?? null,
+        });
+
+        if (!status.autoSync || !status.hasSnapshot) return;
+
+        // ¿El servidor trajo datos más nuevos que los que tengo localmente?
+        const snapshotRes = await fetch('/api/woo/snapshot');
+        if (!snapshotRes.ok) return;
+        const { snapshot } = await snapshotRes.json();
+        if (cancelled || !snapshot?.fetchedAt) return;
+
+        const remoteTime = new Date(snapshot.fetchedAt).getTime();
+        const localTime = wooConfig.ultimoSync ? new Date(wooConfig.ultimoSync).getTime() : 0;
+        if (!Number.isFinite(remoteTime) || remoteTime <= localTime) return;
+
+        if (Array.isArray(snapshot.products) && snapshot.products.length > 0) {
+          handleSyncCatalog(snapshot.products);
+        }
+        if (Array.isArray(snapshot.customers) && snapshot.customers.length > 0) {
+          handleSyncCustomers(snapshot.customers);
+        }
+        const fetchedAt = snapshot.fetchedAt;
+        setWooConfig(prev => ({ ...prev, ultimoSync: fetchedAt }));
+        addSystemLog(
+          'SYNC',
+          'WooCommerce',
+          `Sincronización aplicada desde el servidor: ${snapshot.products?.length ?? 0} productos, ${snapshot.customers?.length ?? 0} clientes (traídos sin necesidad de tener la app abierta).`
+        );
+      } catch {
+        if (!cancelled) {
+          // Servidor no disponible (p. ej. build estático sin server.js): modo navegador.
+          setServerSync(prev => ({ ...prev, available: false }));
+        }
+      }
+    };
+
+    pollServerSync();
+    const timer = setInterval(pollServerSync, 60000);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, [wooConfig.ultimoSync]);
+
+  useEffect(() => {
+    // Si el servidor se encarga de la programación, no duplicamos consultas desde acá.
+    if (serverSync.available && serverSync.autoSync) return;
     if (!wooConfig.autoSync || !wooConfig.url || !wooConfig.conectado) {
       return;
     }
@@ -435,7 +507,7 @@ export default function App() {
     checkAutoSync();
     const intervalTimer = setInterval(checkAutoSync, 60000); // Check every 60s
     return () => clearInterval(intervalTimer);
-  }, [wooConfig]);
+  }, [wooConfig, serverSync.available, serverSync.autoSync]);
 
   // Sync state to LocalStorage
   useEffect(() => {
@@ -707,15 +779,26 @@ export default function App() {
         </div>
       )}
 
-      {/* WooCommerce Auto-Sync Failure Banner (Fix C: el fallo deja de ser silencioso) */}
-      {wooSyncStatus.failureCount > 0 && wooConfig.autoSync && (
+      {/* WooCommerce Auto-Sync Failure Banner (Fix C + Fix E: el fallo deja de ser silencioso,
+          sea del temporizador del navegador o del servidor) */}
+      {((wooSyncStatus.failureCount > 0 && wooConfig.autoSync) || (serverSync.lastError && serverSync.autoSync)) && (
         <div className="bg-amber-100 dark:bg-amber-950/70 text-amber-900 dark:text-amber-100 border-b border-amber-300 dark:border-amber-800 px-4 py-2 flex flex-wrap items-center justify-between gap-2 text-xs shrink-0">
           <div className="flex items-center gap-2 min-w-0">
             <span className="text-sm">⚠️</span>
             <span className="truncate">
-              <strong>Sincronización automática con WooCommerce fallando</strong> (intento {wooSyncStatus.failureCount}).
-              {wooSyncStatus.lastError ? <> Último error: <span className="font-mono">{wooSyncStatus.lastError}</span>.</> : null}
-              {wooSyncStatus.nextAttemptAt ? <> Próximo reintento: <strong>{new Date(wooSyncStatus.nextAttemptAt).toLocaleTimeString()}</strong>.</> : null}
+              {serverSync.lastError ? (
+                <>
+                  <strong>Sincronización automática (servidor) fallando.</strong> Último error:{' '}
+                  <span className="font-mono">{serverSync.lastError}</span>.
+                  {serverSync.nextRunAt ? <> Próximo intento: <strong>{new Date(serverSync.nextRunAt).toLocaleTimeString()}</strong>.</> : null}
+                </>
+              ) : (
+                <>
+                  <strong>Sincronización automática con WooCommerce fallando</strong> (intento {wooSyncStatus.failureCount}).
+                  {wooSyncStatus.lastError ? <> Último error: <span className="font-mono">{wooSyncStatus.lastError}</span>.</> : null}
+                  {wooSyncStatus.nextAttemptAt ? <> Próximo reintento: <strong>{new Date(wooSyncStatus.nextAttemptAt).toLocaleTimeString()}</strong>.</> : null}
+                </>
+              )}
             </span>
           </div>
           <div className="flex items-center gap-2 shrink-0">
@@ -730,6 +813,7 @@ export default function App() {
                 wooSyncBackoffRef.current = 0;
                 wooSyncNextAttemptRef.current = 0;
                 setWooSyncStatus({ failureCount: 0 });
+                setServerSync(prev => ({ ...prev, lastError: null }));
               }}
               className="font-bold px-2 py-1 opacity-80 hover:opacity-100 cursor-pointer"
             >

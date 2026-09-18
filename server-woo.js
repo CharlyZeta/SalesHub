@@ -227,12 +227,17 @@ export function createWooService(options = {}) {
         lastError: null,
         lastCounts: { products: products.length, customers: customers.length },
         lastReason: reason,
+        failures: 0,
       });
       log.info?.(`[woo] Sincronización OK: ${products.length} productos, ${customers.length} clientes`);
       return { ok: true, fetchedAt, products: products.length, customers: customers.length };
     } catch (err) {
       const message = err?.message || String(err);
-      writeState({ lastError: message, lastAttempt: new Date().toISOString() });
+      writeState({
+        lastError: message,
+        lastAttempt: new Date().toISOString(),
+        failures: (readState().failures || 0) + 1,
+      });
       log.warn?.(`[woo] Sincronización fallida: ${message}`);
       return { ok: false, error: message };
     } finally {
@@ -247,7 +252,20 @@ export function createWooService(options = {}) {
     const state = readState();
     const intervalMs = (config.intervalHours || 1) * 3600_000;
     const last = state.lastSync ? new Date(state.lastSync).getTime() : 0;
-    if (now - last < intervalMs) return { ran: false, reason: 'todavía no corresponde' };
+
+    // Si viene fallando, se reintenta con backoff (1, 2, 4, ... 30 min) en lugar de
+    // golpear el endpoint roto en cada tick.
+    const failures = state.failures || 0;
+    if (failures > 0) {
+      const backoffMs = Math.min(60_000 * 2 ** (failures - 1), 30 * 60_000);
+      const lastAttempt = state.lastAttempt ? new Date(state.lastAttempt).getTime() : 0;
+      if (now - lastAttempt < backoffMs) {
+        return { ran: false, reason: `backoff activo (${Math.round(backoffMs / 60000)} min)` };
+      }
+    } else if (now - last < intervalMs) {
+      return { ran: false, reason: 'todavía no corresponde' };
+    }
+
     const result = await runSync('programada');
     return { ran: true, ...result };
   }
