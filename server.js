@@ -34,6 +34,8 @@ const DIST_DIR = process.env.DIST_DIR
 
 const BACKUPS_DIR = path.join(__dirname, 'backups');
 const ANDREANI_LOG_FILE = path.join(__dirname, 'andreani_error.log');
+/** Datos del servidor (config/estado/snapshot de WooCommerce). Excluido de git. */
+const DATA_DIR = process.env.DATA_DIR ? path.resolve(__dirname, process.env.DATA_DIR) : path.join(__dirname, 'data');
 
 // ---------------------------------------------------------------------------
 // Servicio de archivos estáticos
@@ -133,6 +135,7 @@ const server = http.createServer(async (req, res) => {
     const handled = await handleApiRequest(req, res, {
       backupsDir: BACKUPS_DIR,
       logFile: ANDREANI_LOG_FILE,
+      dataDir: DATA_DIR,
     });
     if (!handled) {
       serveStatic(req, res);

@@ -17,6 +17,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { createWooService } from './server-woo.js';
 
 // ---------------------------------------------------------------------------
 // Configuración por contexto (inyectada por cada host)
@@ -27,6 +28,8 @@ export const API_DEFAULTS = {
   backupsDir: 'backups',
   /** Archivo donde se registran los errores de Andreani. */
   logFile: 'andreani_error.log',
+  /** Directorio de datos del servidor (config/estado/snapshot de WooCommerce). */
+  dataDir: 'data',
   /** Política de retención de backups en disco. */
   retention: {
     /** Máximo de copias a conservar (0 = retención desactivada). */
@@ -378,6 +381,64 @@ async function handleAndreaniSingle(req, res, trackingNumber, logFile) {
 }
 
 // ---------------------------------------------------------------------------
+// Sincronización de WooCommerce del lado del servidor (Fix E / W2)
+// ---------------------------------------------------------------------------
+
+/** Instancias por dataDir (dev y producción usan el mismo directorio `data/`). */
+const wooServices = new Map();
+
+function getWooService(dataDir) {
+  const key = path.resolve(dataDir);
+  if (!wooServices.has(key)) {
+    wooServices.set(key, createWooService({ dataDir: key }));
+  }
+  return wooServices.get(key);
+}
+
+/** GET /api/woo/status → estado público (sin credenciales) */
+async function handleWooStatus(req, res, dataDir) {
+  sendJson(res, 200, getWooService(dataDir).getStatus());
+}
+
+/** GET /api/woo/snapshot → último catálogo/clientes descargados por el servidor */
+async function handleWooSnapshot(req, res, dataDir) {
+  sendJson(res, 200, { snapshot: getWooService(dataDir).getSnapshot() });
+}
+
+/** POST /api/woo/config → la app publica URL, credenciales y programación */
+async function handleWooSetConfig(req, res, dataDir) {
+  try {
+    const body = await readJsonBody(req);
+    if (!body || typeof body !== 'object') {
+      sendJson(res, 400, { error: 'Cuerpo de petición vacío o JSON inválido' });
+      return;
+    }
+    if (body.url !== undefined && typeof body.url !== 'string') {
+      sendJson(res, 400, { error: 'URL inválida' });
+      return;
+    }
+    sendJson(res, 200, { success: true, status: getWooService(dataDir).setConfig(body) });
+  } catch (err) {
+    sendJson(res, err && err.isBadJson ? 400 : 500, { error: err.message });
+  }
+}
+
+/** DELETE /api/woo/config → desactiva la sincronización del servidor */
+async function handleWooClearConfig(req, res, dataDir) {
+  sendJson(res, 200, { success: true, status: getWooService(dataDir).clearConfig() });
+}
+
+/** POST /api/woo/sync → fuerza una sincronización inmediata */
+async function handleWooSyncNow(req, res, dataDir) {
+  try {
+    const result = await getWooService(dataDir).runSync('manual');
+    sendJson(res, result.ok ? 200 : 500, result);
+  } catch (err) {
+    sendJson(res, 500, { error: err.message });
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Router principal
 // ---------------------------------------------------------------------------
 
@@ -387,11 +448,11 @@ async function handleAndreaniSingle(req, res, trackingNumber, logFile) {
  *
  * @param {import('node:http').IncomingMessage} req
  * @param {import('node:http').ServerResponse} res
- * @param {{ backupsDir?: string, logFile?: string, retention?: { maxFiles?: number, minAgeDays?: number } }} [options]
+ * @param {{ backupsDir?: string, logFile?: string, dataDir?: string, retention?: { maxFiles?: number, minAgeDays?: number } }} [options]
  * @returns {Promise<boolean>}
  */
 export async function handleApiRequest(req, res, options = {}) {
-  const { backupsDir, logFile, retention } = { ...API_DEFAULTS, ...options };
+  const { backupsDir, logFile, retention, dataDir } = { ...API_DEFAULTS, ...options };
   const pathname = (req.url || '').split('?')[0];
 
   // Solo se responsabiliza por el espacio /api/*
@@ -428,6 +489,32 @@ export async function handleApiRequest(req, res, options = {}) {
     } else {
       sendJson(res, 404, { error: 'Ruta no encontrada' });
     }
+    return true;
+  }
+
+  // --- Sincronización de WooCommerce (servidor) ---
+  if (pathname === '/api/woo/status' && req.method === 'GET') {
+    await handleWooStatus(req, res, dataDir);
+    return true;
+  }
+
+  if (pathname === '/api/woo/snapshot' && req.method === 'GET') {
+    await handleWooSnapshot(req, res, dataDir);
+    return true;
+  }
+
+  if (pathname === '/api/woo/config' && req.method === 'POST') {
+    await handleWooSetConfig(req, res, dataDir);
+    return true;
+  }
+
+  if (pathname === '/api/woo/config' && req.method === 'DELETE') {
+    await handleWooClearConfig(req, res, dataDir);
+    return true;
+  }
+
+  if (pathname === '/api/woo/sync' && req.method === 'POST') {
+    await handleWooSyncNow(req, res, dataDir);
     return true;
   }
 

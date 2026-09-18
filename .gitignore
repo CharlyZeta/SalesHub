@@ -9,6 +9,9 @@ coverage/
 # Local backups (contains customer PII and database snapshots)
 backups/
 
+# Server data (WooCommerce credentials, state and snapshots)
+data/
+
 # Logs
 *.log
 andreani_error.log

@@ -16,6 +16,7 @@ const apiPlugin = (): Plugin => ({
         const handled = await handleApiRequest(req, res, {
           backupsDir: path.resolve(__dirname, 'backups'),
           logFile: path.resolve(__dirname, 'andreani_error.log'),
+          dataDir: path.resolve(__dirname, 'data'),
         });
         if (!handled) {
           next();

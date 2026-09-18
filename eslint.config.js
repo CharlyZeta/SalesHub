@@ -25,7 +25,7 @@ export default tseslint.config(
   // Scripts e infraestructura en Node: se lintean con los globals de Node declarados
   // explícitamente (evita depender del paquete `globals`).
   {
-    files: ['scripts/**/*.mjs', 'server.js', 'api-handlers.js'],
+    files: ['scripts/**/*.mjs', 'server.js', 'server-woo.js', 'api-handlers.js'],
     languageOptions: {
       globals: {
         process: 'readonly',
