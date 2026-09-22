@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useDeferredValue } from 'react';
 import { X, Users, Search, Plus, UserCheck, ShoppingBag, Phone, MapPin, Loader2 } from 'lucide-react';
 import { Customer, Sale } from '../types';
 import { formatCurrency, formatDate } from '../utils/formatters';
 import { addSystemLog } from '../utils/logger';
+import { buildSalesCustomerIndex, filterCustomers, CustomerSalesSummary } from '../utils/customerIndex';
 
 interface CustomerDirectoryModalProps {
   isOpen: boolean;
@@ -23,31 +24,47 @@ const CustomerDirectoryModalInner: React.FC<CustomerDirectoryModalProps> = ({
   sales,
   onAddCustomer
 }) => {
-
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSearching, setIsSearching] = useState(false);
   const [search, setSearch] = useState('');
+  const deferredSearch = useDeferredValue(search);
+  const isSearching = deferredSearch !== search;
+
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
 
-  // Carga inicial con spinner circular para listas grandes
-  useEffect(() => {
-    setIsLoading(true);
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 250);
-    return () => clearTimeout(timer);
-  }, []);
+  // Pre-indexar las ventas por clienteId en un Map O(1)
+  const salesByCustomer = useMemo(() => buildSalesCustomerIndex(sales), [sales]);
 
-  const handleSearchChange = (val: string) => {
-    setSearch(val);
-    setIsSearching(true);
-    setTimeout(() => {
-      setIsSearching(false);
-    }, 150);
+  const EMPTY_SUMMARY: CustomerSalesSummary = { count: 0, total: 0, sales: [] };
+  const getCustomerSummary = (clienteId: string): CustomerSalesSummary => {
+    return salesByCustomer.get(clienteId) || EMPTY_SUMMARY;
   };
 
-  // New Customer State
+  // Lista de clientes filtrada de manera reactiva y no bloqueante
+  const filteredCustomers = useMemo(() => {
+    return filterCustomers(customers, deferredSearch);
+  }, [customers, deferredSearch]);
+
+  // Paginación progresiva para mantener el DOM ultra liviano
+  const PAGE_SIZE = 40;
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+
+  // Reset de la paginación al cambiar el filtro
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [deferredSearch]);
+
+  const visibleCustomers = useMemo(() => {
+    return filteredCustomers.slice(0, visibleCount);
+  }, [filteredCustomers, visibleCount]);
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+    if (scrollHeight - scrollTop - clientHeight < 120 && visibleCount < filteredCustomers.length) {
+      setVisibleCount((prev) => Math.min(prev + PAGE_SIZE, filteredCustomers.length));
+    }
+  };
+
+  // Estados para el formulario de nuevo cliente
   const [newNombre, setNewNombre] = useState('');
   const [newApellido, setNewApellido] = useState('');
   const [newDniCuit, setNewDniCuit] = useState('');
@@ -56,24 +73,6 @@ const CustomerDirectoryModalInner: React.FC<CustomerDirectoryModalProps> = ({
   const [newDireccion, setNewDireccion] = useState('');
   const [newLocalidad, setNewLocalidad] = useState('');
   const [newProvincia, setNewProvincia] = useState('Buenos Aires');
-
-  // Filtered customer list
-  const filteredCustomers = customers.filter((c) => {
-    const q = search.toLowerCase().trim();
-    if (!q) return true;
-    return (
-      c.nombre.toLowerCase().includes(q) ||
-      c.apellido.toLowerCase().includes(q) ||
-      c.clienteId.toLowerCase().includes(q) ||
-      (c.dniCuit || '').toLowerCase().includes(q) ||
-      (c.telefono || '').toLowerCase().includes(q)
-    );
-  });
-
-  // Calculate customer purchase history from sales
-  const getCustomerSales = (clienteId: string) => {
-    return sales.filter((s) => s.clienteId === clienteId);
-  };
 
   const handleCreateCustomer = (e: React.FormEvent) => {
     e.preventDefault();
@@ -156,204 +155,212 @@ const CustomerDirectoryModalInner: React.FC<CustomerDirectoryModalProps> = ({
 
         {/* Modal Body */}
         <div className="p-5 overflow-y-auto space-y-4 text-xs text-slate-800 dark:text-slate-200">
-          {isLoading ? (
-            <div className="py-24 flex flex-col items-center justify-center space-y-4">
-              <div className="relative flex items-center justify-center">
-                <div className="w-14 h-14 rounded-full border-4 border-indigo-100 dark:border-indigo-900/40 border-t-indigo-600 dark:border-t-indigo-400 animate-spin" />
-                <Users className="w-6 h-6 text-indigo-600 dark:text-indigo-400 absolute" />
-              </div>
-              <div className="text-center">
-                <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
-                  Cargando directorio de clientes...
-                </p>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  Procesando {customers.length} registros e historiales de compra
-                </p>
-              </div>
-            </div>
-          ) : (
-            <>
-              {/* Add New Customer Form Drawer */}
-              {showAddForm && (
-                <form onSubmit={handleCreateCustomer} className="bg-slate-50 dark:bg-slate-950 border border-indigo-200 dark:border-indigo-500/40 rounded-lg p-4 space-y-3">
-                  <h3 className="font-bold text-indigo-700 dark:text-indigo-300 text-xs flex items-center gap-1">
-                    <UserCheck className="w-4 h-4" />
-                    Registrar Nuevo Cliente
-                  </h3>
+          {/* Add New Customer Form Drawer */}
+          {showAddForm && (
+            <form onSubmit={handleCreateCustomer} className="bg-slate-50 dark:bg-slate-950 border border-indigo-200 dark:border-indigo-500/40 rounded-lg p-4 space-y-3">
+              <h3 className="font-bold text-indigo-700 dark:text-indigo-300 text-xs flex items-center gap-1">
+                <UserCheck className="w-4 h-4" />
+                Registrar Nuevo Cliente
+              </h3>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div>
-                      <label className="block text-slate-500 dark:text-slate-400 mb-0.5">Nombre *</label>
-                      <input
-                        type="text"
-                        required
-                        value={newNombre}
-                        onChange={(e) => setNewNombre(e.target.value)}
-                        className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded px-2.5 py-1 text-slate-900 dark:text-slate-100 focus:outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-slate-500 dark:text-slate-400 mb-0.5">Apellido</label>
-                      <input
-                        type="text"
-                        value={newApellido}
-                        onChange={(e) => setNewApellido(e.target.value)}
-                        className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded px-2.5 py-1 text-slate-900 dark:text-slate-100 focus:outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-slate-500 dark:text-slate-400 mb-0.5">DNI / CUIT</label>
-                      <input
-                        type="text"
-                        value={newDniCuit}
-                        onChange={(e) => setNewDniCuit(e.target.value)}
-                        className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded px-2.5 py-1 text-slate-900 dark:text-slate-100 font-mono focus:outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-slate-500 dark:text-slate-400 mb-0.5">Teléfono</label>
-                      <input
-                        type="text"
-                        value={newTelefono}
-                        onChange={(e) => setNewTelefono(e.target.value)}
-                        className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded px-2.5 py-1 text-slate-900 dark:text-slate-100 focus:outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-slate-500 dark:text-slate-400 mb-0.5">Email</label>
-                      <input
-                        type="email"
-                        value={newEmail}
-                        onChange={(e) => setNewEmail(e.target.value)}
-                        className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded px-2.5 py-1 text-slate-900 dark:text-slate-100 focus:outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-slate-500 dark:text-slate-400 mb-0.5">Dirección de Entrega por Defecto</label>
-                      <input
-                        type="text"
-                        placeholder="Calle y número"
-                        value={newDireccion}
-                        onChange={(e) => setNewDireccion(e.target.value)}
-                        className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded px-2.5 py-1 text-slate-900 dark:text-slate-100 focus:outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-slate-500 dark:text-slate-400 mb-0.5">Localidad</label>
-                      <input
-                        type="text"
-                        placeholder="Ej: Rosario"
-                        value={newLocalidad}
-                        onChange={(e) => setNewLocalidad(e.target.value)}
-                        className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded px-2.5 py-1 text-slate-900 dark:text-slate-100 focus:outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-slate-500 dark:text-slate-400 mb-0.5">Provincia</label>
-                      <input
-                        type="text"
-                        placeholder="Ej: Santa Fe"
-                        value={newProvincia}
-                        onChange={(e) => setNewProvincia(e.target.value)}
-                        className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded px-2.5 py-1 text-slate-900 dark:text-slate-100 focus:outline-none"
-                      />
-                    </div>
-                    <div className="flex items-end justify-end gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setShowAddForm(false)}
-                        className="bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-400 px-3 py-1 rounded"
-                      >
-                        Cancelar
-                      </button>
-                      <button
-                        type="submit"
-                        className="bg-indigo-600 text-white font-medium px-4 py-1 rounded cursor-pointer"
-                      >
-                        Guardar
-                      </button>
-                    </div>
-                  </div>
-                </form>
-              )}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-slate-500 dark:text-slate-400 mb-0.5">Nombre *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ej: Juan"
+                    value={newNombre}
+                    onChange={(e) => setNewNombre(e.target.value)}
+                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded px-2.5 py-1 text-slate-900 dark:text-slate-100 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-500 dark:text-slate-400 mb-0.5">Apellido</label>
+                  <input
+                    type="text"
+                    placeholder="Ej: Pérez"
+                    value={newApellido}
+                    onChange={(e) => setNewApellido(e.target.value)}
+                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded px-2.5 py-1 text-slate-900 dark:text-slate-100 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-500 dark:text-slate-400 mb-0.5">DNI / CUIT</label>
+                  <input
+                    type="text"
+                    value={newDniCuit}
+                    onChange={(e) => setNewDniCuit(e.target.value)}
+                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded px-2.5 py-1 text-slate-900 dark:text-slate-100 font-mono focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-500 dark:text-slate-400 mb-0.5">Teléfono</label>
+                  <input
+                    type="text"
+                    value={newTelefono}
+                    onChange={(e) => setNewTelefono(e.target.value)}
+                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded px-2.5 py-1 text-slate-900 dark:text-slate-100 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-500 dark:text-slate-400 mb-0.5">Email</label>
+                  <input
+                    type="email"
+                    value={newEmail}
+                    onChange={(e) => setNewEmail(e.target.value)}
+                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded px-2.5 py-1 text-slate-900 dark:text-slate-100 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-500 dark:text-slate-400 mb-0.5">Dirección de Entrega por Defecto</label>
+                  <input
+                    type="text"
+                    placeholder="Calle y número"
+                    value={newDireccion}
+                    onChange={(e) => setNewDireccion(e.target.value)}
+                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded px-2.5 py-1 text-slate-900 dark:text-slate-100 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-500 dark:text-slate-400 mb-0.5">Localidad</label>
+                  <input
+                    type="text"
+                    placeholder="Ej: Rosario"
+                    value={newLocalidad}
+                    onChange={(e) => setNewLocalidad(e.target.value)}
+                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded px-2.5 py-1 text-slate-900 dark:text-slate-100 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-500 dark:text-slate-400 mb-0.5">Provincia</label>
+                  <input
+                    type="text"
+                    placeholder="Ej: Santa Fe"
+                    value={newProvincia}
+                    onChange={(e) => setNewProvincia(e.target.value)}
+                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded px-2.5 py-1 text-slate-900 dark:text-slate-100 focus:outline-none"
+                  />
+                </div>
+                <div className="flex items-end justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddForm(false)}
+                    className="bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-400 px-3 py-1 rounded"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="bg-indigo-600 text-white font-medium px-4 py-1 rounded cursor-pointer"
+                  >
+                    Guardar
+                  </button>
+                </div>
+              </div>
+            </form>
+          )}
 
-              {/* Search bar */}
-              <div className="relative">
-                {isSearching ? (
-                  <Loader2 className="w-4 h-4 absolute left-3 top-2.5 text-indigo-600 dark:text-indigo-400 animate-spin" />
-                ) : (
-                  <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
+          {/* Search bar */}
+          <div className="relative">
+            {isSearching ? (
+              <Loader2 className="w-4 h-4 absolute left-3 top-2.5 text-indigo-600 dark:text-indigo-400 animate-spin" />
+            ) : (
+              <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
+            )}
+            <input
+              type="text"
+              placeholder="Buscar cliente por nombre, ID interno (CLI-1001), CUIT o teléfono..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-md pl-9 pr-3 py-2 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-500"
+            />
+          </div>
+
+          {/* Customer list and history split */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            
+            {/* Left: Customer Cards list */}
+            <div onScroll={handleScroll} className="space-y-2 max-h-96 overflow-y-auto pr-1">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-bold text-slate-500 dark:text-slate-400 text-[11px] uppercase tracking-wider">
+                  Listado de Clientes ({filteredCustomers.length})
+                </h3>
+                {visibleCustomers.length < filteredCustomers.length && (
+                  <span className="text-[10px] text-slate-400">
+                    Mostrando {visibleCustomers.length} de {filteredCustomers.length}
+                  </span>
                 )}
-                <input
-                  type="text"
-                  placeholder="Buscar cliente por nombre, ID interno (CLI-1001), CUIT o teléfono..."
-                  value={search}
-                  onChange={(e) => handleSearchChange(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-md pl-9 pr-3 py-2 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-500"
-                />
               </div>
 
-              {/* Customer list and history split */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                
-                {/* Left: Customer Cards list */}
-                <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
-                  <h3 className="font-bold text-slate-500 dark:text-slate-400 text-[11px] uppercase tracking-wider mb-2">
-                    Listado de Clientes ({filteredCustomers.length})
-                  </h3>
+              {filteredCustomers.length === 0 ? (
+                <div className="p-8 text-center text-slate-400 dark:text-slate-500 border border-dashed border-slate-200 dark:border-slate-800 rounded-lg">
+                  <p className="font-semibold text-xs">No se encontraron clientes</p>
+                  <p className="text-[11px] mt-1">Prueba con otro término de búsqueda o registra un nuevo cliente.</p>
+                </div>
+              ) : (
+                <>
+                  {visibleCustomers.map((c) => {
+                    const summary = getCustomerSummary(c.clienteId);
+                    const isSelected = selectedCustomer?.clienteId === c.clienteId;
 
-                  {filteredCustomers.length === 0 ? (
-                    <div className="p-8 text-center text-slate-400 dark:text-slate-500 border border-dashed border-slate-200 dark:border-slate-800 rounded-lg">
-                      <p className="font-semibold text-xs">No se encontraron clientes</p>
-                      <p className="text-[11px] mt-1">Prueba con otro término de búsqueda o registra un nuevo cliente.</p>
-                    </div>
-                  ) : (
-                    filteredCustomers.map((c) => {
-                      const cSales = getCustomerSales(c.clienteId);
-                      const totalSpent = cSales.reduce((acc, s) => acc + s.montoTotal, 0);
-                      const isSelected = selectedCustomer?.clienteId === c.clienteId;
-
-                      return (
-                        <div
-                          key={c.clienteId}
-                          onClick={() => setSelectedCustomer(c)}
-                          className={`p-3 rounded-lg border transition-all cursor-pointer ${
-                            isSelected
-                              ? 'bg-indigo-50 dark:bg-indigo-950/60 border-indigo-500 ring-1 ring-indigo-500'
-                              : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <span className="font-mono text-cyan-700 dark:text-cyan-400 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-1.5 py-0.5 rounded text-[11px] font-bold">
-                                {c.clienteId}
-                              </span>
-                              <span className="font-bold text-slate-900 dark:text-slate-100">
-                                {c.nombre} {c.apellido}
-                              </span>
-                            </div>
-                            <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
-                              {formatCurrency(totalSpent)}
+                    return (
+                      <div
+                        key={c.clienteId}
+                        onClick={() => setSelectedCustomer(c)}
+                        className={`p-3 rounded-lg border transition-all cursor-pointer ${
+                          isSelected
+                            ? 'bg-indigo-50 dark:bg-indigo-950/60 border-indigo-500 ring-1 ring-indigo-500'
+                            : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-cyan-700 dark:text-cyan-400 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-1.5 py-0.5 rounded text-[11px] font-bold">
+                              {c.clienteId}
+                            </span>
+                            <span className="font-bold text-slate-900 dark:text-slate-100">
+                              {c.nombre} {c.apellido}
                             </span>
                           </div>
-
-                          <div className="mt-2 text-[11px] text-slate-500 dark:text-slate-400 flex flex-wrap gap-x-4 gap-y-1">
-                            {c.dniCuit && <span>CUIT: {c.dniCuit}</span>}
-                            {c.telefono && <span className="flex items-center gap-1"><Phone className="w-3 h-3 text-slate-400" /> {c.telefono}</span>}
-                            {(c.direccion || c.localidad || c.provincia) && (
-                              <span className="flex items-center gap-1"><MapPin className="w-3 h-3 text-slate-400" /> {[c.direccion, c.localidad].filter(Boolean).join(', ')}</span>
-                            )}
-                            <span>Ventas: <strong className="text-slate-800 dark:text-slate-200">{cSales.length}</strong></span>
-                          </div>
+                          <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                            {formatCurrency(summary.total)}
+                          </span>
                         </div>
-                      );
-                    })
-                  )}
-                </div>
 
-                {/* Right: Selected Customer Purchase History */}
-                <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-4 flex flex-col justify-between">
-                  {selectedCustomer ? (
+                        <div className="mt-2 text-[11px] text-slate-500 dark:text-slate-400 flex flex-wrap gap-x-4 gap-y-1">
+                          {c.dniCuit && <span>CUIT: {c.dniCuit}</span>}
+                          {c.telefono && <span className="flex items-center gap-1"><Phone className="w-3 h-3 text-slate-400" /> {c.telefono}</span>}
+                          {(c.direccion || c.localidad || c.provincia) && (
+                            <span className="flex items-center gap-1"><MapPin className="w-3 h-3 text-slate-400" /> {[c.direccion, c.localidad].filter(Boolean).join(', ')}</span>
+                          )}
+                          <span>Ventas: <strong className="text-slate-800 dark:text-slate-200">{summary.count}</strong></span>
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  {visibleCustomers.length < filteredCustomers.length && (
+                    <div className="pt-2 text-center">
+                      <button
+                        type="button"
+                        onClick={() => setVisibleCount((prev) => Math.min(prev + PAGE_SIZE, filteredCustomers.length))}
+                        className="w-full py-2 bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-indigo-600 dark:text-indigo-400 font-semibold text-xs rounded-lg border border-slate-200 dark:border-slate-800 transition-colors cursor-pointer"
+                      >
+                        Mostrar más ({filteredCustomers.length - visibleCustomers.length} restantes)
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+
+            {/* Right: Selected Customer Purchase History */}
+            <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-4 flex flex-col justify-between">
+              {selectedCustomer ? (
+                (() => {
+                  const summary = getCustomerSummary(selectedCustomer.clienteId);
+                  return (
                     <div className="space-y-3">
                       <div className="border-b border-slate-200 dark:border-slate-800 pb-2 flex items-center justify-between">
                         <div>
@@ -365,7 +372,7 @@ const CustomerDirectoryModalInner: React.FC<CustomerDirectoryModalProps> = ({
                           </p>
                         </div>
                         <span className="bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 px-2 py-0.5 rounded text-[10px] font-bold">
-                          {selectedCustomer.cantidadPedidos || getCustomerSales(selectedCustomer.clienteId).length} Pedidos
+                          {selectedCustomer.cantidadPedidos || summary.count} Pedidos
                         </span>
                       </div>
 
@@ -393,14 +400,14 @@ const CustomerDirectoryModalInner: React.FC<CustomerDirectoryModalProps> = ({
 
                       <h4 className="font-bold text-slate-700 dark:text-slate-300 text-xs flex items-center gap-1 pt-1">
                         <ShoppingBag className="w-3.5 h-3.5 text-indigo-600" />
-                        Historial de Compras ({getCustomerSales(selectedCustomer.clienteId).length})
+                        Historial de Compras ({summary.count})
                       </h4>
 
                       <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
-                        {getCustomerSales(selectedCustomer.clienteId).length === 0 ? (
+                        {summary.sales.length === 0 ? (
                           <p className="text-slate-400 dark:text-slate-500 text-xs py-4 text-center">No tiene compras registradas en el sistema.</p>
                         ) : (
-                          getCustomerSales(selectedCustomer.clienteId).map((s) => (
+                          summary.sales.map((s) => (
                             <div key={s.id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-2 rounded text-xs flex items-center justify-between">
                               <div>
                                 <span className="text-slate-500 dark:text-slate-400 font-sans">{formatDate(s.fecha)}</span>
@@ -415,17 +422,17 @@ const CustomerDirectoryModalInner: React.FC<CustomerDirectoryModalProps> = ({
                         )}
                       </div>
                     </div>
-                  ) : (
-                    <div className="h-full flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 py-12">
-                      <Users className="w-8 h-8 mb-2 text-slate-400 dark:text-slate-600" />
-                      <span>Selecciona un cliente de la lista para consultar su historial completo</span>
-                    </div>
-                  )}
+                  );
+                })()
+              ) : (
+                <div className="h-full flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 py-12">
+                  <Users className="w-8 h-8 mb-2 text-slate-400 dark:text-slate-600" />
+                  <span>Selecciona un cliente de la lista para consultar su historial completo</span>
                 </div>
+              )}
+            </div>
 
-              </div>
-            </>
-          )}
+          </div>
         </div>
       </div>
     </div>

@@ -34,7 +34,7 @@ proyecto, con su estado, causa, solución aplicada y forma de verificarla.
 | **W1** | El flag de seguridad apagaba la sincronización automática de WooCommerce | **Alta** | ✅ Reparado |
 | **W4** | Fallos de sincronización silenciosos y sin backoff | **Alta** | ✅ Reparado |
 | **W2** | La programación sólo existía con la app abierta (sin cron en el servidor) | Alta | ✅ Reparado |
-| **W3** | La config de automatización podía no guardarse (botón poco visible) | Media | 🟡 Parcial |
+| **W3** | La config de automatización podía no guardarse (botón poco visible) | Media | ✅ Reparado |
 | **W5** | Fallback a catálogo **demo** como éxito + reemplazo total del catálogo | Media | ✅ Reparado |
 | **W6** | Faltan indicadores (próxima corrida / último error) | Baja | 🟡 Parcial |
 

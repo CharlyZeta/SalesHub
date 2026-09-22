@@ -77,6 +77,8 @@ Entidades tipadas en `src/types.ts` (Strict Typing Layer) que modelan el dominio
 3. **Distribución Omnicanal Inmediata**: Integración directa con la **API de WhatsApp (`wa.me`)** adaptada a la numeración argentina (`+54 9`) y cliente de correo electrónico para compartir presupuestos y ubicaciones geográficas de entrega con detalle de cliente y productos.
 4. **Trazabilidad y Auditoría Completa**: Sistema de logs de auditoría en memoria y almacenamiento local que registra cada alta, modificación, conversión y sincronización de API.
 5. **Localización y Logística Simplificada**: Geolocalización en mapa interactivo de OpenStreetMap sin costos de API, pin arrastrable para corrección exacta de coordenadas y plantilla de WhatsApp para transportistas y clientes.
+6. **Directorio de Clientes de Alto Rendimiento (FIX-C001)**: Indexación $O(1)$ de ventas por cliente mediante `Map`, paginación progresiva en ventana de 40 clientes y búsqueda concurrente no bloqueante (`useDeferredValue`), soportando catálogos de miles de clientes sin saturar la memoria ni congelar la interfaz.
+7. **Autoguardado con Debounce de WooCommerce (FIX-W003)**: Persistencia automática tras 900 ms de inactividad y guardado forzado en el desmontaje del componente (`unmount`), impidiendo pérdidas de configuración por cierres accidentales.
 
 ---
 
@@ -203,8 +205,8 @@ El proyecto cuenta con una suite completa de pruebas unitarias implementada con 
 | `src/utils/logger.ts` | **88.5%** | **90.9%** | PASSED |
 | `api-handlers.js` (capa de API) | **61.1%** | **61.2%** | PASSED |
 | `src/utils/wooCommerceApi.ts` | **60.4%** | **60.5%** | PASSED |
-| **TOTAL (módulos utils)** | **81.6%** | **81.1%** | **9/9 TEST SUITES PASSED (90/90 TESTS)** |
-| **TOTAL global (incluye API)** | **76.0%** | **75.4%** | — |
+| **TOTAL (módulos utils)** | **82.4%** | **82.1%** | **12/12 TEST SUITES PASSED (111/111 TESTS)** |
+| **TOTAL global (incluye API)** | **76.8%** | **76.2%** | — |
 
 > Nota: la cobertura mide la lógica pura (`src/utils`) y la capa de API
 > (`api-handlers.js`) ejercitadas por los tests; los componentes de UI
@@ -286,18 +288,25 @@ npm run test:coverage
 ```
 SalesHub/
 ├── .github/workflows/ci.yml  # Pipeline CI: typecheck + lint, tests, build, mapa y ciclos
-├── AGENTS.md                 # Protocolo de sesión para agentes (lectura mínima + ahorro de tokens)
+├── AGENTS.md                 # Protocolo de sesión para agentes (lectura mínima + SDD-GL v0.3.0)
+├── contracts/                # Contratos ejecutables bajo protocolo SDD-GL v0.3.0 (Gate/Loop)
+│   ├── README.md
+│   ├── FIX-W003.md           # Autoguardado con debounce de ajustes WooCommerce
+│   └── FIX-C001.md           # Optimización O(1) y paginación del Directorio de Clientes
 ├── src/
-│   ├── __tests__/            # Tests unitarios con Vitest (9 suites / 90 tests)
+│   ├── __tests__/            # Tests unitarios con Vitest (12 suites / 111 tests)
 │   │   ├── andreaniStatusMapper.test.ts
 │   │   ├── apiHandlers.test.ts         # API de backups/tracking y rotación
 │   │   ├── budgetDelivery.test.ts
 │   │   ├── budgetSaleLogic.test.ts
+│   │   ├── customerPerformance.test.ts # Rendimiento de agregación e indexación O(1)
 │   │   ├── formatters.test.ts
 │   │   ├── logger.test.ts
 │   │   ├── numberToWords.test.ts
 │   │   ├── security.test.ts
-│   │   └── wooCommerceApi.test.ts
+│   │   ├── wooCommerceApi.test.ts
+│   │   ├── wooCommerceAutosave.test.ts # Autoguardado y unmount debounce
+│   │   └── wooServerSync.test.ts
 │   ├── assets/images/        # Capturas e imágenes promocionales
 │   ├── components/           # Componentes UI encapsulados (uno por responsabilidad)
 │   │   ├── AnalyticsModal.tsx
@@ -308,7 +317,7 @@ SalesHub/
 │   │   ├── ConfigEmpresaTab.tsx        # Pestaña: empresa / firma
 │   │   ├── ConfigGeneralTab.tsx        # Pestaña: canales, pagos, envíos, Andreani
 │   │   ├── ConfigSecurityTab.tsx       # Pestaña: seguridad & PIN
-│   │   ├── CustomerDirectoryModal.tsx
+│   │   ├── CustomerDirectoryModal.tsx  # Directorio con paginación y búsqueda no bloqueante
 │   │   ├── ExportModal.tsx
 │   │   ├── Header.tsx
 │   │   ├── ImportModal.tsx
@@ -320,7 +329,7 @@ SalesHub/
 │   │   ├── SendBudgetModal.tsx
 │   │   ├── SpreadsheetGrid.tsx
 │   │   ├── SystemLogsModal.tsx
-│   │   └── WooCommerceModal.tsx
+│   │   └── WooCommerceModal.tsx        # Sincronización + autoguardado de ajustes
 │   ├── data/                 # Datos iniciales y semillas de prueba
 │   │   └── initialData.ts
 │   ├── utils/                # Utilidades puras y lógica de negocio
@@ -328,6 +337,7 @@ SalesHub/
 │   │   ├── andreaniSyncService.ts      # Auto-seguimiento reactivo de envíos
 │   │   ├── backupService.ts            # Backups IndexedDB + disco (API /api/backup)
 │   │   ├── budgetDelivery.ts
+│   │   ├── customerIndex.ts            # Pre-indexación O(1) de ventas y filtro seguro
 │   │   ├── formatters.ts
 │   │   ├── logger.ts                   # Motor de auditoría (localStorage + eventos)
 │   │   ├── numberToWords.ts
@@ -342,7 +352,11 @@ SalesHub/
 ├── docs/ESTADO-DEL-PROYECTO.md # Estado de la sesión: entregado, pendientes y cómo retomar
 ├── docs/MAPA-DEL-CODIGO.md   # Índice autogenerado del código (npm run map)
 ├── docs/FIXES.md             # Registro de correcciones aplicadas y deuda pendiente
-├── scripts/                  # Automatización: mapa del código, diagnóstico del grafo y hooks
+├── scripts/                  # Automatización: mapa del código, diagnóstico, check SDD y hooks
+│   ├── check-sdd-version.mjs # Verificación de versión del framework SDD-GL
+│   ├── generate-code-map.mjs # Generador del mapa del código
+│   ├── graph-doctor.mjs      # Diagnóstico del grafo de conocimiento
+│   └── install-hooks.mjs     # Instalador de hooks de git
 ├── metadata.json             # Metadatos del applet en AI Studio
 ├── package.json              # Dependencias y scripts de compilación
 ├── server.js                 # Servidor de producción Node.js (dist/ + APIs /api/*)

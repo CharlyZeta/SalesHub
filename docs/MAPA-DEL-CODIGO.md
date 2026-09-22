@@ -4,20 +4,21 @@
 > Es el índice que conviene leer **antes** de abrir archivos: una fila por módulo
 > con su responsabilidad y sus exports principales.
 
-**Resumen:** 38 archivos · 13.604 líneas.
+**Resumen:** 40 archivos · 13.824 líneas.
 
 | Directorio | Archivos | Líneas |
 |:--|--:|--:|
-| `scripts/` | 4 | 445 |
+| `scripts/` | 5 | 524 |
 | `src/` | 3 | 1.310 |
-| `src/components/` | 21 | 9.733 |
+| `src/components/` | 21 | 9.821 |
 | `src/data/` | 1 | 358 |
-| `src/utils/` | 9 | 1.758 |
+| `src/utils/` | 10 | 1.811 |
 
 ## `scripts/`
 
 | Archivo | Líneas | Responsabilidad | Exports |
 |:--|--:|:--|:--|
+| `check-sdd-version.mjs` | 79 | 1. Verificar instalación / repositorio local del protocolo | — |
 | `generate-code-map.mjs` | 197 | Generador de este mapa (npm run map / map:check) | — |
 | `graph-doctor.mjs` | 114 | Diagnóstico del grafo de conocimiento y de los hooks (npm run graph:doctor) | — |
 | `install-hooks.mjs` | 97 | Instalación automática de hooks de git (npm install / npm run hooks:install) | — |
@@ -43,7 +44,7 @@
 | `ConfigGeneralTab.tsx` | 431 | Pestaña General & Ventas: canales, pagos, envíos, Andreani, numeración e importación | ConfigGeneralTab, ConfigGeneralTabProps |
 | `ConfigModal.tsx` | 477 | Configuración del sistema: shell del modal, estado compartido, guardado y pestañas | ConfigModal |
 | `ConfigSecurityTab.tsx` | 155 | Pestaña Seguridad & PIN: control de acceso, inactividad y restricciones por rol | ConfigSecurityTab, ConfigSecurityTabProps |
-| `CustomerDirectoryModal.tsx` | 434 | Directorio de clientes: búsqueda, historial de compras y alta de clientes | CustomerDirectoryModal |
+| `CustomerDirectoryModal.tsx` | 441 | Directorio de clientes: búsqueda, historial de compras y alta de clientes | CustomerDirectoryModal |
 | `ExportModal.tsx` | 124 | Exportador de ventas a CSV por rango y canal | ExportModal |
 | `Header.tsx` | 219 | Barra superior: marca, KPIs rápidos, accesos a modales, tema y bloqueo de sesión | Header |
 | `ImportModal.tsx` | 526 | Importador CSV / pegado desde Google Sheets con mapeo de columnas | ImportModal |
@@ -55,7 +56,7 @@
 | `SendBudgetModal.tsx` | 367 | Envío omnicanal de presupuestos por WhatsApp (wa.me) y correo (mailto) | SendBudgetModal |
 | `SpreadsheetGrid.tsx` | 1081 | Planilla interactiva de ventas: edición inline, filtros, paginación y tracking Andreani | SpreadsheetGrid |
 | `SystemLogsModal.tsx` | 367 | Consola de auditoría: filtros por nivel/categoría/fecha y exportación | SystemLogsModal |
-| `WooCommerceModal.tsx` | 739 | Sincronización WooCommerce: credenciales, catálogo, clientes y programación | WooCommerceModal |
+| `WooCommerceModal.tsx` | 820 | Sincronización WooCommerce: credenciales, catálogo, clientes y programación | WooCommerceModal |
 
 ## `src/data/`
 
@@ -71,6 +72,7 @@
 | `andreaniSyncService.ts` | 114 | Consulta en lote del tracking de Andreani con caché de 60 s | clearAndreaniTrackingCache, fetchAndreaniTrackingsBulk, AndreaniTrackResult |
 | `backupService.ts` | 331 | Backups en IndexedDB y disco (API /api/backup) con rotación | IDB_RETENTION, saveToIndexedDb, listFromIndexedDb, getFromIndexedDb, deleteFromIndexedDb, pruneIndexedDbBackups, saveToBackend, listFromBackend, getFromBackend, runBackup, listAllBackups, restoreBackup, checkAndTriggerAutoBackup, FullAppState, BackupItem |
 | `budgetDelivery.ts` | 152 | Plantillas de envío de presupuestos (WhatsApp/correo) y normalización de teléfonos | formatWhatsAppPhone, generateBudgetWhatsAppText, generateBudgetEmailSubject, generateBudgetEmailBody, openWhatsAppForBudget, openEmailForBudget |
+| `customerIndex.ts` | 53 | — | buildSalesCustomerIndex, filterCustomers, CustomerSalesSummary |
 | `formatters.ts` | 253 | Formateo ARS/fechas, validaciones de venta, IDs y sanitización de CSV | formatCurrency, formatDate, parseDateToISO, parseAmountString, validateRequiredSaleFields, getCurrentMonthISO, generateSaleId, getMonthYearLabel, exportSalesToCSV, RecordValidationResult |
 | `logger.ts` | 125 | Motor de auditoría (localStorage + eventos) con filtros y exportación | getSystemLogs, addSystemLog, clearSystemLogs, filterSystemLogs, exportLogsJSON, exportLogsCSV, LogEntry, LogFilterOptions, LogLevel |
 | `numberToWords.ts` | 71 | Conversión de importes a texto (para comprobantes) | numberToWordsSpanish |

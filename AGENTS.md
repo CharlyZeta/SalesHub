@@ -12,8 +12,9 @@ tokens posible**.
 |:--|:--|:--|:--|
 | 1 | `docs/ESTADO-DEL-PROYECTO.md` | Estado actual, entregado, pendientes y cómo retomar | ~5 KB |
 | 2 | `docs/MAPA-DEL-CODIGO.md` | Índice: 1 fila por archivo con responsabilidad y exports | ~5 KB |
-| 3 | `docs/FIXES.md` | Registro de incidencias con IDs (A*, B*, W*) y su estado | ~15 KB (leer solo la sección necesaria) |
-| 4 | `graphify-out/GRAPH_REPORT.md` | Reporte del grafo: comunidades y nodos centrales | solo si hace falta el panorama |
+| 3 | `docs/FIXES.md` | Registro histórico de incidencias con IDs (A*, B*, W*) | ~15 KB (leer solo la sección necesaria) |
+| 4 | `contracts/*.md` | Contratos SDD-GL del trabajo en curso o a ejecutar | ~2 KB por contrato |
+| 5 | `graphify-out/GRAPH_REPORT.md` | Reporte del grafo: comunidades y nodos centrales | solo si hace falta el panorama |
 
 **No leer nunca `graphify-out/graph.json`** (535 KB ≈ 150k tokens). Para eso existen
 `graphify explain` / `graphify path`.
@@ -38,18 +39,34 @@ tokens posible**.
 
 ---
 
-## 3. Ciclo de trabajo
+## 3. Ciclo de trabajo y Metodología SDD-GL
 
-**Al iniciar**
+### Metodología de Desarrollo y Fixes (SDD-GL)
+Todo desarrollo, refactor o fix en este proyecto se rige obligatoriamente por el framework
+**Spec-Driven Development with Gate/Loop (SDD-GL)**:
+1. **Contrato formal**: Cada tarea debe contar con su archivo en `contracts/[FEAT|FIX]-XXXX.md`
+   conforme a la especificación SDD-GL v0.3.0 (Intent, Use Case, Business Rules, Acceptance
+   Criteria AC-XXX, Entities Affected, Ambiguity Log, Completion Map).
+2. **Fase Gate (HO-Gate)**: El contrato nace en `Status: DRAFT` y `Mode: GATE`. Solo el
+   humano puede autorizar la transición a `Status: APPROVED` y `Mode: LOOP`. El agente
+   **nunca** inicia implementación autónoma sin esta aprobación humana.
+3. **Fase Loop**: Ejecución autónoma iterativa guiada por los criterios de completitud
+   inferidos (`Main Flow`, `AF-XX`, `BR-XXX`, `AC-XXX`). Actualización atómica del
+   `Completion Map` (`❌` → `⏳` → `✅`).
+4. **Stack Preset**: TypeScript Node.js / Bun (`presets/typescript-node.md`), usando
+   Vitest (`npm test`), TypeScript estricto y cero tolerancia a errores o warnings de lint.
+
+**Al iniciar la sesión**
 ```bash
+npm run sdd:check        # verificar versión activa de SDD-GL y detectar nuevas versiones
 npm run graph:doctor     # estado del grafo, hooks y artefactos (sin costo de tokens)
 npm run lint && npm test # confirmar que el punto de partida está sano
 ```
 
 **Durante**
-- Un pedido = un objetivo verificable (idealmente 1–3 fixes relacionados, no 10).
-- Cada cambio de comportamiento se acompaña de su entrada en `docs/FIXES.md` (con ID) y en
-  `CHANGELOG.txt`.
+- Un pedido = un contrato SDD-GL o lote coordinado de contratos.
+- Cada cambio de comportamiento se acompaña de su entrada en `docs/FIXES.md` (o `contracts/`)
+  y en `CHANGELOG.txt`.
 - Antes de commitear: `npm run lint` (tsc + ESLint), `npm test`, `npm run build` cuando
   aplique.
 
@@ -68,6 +85,7 @@ siguen *Conventional Commits* en español (`feat:`, `fix:`, `docs:`, `refactor:`
 
 | Mecanismo | Qué hace | Cuándo corre |
 |:--|:--|:--|
+| `npm run sdd:check` | Chequea versión instalada y actualizaciones de SDD-GL | al iniciar sesión / a demanda |
 | `hooks:install` (script `prepare`) | Instala los hooks de git | automático en `npm install` / `npm ci` |
 | Hook `pre-commit` | Regenera y agrega `docs/MAPA-DEL-CODIGO.md` | en cada commit |
 | Hook `post-commit` (Graphify) | Reconstruye el grafo de conocimiento en segundo plano | en cada commit |
@@ -81,11 +99,11 @@ siguen *Conventional Commits* en español (`feat:`, `fix:`, `docs:`, `refactor:`
 
 - **Dominio**: front-office comercial (ventas, presupuestos AFIP, remitos, envíos) para un
   comercio; **no** reemplaza al ERP.
+- **Metodología**: SDD-GL v0.3.0 en `contracts/` para cualquier desarrollo y fix.
 - **Persistencia**: `localStorage` + IndexedDB (una sola PC). No hay backend de datos; el
   `server.js` solo sirve el build y expone `/api/backup*` y `/api/tracking/andreani/*`.
 - **Uso real**: una PC en el local, operadores con teclado. Priorizar claridad y velocidad.
 - **Datos sensibles**: `backups/` (PII), claves de WooCommerce y hash de Andreani viven en
   el navegador. **Nunca** commitear `backups/`, `.env`, logs ni el mirror `andreani-shipping/`.
-- **Trabajo pendiente**: se gestiona por IDs en `docs/FIXES.md` (prioridad: W2/Fix E y
-  W5/Fix D).
+- **Trabajo pendiente**: se gestiona por contratos en `contracts/` y IDs en `docs/FIXES.md`.
 - **Infra de tokens**: Graphify (grafo + hook), mapa del código, este archivo y `/compact`.

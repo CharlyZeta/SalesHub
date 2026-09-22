@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { X, ShoppingBag, RefreshCw, Key, CheckCircle2, Users, Search, Plus, AlertCircle, Loader2 } from 'lucide-react';
 import { CatalogProduct, Customer, WooCommerceConfig, UserRole } from '../types';
 import { formatCurrency } from '../utils/formatters';
@@ -64,6 +64,112 @@ const WooCommerceModalInner: React.FC<WooCommerceModalProps> = ({
     lastError: string | null;
     nextRunAt: string | null;
   }>({ available: false, autoSync: false, lastSync: null, lastError: null, nextRunAt: null });
+
+  // W3: autoguardado. Los ajustes se persisten solos (con debounce) en cuanto cambian, así
+  // nadie pierde la programación por cerrar el modal sin pulsar "Guardar Ajustes".
+  const [autoSaveState, setAutoSaveState] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const autoSaveTimerRef = useRef<number | null>(null);
+  const firstRenderRef = useRef(true);
+
+  /** Construye la configuración con los valores actuales del formulario. */
+  const buildConfig = (): WooCommerceConfig => ({
+    url,
+    consumerKey,
+    consumerSecret,
+    autoSync,
+    syncIntervalHours,
+    ultimoSync: config.ultimoSync,
+    conectado: Boolean(url && consumerKey),
+  });
+
+  const latestConfigRef = useRef<WooCommerceConfig | null>(null);
+  useEffect(() => {
+    latestConfigRef.current = buildConfig();
+  });
+
+  /** Publica solo la configuración (sin sincronizar) para que el servidor programe. */
+  const publishConfigToServer = async (cfg: WooCommerceConfig) => {
+    try {
+      const res = await fetch('/api/woo/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          url: cfg.url,
+          consumerKey: cfg.consumerKey,
+          consumerSecret: cfg.consumerSecret,
+          autoSync: cfg.autoSync,
+          intervalHours: cfg.syncIntervalHours || 1,
+        }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      setServerStatus({
+        available: true,
+        autoSync: Boolean(data?.status?.autoSync),
+        lastSync: data?.status?.lastSync ?? null,
+        lastError: data?.status?.lastError ?? null,
+        nextRunAt: data?.status?.nextRunAt ?? null,
+      });
+      addSystemLog(
+        'SYNC',
+        'WooCommerce',
+        `Configuración publicada al servidor: la sincronización programada (cada ${cfg.syncIntervalHours || 1} h) correrá aunque la aplicación esté cerrada.`
+      );
+      return true;
+    } catch {
+      // Sin servidor (por ejemplo, build estático servido por otro medio) se sigue
+      // usando la programación del navegador.
+      setServerStatus(prev => ({ ...prev, available: false }));
+      return false;
+    }
+  };
+
+  // Autoguardado con debounce: se dispara ante cualquier cambio de los ajustes.
+  useEffect(() => {
+    // No guardar en el primer render (son los valores recién cargados) ni mientras el
+    // usuario escribe con el teclado en un campo de texto (se espera el debounce).
+    if (firstRenderRef.current) {
+      firstRenderRef.current = false;
+      return;
+    }
+    // Sin URL no hay nada útil que publicar (evita guardar un formulario vacío).
+    if (!url.trim()) return;
+
+    if (autoSaveTimerRef.current) window.clearTimeout(autoSaveTimerRef.current);
+    setAutoSaveState('saving');
+
+    autoSaveTimerRef.current = window.setTimeout(() => {
+      const updatedConfig = buildConfig();
+      onUpdateConfig(updatedConfig);
+      void publishConfigToServer(updatedConfig);
+      setAutoSaveState('saved');
+      addSystemLog(
+        'INFO',
+        'WooCommerce',
+        `Ajustes guardados automáticamente (programación: ${updatedConfig.autoSync ? `cada ${updatedConfig.syncIntervalHours} h` : 'inactiva'})`
+      );
+      autoSaveTimerRef.current = window.setTimeout(() => setAutoSaveState('idle'), 2500);
+    }, 900);
+
+    return () => {
+      if (autoSaveTimerRef.current) window.clearTimeout(autoSaveTimerRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [url, consumerKey, consumerSecret, autoSync, syncIntervalHours]);
+
+  // Al cerrar el modal, si quedó un guardado pendiente se aplica sin esperar el debounce.
+  useEffect(() => {
+    return () => {
+      if (autoSaveTimerRef.current) {
+        window.clearTimeout(autoSaveTimerRef.current);
+        const pending = latestConfigRef.current;
+        if (pending && pending.url.trim()) {
+          onUpdateConfig(pending);
+        }
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Al abrir el modal, consultamos el estado del servidor (si está disponible).
   useEffect(() => {
@@ -146,43 +252,6 @@ const WooCommerceModalInner: React.FC<WooCommerceModalProps> = ({
     } catch {
       setServerStatus(prev => ({ ...prev, available: false }));
       return { available: false };
-    }
-  };
-
-  /** Publica solo la configuración (sin sincronizar) para que el servidor programe. */
-  const publishConfigToServer = async (cfg: WooCommerceConfig) => {
-    try {
-      const res = await fetch('/api/woo/config', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          url: cfg.url,
-          consumerKey: cfg.consumerKey,
-          consumerSecret: cfg.consumerSecret,
-          autoSync: cfg.autoSync,
-          intervalHours: cfg.syncIntervalHours || 1,
-        }),
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      setServerStatus({
-        available: true,
-        autoSync: Boolean(data?.status?.autoSync),
-        lastSync: data?.status?.lastSync ?? null,
-        lastError: data?.status?.lastError ?? null,
-        nextRunAt: data?.status?.nextRunAt ?? null,
-      });
-      addSystemLog(
-        'SYNC',
-        'WooCommerce',
-        `Configuración publicada al servidor: la sincronización programada (cada ${cfg.syncIntervalHours || 1} h) correrá aunque la aplicación esté cerrada.`
-      );
-      return true;
-    } catch {
-      // Sin servidor (por ejemplo, build estático servido por otro medio) se sigue
-      // usando la programación del navegador.
-      setServerStatus(prev => ({ ...prev, available: false }));
-      return false;
     }
   };
 
@@ -460,9 +529,21 @@ const WooCommerceModalInner: React.FC<WooCommerceModalProps> = ({
                   >
                     {autoSync ? `Activa cada ${syncIntervalHours} h` : 'Inactiva'}
                   </span>
-                  <span className="text-slate-400 dark:text-slate-500 ml-1">
-                    (se guarda con «Guardar Ajustes»)
-                  </span>
+                  {autoSaveState === 'saving' && (
+                    <span className="text-amber-600 dark:text-amber-400 ml-1.5 inline-flex items-center gap-1">
+                      <Loader2 className="w-3 h-3 animate-spin inline" /> Guardando...
+                    </span>
+                  )}
+                  {autoSaveState === 'saved' && (
+                    <span className="text-emerald-600 dark:text-emerald-400 ml-1.5 inline-flex items-center gap-1 font-medium">
+                      <CheckCircle2 className="w-3 h-3 inline" /> Guardado
+                    </span>
+                  )}
+                  {autoSaveState === 'idle' && (
+                    <span className="text-slate-400 dark:text-slate-500 ml-1">
+                      (autoguardado activo)
+                    </span>
+                  )}
                 </div>
                 <div className="text-[11px]">
                   <span className="text-slate-500 dark:text-slate-400">Servidor: </span>

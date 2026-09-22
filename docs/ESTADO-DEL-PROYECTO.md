@@ -4,8 +4,8 @@ Documento de **handoff**: qué se hizo, cómo quedó el repositorio y qué sigue
 Pensado para retomar el trabajo en cualquier momento (o para que otra persona entienda
 el punto exacto en el que está el desarrollo).
 
-**Última actualización:** 2026-09-17
-**Versión del proyecto:** 0.0.23
+**Última actualización:** 2026-09-22
+**Versión del proyecto:** 0.0.25
 **Commit de cierre:** el último de `master` (`git log -1 --oneline`)
 **Repositorio:** https://github.com/CharlyZeta/SalesHub (rama `master`)
 
@@ -21,7 +21,7 @@ documentado, con lint/CI reales y los problemas de sincronización resueltos**.
 | Área | Estado |
 |:--|:--|
 | Calidad | `npm run lint` (tsc + ESLint): **0 errores / 0 warnings** |
-| Tests | **9 archivos / 90 tests** (Vitest) |
+| Tests | **12 archivos / 111 tests** (Vitest) |
 | Cobertura | utils **81,6 %** · global **76,0 %** (`security.ts` 95,5 %) |
 | Build | Producción OK |
 | CI | GitHub Actions **en verde** en cada push (typecheck + lint, tests, build) |
@@ -113,7 +113,6 @@ Detalle completo, con causa y plan, en `docs/FIXES.md`.
 
 | Prioridad | ID | Pendiente |
 |:--:|:--|:--|
-| Media | **W3** | Autoguardado de la configuración de WooCommerce (hoy requiere "Guardar Ajustes") |
 | Media | **B8** | Endurecimiento: no precargar claves en el modal + revisar defaults de seguridad |
 | Media | **B3 (resto)** | Tests de componentes UI (requiere `@testing-library/react` + jsdom) y completar cobertura de `wooCommerceApi` |
 | Baja | **B1** | Aplicar Prettier al código y verificar format en CI (diff grande, commit exclusivo) |
@@ -126,9 +125,9 @@ Detalle completo, con causa y plan, en `docs/FIXES.md`.
 | Aparte | **Carril 1 UI** | Esc/foco accesible en modales + toasts en lugar de `alert()` (pausado a pedido del usuario) |
 
 > **Cerrado y probado:** W1 y W4 (validados en uso real), **W2 / Fix E** (sincronización
-> programada en el servidor, con prueba real del temporizador) y **W5 / Fix D** (merge sin
-> borrados + fin del catálogo demo como falso éxito, verificado end-to-end con
-> `scripts/mock-woo-server.mjs`).
+> programada en el servidor, con prueba real del temporizador), **W5 / Fix D** (merge sin
+> borrados + fin del catálogo demo como falso éxito), y **W3 / FIX-W003** (autoguardado con
+> debounce y unmount seguro, verificado por contrato SDD-GL y tests unitarios).
 
 ---
 

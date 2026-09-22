@@ -4,6 +4,23 @@ Todas las mejoras y fixes notables del proyecto.
 
 El formato se basa en Keep a Changelog, y el proyecto respeta Versionado Semántico.
 
+## [0.0.25] - 2026-09-22
+
+### FIX-C001: Optimización de rendimiento y renderizado no bloqueante del Directorio de Clientes
+
+#### Rendimiento y Corrección
+- **Indexación O(1) de ventas por cliente (`src/utils/customerIndex.ts`)**: Se eliminó el escaneo cuadrático O(N*M) que recorría todo el array de ventas en cada render por cada cliente. Las compras se pre-indexan en un `Map` una sola vez en O(M) memoizado, reduciendo millones de iteraciones a consultas directas en 0 ms.
+- **Paginación progresiva de tarjetas (batches de 40 items)**: Se sustituyó el volcado masivo de miles de tarjetas al DOM por renderizado en ventana de 40 elementos, con scroll infinito y botón "Mostrar más". El DOM pasó de decenas de miles de nodos a menos de 400 nodos, eliminando el congelamiento y consumo desmedido de memoria.
+- **Búsqueda concurrente no bloqueante (`useDeferredValue`)**: La escritura en el buscador de clientes mantiene la respuesta a 60 FPS sin bloquear el hilo principal.
+- **Apertura instantánea**: Se removió el spinner artificial de 250 ms, logrando render inmediato al pulsar "Clientes".
+
+### FIX-W003: Autoguardado con Debounce de Ajustes WooCommerce
+
+#### Corregido
+- **Autoguardado con debounce de 900 ms**: Los ajustes de WooCommerce se persisten localmente y se publican a `/api/woo/config` tras 900 ms de inactividad, evitando pérdida de configuración por cierre accidental del modal.
+- **Persistencia en desmontaje (`unmount`)**: Si el usuario cierra el modal con cambios pendientes, se persisten inmediatamente mediante `latestConfigRef` para evitar cierres obsoletos (stale closure).
+- **Resolución de colisión TS2451 y reglas de hooks**: Eliminada la duplicación de `publishConfigToServer` y adaptado el ref a un efecto seguro.
+
 ## [0.0.24] - 2026-09-17
 
 ### Documentación: estado de la sesión al día tras W2 (Fix E) y W5 (Fix D)

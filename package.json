@@ -20,6 +20,7 @@
     "map": "node scripts/generate-code-map.mjs",
     "map:check": "node scripts/generate-code-map.mjs --check",
     "graph:doctor": "node scripts/graph-doctor.mjs",
+    "sdd:check": "node scripts/check-sdd-version.mjs",
     "deps:circular": "madge --circular --extensions ts,tsx src",
     "hooks:install": "node scripts/install-hooks.mjs",
     "prepare": "node scripts/install-hooks.mjs",
