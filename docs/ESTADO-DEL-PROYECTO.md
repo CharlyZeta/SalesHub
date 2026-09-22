@@ -26,7 +26,7 @@ documentado, con lint/CI reales y los problemas de sincronización resueltos**.
 | Build | Producción OK |
 | CI | GitHub Actions **en verde** en cada push (typecheck + lint, tests, build) |
 | Sincronización WooCommerce | **Funcionando según la configuración** (validado en uso real) |
-| Repositorio | Sincronizado: local = remoto = `cc0bd74`, árbol limpio |
+| Repositorio | Sincronizado: local = remoto = `0ed0da3`, árbol limpio |
 
 ---
 
