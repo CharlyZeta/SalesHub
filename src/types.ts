@@ -48,6 +48,7 @@ export interface Sale {
   clienteDireccion?: string;
   clienteLocalidad?: string;
   clienteProvincia?: string;
+  clienteCodigoPostal?: string;
   
   productos: SaleProductItem[];
   montoTotal: number;
@@ -64,6 +65,7 @@ export interface Sale {
   entregaDireccion?: string;
   entregaLocalidad?: string;
   entregaProvincia?: string;
+  entregaCodigoPostal?: string;
   entregaCoordenadas?: {
     lat: number;
     lng: number;

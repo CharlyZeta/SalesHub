@@ -1,5 +1,6 @@
 import { CatalogProduct, Customer, WooCommerceConfig } from '../types';
 import { addSystemLog } from './logger';
+import { normalizePersonName } from './formatters';
 
 /**
  * Fix D / W5: el catálogo de demostración está **desactivado por defecto**. Ante un fallo
@@ -138,26 +139,53 @@ export const transformWooProduct = (item: WooProductDTO): CatalogProduct => {
 
 export const transformWooCustomer = (item: WooCustomerDTO): Customer => {
   const billing = item.billing || {};
-  const nombre = billing.first_name || item.first_name || 'Cliente';
-  const apellido = billing.last_name || item.last_name || 'WooCommerce';
-  const razonSocial = billing.company || `${nombre} ${apellido}`.trim();
+  const rawNombre = billing.first_name || item.first_name || 'Cliente';
+  const rawApellido = billing.last_name || item.last_name || 'WooCommerce';
+  const nombre = normalizePersonName(rawNombre);
+  const apellido = normalizePersonName(rawApellido);
 
   // Extract DNI/CUIT from WooCommerce meta_data fields if present
   let dniCuit = '';
+  const dniKeys = [
+    'billing_dni', '_billing_dni',
+    'billing_cuit', '_billing_cuit',
+    'billing_cuit_dni', '_billing_cuit_dni',
+    'billing_cuit_cuil', '_billing_cuit_cuil',
+    'dni', 'cuit', 'cuil',
+    'billing_doc', '_billing_doc', 'doc',
+    'documento', '_documento', 'billing_documento', '_billing_documento',
+    'billing_cedula', 'cedula',
+    'billing_identification_number', '_billing_identification_number',
+    'identification_number', 'numero_documento', 'nro_documento', 'num_documento',
+    'billing_nro_doc', '_billing_nro_doc'
+  ];
+
   if (item.meta_data && Array.isArray(item.meta_data)) {
     const docMeta = item.meta_data.find(m => 
-      ['billing_dni', 'billing_cuit', 'dni', 'cuit', 'billing_cuit_dni', 'billing_doc', 'doc', 'documento'].includes(m.key.toLowerCase())
+      m && m.key && dniKeys.includes(String(m.key).trim().toLowerCase())
     );
     if (docMeta && docMeta.value) {
       dniCuit = String(docMeta.value).trim();
     }
   }
 
+  // Heurística alternativa: si no vino en meta_data, revisar si el DNI/CUIT vino en billing.company
+  if (!dniCuit && billing.company) {
+    const comp = String(billing.company).trim();
+    if (/^(DNI|CUIT|CUIL)?\s*[\d.-]{7,13}$/i.test(comp)) {
+      dniCuit = comp.replace(/^(DNI|CUIT|CUIL)\s*/i, '').trim();
+    }
+  }
+
+  const razonSocial = billing.company && billing.company.trim() !== dniCuit
+    ? billing.company.trim()
+    : `${nombre} ${apellido}`.trim();
+
   // Extract phone number from WooCommerce meta_data fields if billing.phone is empty
   let telefono = billing.phone || '';
   if (!telefono && item.meta_data && Array.isArray(item.meta_data)) {
     const phoneMeta = item.meta_data.find(m => 
-      ['billing_phone', 'phone', 'telefono', 'celular', 'billing_cellphone'].includes(m.key.toLowerCase())
+      m && m.key && ['billing_phone', 'phone', 'telefono', 'celular', 'billing_cellphone'].includes(String(m.key).trim().toLowerCase())
     );
     if (phoneMeta && phoneMeta.value) {
       telefono = String(phoneMeta.value).trim();
@@ -176,6 +204,7 @@ export const transformWooCustomer = (item: WooCustomerDTO): Customer => {
     direccion: billing.address_1 || '',
     localidad: billing.city || '',
     provincia: billing.state || '',
+    codigoPostal: billing.postcode ? String(billing.postcode).trim() : '',
     canalHabitual: 'WooCommerce',
     origen: 'WooCommerce'
   };

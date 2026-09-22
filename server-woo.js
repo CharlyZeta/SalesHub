@@ -73,29 +73,84 @@ function mapProduct(item) {
   };
 }
 
+/** Normaliza nombres y apellidos a formato Capitalizado / Title Case. */
+function normalizePersonName(name) {
+  if (!name || typeof name !== 'string') return '';
+  return name
+    .trim()
+    .replace(/\s+/g, ' ')
+    .split(' ')
+    .map((word) => {
+      if (!word) return '';
+      if (word.includes('-')) {
+        return word
+          .split('-')
+          .map((sub) => (sub ? sub.charAt(0).toUpperCase() + sub.slice(1).toLowerCase() : ''))
+          .join('-');
+      }
+      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+    })
+    .join(' ');
+}
+
 /** Cliente de WooCommerce → forma que consume la app (`Customer`). */
 function mapCustomer(item) {
   const billing = item.billing || {};
-  const nombre = billing.first_name || item.first_name || 'Cliente';
-  const apellido = billing.last_name || item.last_name || 'WooCommerce';
+  const rawNombre = billing.first_name || item.first_name || 'Cliente';
+  const rawApellido = billing.last_name || item.last_name || 'WooCommerce';
+  const nombre = normalizePersonName(rawNombre);
+  const apellido = normalizePersonName(rawApellido);
   const meta = Array.isArray(item.meta_data) ? item.meta_data : [];
 
-  const docKeys = ['billing_dni', 'billing_cuit', 'dni', 'cuit', 'billing_cuit_dni', 'billing_doc', 'doc', 'documento'];
-  const docMeta = meta.find((m) => docKeys.includes(String(m.key || '').toLowerCase()));
-  const phoneMeta = meta.find((m) => ['billing_phone', 'phone', 'telefono', 'celular'].includes(String(m.key || '').toLowerCase()));
+  const docKeys = [
+    'billing_dni', '_billing_dni',
+    'billing_cuit', '_billing_cuit',
+    'billing_cuit_dni', '_billing_cuit_dni',
+    'billing_cuit_cuil', '_billing_cuit_cuil',
+    'dni', 'cuit', 'cuil',
+    'billing_doc', '_billing_doc', 'doc',
+    'documento', '_documento', 'billing_documento', '_billing_documento',
+    'billing_cedula', 'cedula',
+    'billing_identification_number', '_billing_identification_number',
+    'identification_number', 'numero_documento', 'nro_documento', 'num_documento',
+    'billing_nro_doc', '_billing_nro_doc'
+  ];
+
+  let dniCuit = '';
+  const docMeta = meta.find((m) => m && m.key && docKeys.includes(String(m.key).trim().toLowerCase()));
+  if (docMeta && docMeta.value) {
+    dniCuit = String(docMeta.value).trim();
+  }
+
+  // Heurística alternativa: si no vino en meta_data, revisar si el DNI/CUIT vino en billing.company
+  if (!dniCuit && billing.company) {
+    const comp = String(billing.company).trim();
+    if (/^(DNI|CUIT|CUIL)?\s*[\d.-]{7,13}$/i.test(comp)) {
+      dniCuit = comp.replace(/^(DNI|CUIT|CUIL)\s*/i, '').trim();
+    }
+  }
+
+  const phoneMeta = meta.find((m) => 
+    m && m.key && ['billing_phone', 'phone', 'telefono', 'celular', 'billing_cellphone'].includes(String(m.key).trim().toLowerCase())
+  );
+
+  const razonSocial = billing.company && billing.company.trim() !== dniCuit
+    ? billing.company.trim()
+    : `${nombre} ${apellido}`.trim();
 
   return {
     id: `woo-cust-${item.id}`,
     clienteId: `WC-${item.id}`,
     nombre,
     apellido,
-    razonSocialNombre: billing.company || `${nombre} ${apellido}`.trim(),
-    dniCuit: docMeta?.value ? String(docMeta.value).trim() : '',
+    razonSocialNombre: razonSocial,
+    dniCuit,
     telefono: billing.phone || (phoneMeta?.value ? String(phoneMeta.value).trim() : ''),
     email: item.email || billing.email || `cliente${item.id}@tienda.com`,
     direccion: billing.address_1 || '',
     localidad: billing.city || '',
     provincia: billing.state || '',
+    codigoPostal: billing.postcode ? String(billing.postcode).trim() : '',
     canalHabitual: 'WooCommerce',
     origen: 'WooCommerce',
   };

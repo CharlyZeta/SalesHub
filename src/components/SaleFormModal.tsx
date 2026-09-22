@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Plus, Trash2, Search, UserCheck, ShoppingCart, FileText, CheckCircle, Printer, Navigation, Loader2, AlertCircle } from 'lucide-react';
 import { Sale, SaleProductItem, Customer, CatalogProduct, SaleChannel, PaymentMethod, ShippingMethod, ShippingStatus, InvoiceType } from '../types';
-import { formatCurrency, validateRequiredSaleFields, generateSaleId } from '../utils/formatters';
+import { formatCurrency, validateRequiredSaleFields, generateSaleId, normalizePersonName, ARGENTINE_PROVINCES, DEFAULT_PROVINCE } from '../utils/formatters';
 import { ProductSearchPicker } from './ProductSearchPicker';
 import { SaleLocationMap } from './SaleLocationMap';
 import { addSystemLog } from '../utils/logger';
@@ -52,7 +52,8 @@ const SaleFormModalInner: React.FC<SaleFormModalProps> = ({
   const [clienteTelefono, setClienteTelefono] = useState(existingSale ? existingSale.clienteTelefono || '' : '');
   const [clienteDireccion, setClienteDireccion] = useState(existingSale?.clienteDireccion || '');
   const [clienteLocalidad, setClienteLocalidad] = useState(existingSale?.clienteLocalidad || '');
-  const [clienteProvincia, setClienteProvincia] = useState(existingSale?.clienteProvincia || 'Buenos Aires');
+  const [clienteCodigoPostal, setClienteCodigoPostal] = useState(existingSale?.clienteCodigoPostal || '');
+  const [clienteProvincia, setClienteProvincia] = useState(existingSale?.clienteProvincia || DEFAULT_PROVINCE);
 
   const [productos, setProductos] = useState<SaleProductItem[]>(
     existingSale && existingSale.productos.length > 0
@@ -75,7 +76,8 @@ const SaleFormModalInner: React.FC<SaleFormModalProps> = ({
   const [envioDomicilioDiferente, setEnvioDomicilioDiferente] = useState(existingSale?.envioDomicilioDiferente || false);
   const [entregaDireccion, setEntregaDireccion] = useState(existingSale?.entregaDireccion || '');
   const [entregaLocalidad, setEntregaLocalidad] = useState(existingSale?.entregaLocalidad || '');
-  const [entregaProvincia, setEntregaProvincia] = useState(existingSale?.entregaProvincia || 'Buenos Aires');
+  const [entregaCodigoPostal, setEntregaCodigoPostal] = useState(existingSale?.entregaCodigoPostal || '');
+  const [entregaProvincia, setEntregaProvincia] = useState(existingSale?.entregaProvincia || DEFAULT_PROVINCE);
   const [entregaCoordenadas, setEntregaCoordenadas] = useState<{lat: number; lng: number} | undefined>(existingSale?.entregaCoordenadas);
   const [showMap, setShowMap] = useState(false);
 
@@ -116,6 +118,7 @@ const SaleFormModalInner: React.FC<SaleFormModalProps> = ({
       if (d.clienteTelefono !== undefined) setClienteTelefono(d.clienteTelefono);
       if (d.clienteDireccion !== undefined) setClienteDireccion(d.clienteDireccion);
       if (d.clienteLocalidad !== undefined) setClienteLocalidad(d.clienteLocalidad);
+      if (d.clienteCodigoPostal !== undefined) setClienteCodigoPostal(d.clienteCodigoPostal);
       if (d.clienteProvincia !== undefined) setClienteProvincia(d.clienteProvincia);
       if (Array.isArray(d.productos) && d.productos.length > 0) setProductos(d.productos);
       if (d.tipoFactura !== undefined) setTipoFactura(d.tipoFactura);
@@ -129,6 +132,7 @@ const SaleFormModalInner: React.FC<SaleFormModalProps> = ({
       if (d.envioDomicilioDiferente !== undefined) setEnvioDomicilioDiferente(d.envioDomicilioDiferente);
       if (d.entregaDireccion !== undefined) setEntregaDireccion(d.entregaDireccion);
       if (d.entregaLocalidad !== undefined) setEntregaLocalidad(d.entregaLocalidad);
+      if (d.entregaCodigoPostal !== undefined) setEntregaCodigoPostal(d.entregaCodigoPostal);
       if (d.entregaProvincia !== undefined) setEntregaProvincia(d.entregaProvincia);
       if (d.entregaCoordenadas !== undefined) setEntregaCoordenadas(d.entregaCoordenadas);
       setDraftRestoredAt(draft.savedAt || new Date().toISOString());
@@ -159,6 +163,7 @@ const SaleFormModalInner: React.FC<SaleFormModalProps> = ({
           clienteTelefono,
           clienteDireccion,
           clienteLocalidad,
+          clienteCodigoPostal,
           clienteProvincia,
           productos,
           tipoFactura,
@@ -172,6 +177,7 @@ const SaleFormModalInner: React.FC<SaleFormModalProps> = ({
           envioDomicilioDiferente,
           entregaDireccion,
           entregaLocalidad,
+          entregaCodigoPostal,
           entregaProvincia,
           entregaCoordenadas,
         };
@@ -194,6 +200,7 @@ const SaleFormModalInner: React.FC<SaleFormModalProps> = ({
     clienteTelefono,
     clienteDireccion,
     clienteLocalidad,
+    clienteCodigoPostal,
     clienteProvincia,
     productos,
     tipoFactura,
@@ -207,6 +214,7 @@ const SaleFormModalInner: React.FC<SaleFormModalProps> = ({
     envioDomicilioDiferente,
     entregaDireccion,
     entregaLocalidad,
+    entregaCodigoPostal,
     entregaProvincia,
     entregaCoordenadas,
     draftEditingId,
@@ -250,15 +258,33 @@ const SaleFormModalInner: React.FC<SaleFormModalProps> = ({
 
   // Auto-fill customer if selected from directory
   const handleSelectCustomer = (c: Customer) => {
-    setClienteId(c.clienteId);
-    setClienteNombre(c.nombre);
-    setClienteApellido(c.apellido);
+    let rawNombre = c.nombre || '';
+    let rawApellido = c.apellido || '';
+
+    // Desglose inteligente si el registro histórico guardó todo en nombre
+    if (!rawApellido && rawNombre.includes(',')) {
+      const parts = rawNombre.split(',').map((p) => p.trim());
+      rawApellido = parts[0] || '';
+      rawNombre = parts.slice(1).join(' ') || '';
+    } else if (!rawApellido && rawNombre.trim().split(/\s+/).length >= 2) {
+      const parts = rawNombre.trim().split(/\s+/);
+      rawApellido = parts.pop() || '';
+      rawNombre = parts.join(' ');
+    }
+
+    const normNombre = normalizePersonName(rawNombre);
+    const normApellido = normalizePersonName(rawApellido);
+
+    setClienteId(c.clienteId || '');
+    setClienteNombre(normNombre);
+    setClienteApellido(normApellido);
     setClienteDniCuit(c.dniCuit || '');
     setClienteTelefono(c.telefono || '');
     setClienteDireccion(c.direccion || '');
     setClienteLocalidad(c.localidad || '');
-    setClienteProvincia(c.provincia || 'Buenos Aires');
-    setCustomerSearch(`${c.nombre} ${c.apellido}`);
+    setClienteCodigoPostal(c.codigoPostal || '');
+    setClienteProvincia(c.provincia || DEFAULT_PROVINCE);
+    setCustomerSearch(`${normNombre} ${normApellido}`.trim());
     setShowCustomerDropdown(false);
   };
 
@@ -337,13 +363,14 @@ const SaleFormModalInner: React.FC<SaleFormModalProps> = ({
         id: existingSale ? existingSale.id : generateSaleId(existingSaleIds),
         fecha,
         clienteId: finalClienteId,
-        clienteNombre: clienteNombre.trim() || 'Cliente Sin Nombre',
-        clienteApellido,
-        clienteDniCuit,
-        clienteTelefono,
-        clienteDireccion,
-        clienteLocalidad,
-        clienteProvincia,
+        clienteNombre: normalizePersonName(clienteNombre) || 'Cliente Sin Nombre',
+        clienteApellido: normalizePersonName(clienteApellido),
+        clienteDniCuit: clienteDniCuit.trim(),
+        clienteTelefono: clienteTelefono.trim(),
+        clienteDireccion: clienteDireccion.trim(),
+        clienteLocalidad: clienteLocalidad.trim(),
+        clienteCodigoPostal: clienteCodigoPostal.trim(),
+        clienteProvincia: clienteProvincia.trim() || DEFAULT_PROVINCE,
         productos: productos.filter(p => p.nombre.trim() !== ''),
         montoTotal: montoTotalCalculado,
         tipoFactura,
@@ -354,9 +381,10 @@ const SaleFormModalInner: React.FC<SaleFormModalProps> = ({
         numeroSeguimiento,
         estadoEnvio,
         envioDomicilioDiferente,
-        entregaDireccion: envioDomicilioDiferente ? entregaDireccion : '',
-        entregaLocalidad: envioDomicilioDiferente ? entregaLocalidad : '',
-        entregaProvincia: envioDomicilioDiferente ? entregaProvincia : '',
+        entregaDireccion: envioDomicilioDiferente ? entregaDireccion.trim() : '',
+        entregaLocalidad: envioDomicilioDiferente ? entregaLocalidad.trim() : '',
+        entregaCodigoPostal: envioDomicilioDiferente ? entregaCodigoPostal.trim() : '',
+        entregaProvincia: envioDomicilioDiferente ? (entregaProvincia.trim() || DEFAULT_PROVINCE) : '',
         entregaCoordenadas: envioDomicilioDiferente ? entregaCoordenadas : undefined,
         notas,
         creadoEn: existingSale ? existingSale.creadoEn : new Date().toISOString()
@@ -612,8 +640,8 @@ const SaleFormModalInner: React.FC<SaleFormModalProps> = ({
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
-              <div>
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 pt-1">
+              <div className="sm:col-span-4">
                 <label className="block text-slate-500 dark:text-slate-400 mb-1">Domicilio del Cliente</label>
                 <input
                   type="text"
@@ -623,7 +651,7 @@ const SaleFormModalInner: React.FC<SaleFormModalProps> = ({
                   className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500 shadow-xs"
                 />
               </div>
-              <div>
+              <div className="sm:col-span-3">
                 <label className="block text-slate-500 dark:text-slate-400 mb-1">Localidad Cliente</label>
                 <input
                   type="text"
@@ -633,15 +661,30 @@ const SaleFormModalInner: React.FC<SaleFormModalProps> = ({
                   className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500 shadow-xs"
                 />
               </div>
-              <div>
-                <label className="block text-slate-500 dark:text-slate-400 mb-1">Provincia Cliente</label>
+              <div className="sm:col-span-2">
+                <label className="block text-slate-500 dark:text-slate-400 mb-1">Código Postal</label>
                 <input
                   type="text"
-                  placeholder="Provincia"
+                  placeholder="CP (ej: 3000)"
+                  value={clienteCodigoPostal}
+                  onChange={(e) => setClienteCodigoPostal(e.target.value)}
+                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500 shadow-xs font-mono"
+                />
+              </div>
+              <div className="sm:col-span-3">
+                <label className="block text-slate-500 dark:text-slate-400 mb-1">Provincia Cliente</label>
+                <select
                   value={clienteProvincia}
                   onChange={(e) => setClienteProvincia(e.target.value)}
                   className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500 shadow-xs"
-                />
+                >
+                  {ARGENTINE_PROVINCES.map((prov) => (
+                    <option key={prov} value={prov} className="dark:bg-slate-900">{prov}</option>
+                  ))}
+                  {!ARGENTINE_PROVINCES.includes(clienteProvincia) && clienteProvincia && (
+                    <option value={clienteProvincia} className="dark:bg-slate-900">{clienteProvincia}</option>
+                  )}
+                </select>
               </div>
             </div>
 
@@ -658,39 +701,54 @@ const SaleFormModalInner: React.FC<SaleFormModalProps> = ({
               </label>
 
               {envioDomicilioDiferente && (
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3 pt-3 border-t border-slate-200 dark:border-slate-800">
-                  <div>
+                <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 mt-3 pt-3 border-t border-slate-200 dark:border-slate-800">
+                  <div className="sm:col-span-4">
                     <label className="block text-slate-500 dark:text-slate-400 mb-1">Dirección de Entrega *</label>
                     <input
                       type="text"
                       placeholder="Calle y número"
                       value={entregaDireccion}
                       onChange={(e) => setEntregaDireccion(e.target.value)}
-                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500"
+                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500 shadow-xs"
                       required
                     />
                   </div>
-                  <div>
+                  <div className="sm:col-span-3">
                     <label className="block text-slate-500 dark:text-slate-400 mb-1">Localidad de Entrega *</label>
                     <input
                       type="text"
                       placeholder="Ej: Rosario"
                       value={entregaLocalidad}
                       onChange={(e) => setEntregaLocalidad(e.target.value)}
-                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500"
+                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500 shadow-xs"
                       required
                     />
                   </div>
-                  <div>
-                    <label className="block text-slate-500 dark:text-slate-400 mb-1">Provincia *</label>
+                  <div className="sm:col-span-2">
+                    <label className="block text-slate-500 dark:text-slate-400 mb-1">CP Entrega</label>
                     <input
                       type="text"
-                      placeholder="Ej: Santa Fe"
+                      placeholder="CP (ej: 2000)"
+                      value={entregaCodigoPostal}
+                      onChange={(e) => setEntregaCodigoPostal(e.target.value)}
+                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500 shadow-xs font-mono"
+                    />
+                  </div>
+                  <div className="sm:col-span-3">
+                    <label className="block text-slate-500 dark:text-slate-400 mb-1">Provincia Entrega *</label>
+                    <select
                       value={entregaProvincia}
                       onChange={(e) => setEntregaProvincia(e.target.value)}
-                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500"
+                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500 shadow-xs"
                       required
-                    />
+                    >
+                      {ARGENTINE_PROVINCES.map((prov) => (
+                        <option key={prov} value={prov} className="dark:bg-slate-900">{prov}</option>
+                      ))}
+                      {!ARGENTINE_PROVINCES.includes(entregaProvincia) && entregaProvincia && (
+                        <option value={entregaProvincia} className="dark:bg-slate-900">{entregaProvincia}</option>
+                      )}
+                    </select>
                   </div>
                 </div>
               )}

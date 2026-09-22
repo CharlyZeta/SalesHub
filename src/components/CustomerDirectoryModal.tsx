@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useDeferredValue } from 'react';
 import { X, Users, Search, Plus, UserCheck, ShoppingBag, Phone, MapPin, Loader2 } from 'lucide-react';
 import { Customer, Sale } from '../types';
-import { formatCurrency, formatDate } from '../utils/formatters';
+import { formatCurrency, formatDate, normalizePersonName, ARGENTINE_PROVINCES, DEFAULT_PROVINCE } from '../utils/formatters';
 import { addSystemLog } from '../utils/logger';
 import { buildSalesCustomerIndex, filterCustomers, CustomerSalesSummary } from '../utils/customerIndex';
 
@@ -72,7 +72,8 @@ const CustomerDirectoryModalInner: React.FC<CustomerDirectoryModalProps> = ({
   const [newEmail, setNewEmail] = useState('');
   const [newDireccion, setNewDireccion] = useState('');
   const [newLocalidad, setNewLocalidad] = useState('');
-  const [newProvincia, setNewProvincia] = useState('Buenos Aires');
+  const [newCodigoPostal, setNewCodigoPostal] = useState('');
+  const [newProvincia, setNewProvincia] = useState(DEFAULT_PROVINCE);
 
   const handleCreateCustomer = (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,14 +85,15 @@ const CustomerDirectoryModalInner: React.FC<CustomerDirectoryModalProps> = ({
     try {
       const created: Customer = {
         clienteId: `CLI-${Math.floor(1000 + Math.random() * 9000)}`,
-        nombre: newNombre,
-        apellido: newApellido,
-        dniCuit: newDniCuit,
-        telefono: newTelefono,
-        email: newEmail,
-        direccion: newDireccion,
-        localidad: newLocalidad,
-        provincia: newProvincia,
+        nombre: normalizePersonName(newNombre),
+        apellido: normalizePersonName(newApellido),
+        dniCuit: newDniCuit.trim(),
+        telefono: newTelefono.trim(),
+        email: newEmail.trim(),
+        direccion: newDireccion.trim(),
+        localidad: newLocalidad.trim(),
+        codigoPostal: newCodigoPostal.trim(),
+        provincia: newProvincia.trim() || DEFAULT_PROVINCE,
         totalCompras: 0,
         cantidadPedidos: 0,
         ultimaCompra: new Date().toISOString().split('T')[0]
@@ -112,7 +114,8 @@ const CustomerDirectoryModalInner: React.FC<CustomerDirectoryModalProps> = ({
       setNewEmail('');
       setNewDireccion('');
       setNewLocalidad('');
-      setNewProvincia('Buenos Aires');
+      setNewCodigoPostal('');
+      setNewProvincia(DEFAULT_PROVINCE);
     } catch (err: any) {
       console.error('Error al registrar cliente:', err);
       addSystemLog('ERROR', 'Clientes', `Error al registrar cliente: ${err?.message || err}`);
@@ -233,14 +236,26 @@ const CustomerDirectoryModalInner: React.FC<CustomerDirectoryModalProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-500 dark:text-slate-400 mb-0.5">Provincia</label>
+                  <label className="block text-slate-500 dark:text-slate-400 mb-0.5">Código Postal</label>
                   <input
                     type="text"
-                    placeholder="Ej: Santa Fe"
+                    placeholder="Ej: 2000"
+                    value={newCodigoPostal}
+                    onChange={(e) => setNewCodigoPostal(e.target.value)}
+                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded px-2.5 py-1 text-slate-900 dark:text-slate-100 font-mono focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-500 dark:text-slate-400 mb-0.5">Provincia</label>
+                  <select
                     value={newProvincia}
                     onChange={(e) => setNewProvincia(e.target.value)}
                     className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded px-2.5 py-1 text-slate-900 dark:text-slate-100 focus:outline-none"
-                  />
+                  >
+                    {ARGENTINE_PROVINCES.map((prov) => (
+                      <option key={prov} value={prov} className="dark:bg-slate-900">{prov}</option>
+                    ))}
+                  </select>
                 </div>
                 <div className="flex items-end justify-end gap-2">
                   <button
@@ -393,7 +408,12 @@ const CustomerDirectoryModalInner: React.FC<CustomerDirectoryModalProps> = ({
                         <div className="col-span-2">
                           <span className="text-slate-400 dark:text-slate-500 block">Domicilio Registrado:</span>
                           <strong className="text-slate-800 dark:text-slate-200">
-                            {[selectedCustomer.direccion, selectedCustomer.localidad, selectedCustomer.provincia].filter(Boolean).join(', ') || 'No especificado'}
+                            {[
+                              selectedCustomer.direccion,
+                              selectedCustomer.localidad,
+                              selectedCustomer.codigoPostal ? `CP ${selectedCustomer.codigoPostal}` : '',
+                              selectedCustomer.provincia
+                            ].filter(Boolean).join(', ') || 'No especificado'}
                           </strong>
                         </div>
                       </div>

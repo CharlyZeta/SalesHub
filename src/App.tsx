@@ -16,7 +16,7 @@ import { AuthModal } from './components/AuthModal';
 
 import { Sale, Customer, CatalogProduct, WooCommerceConfig, AppConfig, Budget, UserRole } from './types';
 import { INITIAL_SALES, INITIAL_CATALOG, INITIAL_WOO_CONFIG, INITIAL_CONFIG, INITIAL_BUDGETS, DEMO_SEED_ENABLED, INITIAL_DEMO_CUSTOMERS } from './data/initialData';
-import { getCurrentMonthISO, generateSaleId } from './utils/formatters';
+import { getCurrentMonthISO, generateSaleId, normalizePersonName, DEFAULT_PROVINCE } from './utils/formatters';
 import { addSystemLog } from './utils/logger';
 import { fetchWooCommerceProducts, fetchWooCommerceCustomers } from './utils/wooCommerceApi';
 import { BackupItem, listAllBackups, restoreBackup, runBackup, checkAndTriggerAutoBackup } from './utils/backupService';
@@ -713,14 +713,15 @@ export default function App() {
       if (!existingCust && saleToSave.clienteNombre) {
         const newCust: Customer = {
           clienteId: saleToSave.clienteId,
-          nombre: saleToSave.clienteNombre,
-          apellido: saleToSave.clienteApellido || '',
-          dniCuit: saleToSave.clienteDniCuit || '',
-          telefono: saleToSave.clienteTelefono || '',
-          email: saleToSave.clienteEmail || '',
-          direccion: saleToSave.clienteDireccion || '',
-          localidad: saleToSave.clienteLocalidad || '',
-          provincia: saleToSave.clienteProvincia || '',
+          nombre: normalizePersonName(saleToSave.clienteNombre),
+          apellido: normalizePersonName(saleToSave.clienteApellido || ''),
+          dniCuit: (saleToSave.clienteDniCuit || '').trim(),
+          telefono: (saleToSave.clienteTelefono || '').trim(),
+          email: (saleToSave.clienteEmail || '').trim(),
+          direccion: (saleToSave.clienteDireccion || '').trim(),
+          localidad: (saleToSave.clienteLocalidad || '').trim(),
+          codigoPostal: (saleToSave.clienteCodigoPostal || '').trim(),
+          provincia: (saleToSave.clienteProvincia || '').trim() || DEFAULT_PROVINCE,
           totalCompras: saleToSave.montoTotal,
           cantidadPedidos: 1,
           ultimaCompra: saleToSave.fecha

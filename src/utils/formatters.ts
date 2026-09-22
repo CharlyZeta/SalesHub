@@ -250,3 +250,59 @@ export function exportSalesToCSV(sales: Sale[], filename = 'ventas_exportadas.cs
   link.click();
   document.body.removeChild(link);
 }
+
+/**
+ * Normaliza nombres y apellidos a formato Capitalizado / Title Case.
+ * Convierte el primer carácter de cada palabra a mayúscula y el resto a minúscula.
+ * Remueve espacios redundantes y soporta nombres compuestos o con guión.
+ */
+export function normalizePersonName(name?: string | null): string {
+  if (!name || typeof name !== 'string') return '';
+  return name
+    .trim()
+    .replace(/\s+/g, ' ')
+    .split(' ')
+    .map((word) => {
+      if (!word) return '';
+      if (word.includes('-')) {
+        return word
+          .split('-')
+          .map((sub) => (sub ? sub.charAt(0).toUpperCase() + sub.slice(1).toLowerCase() : ''))
+          .join('-');
+      }
+      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+    })
+    .join(' ');
+}
+
+/**
+ * Lista oficial de las 24 provincias / jurisdicciones de la República Argentina.
+ */
+export const ARGENTINE_PROVINCES: string[] = [
+  'Buenos Aires',
+  'Ciudad Autónoma de Buenos Aires',
+  'Catamarca',
+  'Chaco',
+  'Chubut',
+  'Córdoba',
+  'Corrientes',
+  'Entre Ríos',
+  'Formosa',
+  'Jujuy',
+  'La Pampa',
+  'La Rioja',
+  'Mendoza',
+  'Misiones',
+  'Neuquén',
+  'Río Negro',
+  'Salta',
+  'San Juan',
+  'San Luis',
+  'Santa Cruz',
+  'Santa Fe',
+  'Santiago del Estero',
+  'Tierra del Fuego',
+  'Tucumán'
+];
+
+export const DEFAULT_PROVINCE = 'Santa Fe';

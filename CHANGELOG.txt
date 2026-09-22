@@ -4,6 +4,18 @@ Todas las mejoras y fixes notables del proyecto.
 
 El formato se basa en Keep a Changelog, y el proyecto respeta Versionado Semántico.
 
+## [0.0.26] - 2026-09-22
+
+### FEAT-CUST-002: Normalización de Clientes, Extracción DNI WooCommerce y Distribución de Campos en Venta
+
+#### Funcionalidades y Normalización de Datos
+- **Normalización de Nombres (`normalizePersonName`)**: Conversión automática a Title Case (primer carácter mayúscula, resto minúscula) para nombres y apellidos de clientes, limpiando espacios redundantes y soportando nombres con guiones o compuestos. Se aplica al registrar clientes en el directorio, al guardar ventas o al sincronizar desde WooCommerce.
+- **Extracción avanzada de DNI/CUIT y CP en WooCommerce**: Se amplió el mapeo de clientes (frontend y backend `server-woo.js`) para capturar claves como `billing_dni`, `_billing_dni`, `billing_cuit`, `_billing_cuit`, `dni`, `cuit`, `documento`, `cedula`, etc., con fallback heurístico en `billing.company` y extracción del código postal (`postcode`).
+- **Desglose de datos al seleccionar cliente en Venta (`SaleFormModal`)**: Separación individual de `Nº Cliente` (`clienteId`), `Nombre` (`clienteNombre`) y `Apellido` (`clienteApellido`), desdoblando automáticamente registros legados si tenían el apellido fusionado en el campo de nombre.
+- **Selector de Provincias con Santa Fe por defecto**: El campo libre de provincia fue reemplazado por un desplegable con las 24 jurisdicciones de Argentina, inicializándose en `"Santa Fe"` para toda nueva venta.
+- **Layout de Domicilio en fila única de 4 columnas**: Distribución horizontal alineada de `Domicilio` (span 4), `Localidad` (span 3), `Código Postal` (span 2) y `Provincia` (span 3), con soporte análogo para el domicilio de entrega alternativo.
+- **Pruebas unitarias**: Nueva suite `src/__tests__/customerNormalization.test.ts` con cobertura completa de las reglas de normalización y extracción.
+
 ## [0.0.25] - 2026-09-22
 
 ### FIX-C001: Optimización de rendimiento y renderizado no bloqueante del Directorio de Clientes

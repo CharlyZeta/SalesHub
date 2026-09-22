@@ -5,7 +5,7 @@ Pensado para retomar el trabajo en cualquier momento (o para que otra persona en
 el punto exacto en el que está el desarrollo).
 
 **Última actualización:** 2026-09-22
-**Versión del proyecto:** 0.0.25
+**Versión del proyecto:** 0.0.26
 **Commit de cierre:** el último de `master` (`git log -1 --oneline`)
 **Repositorio:** https://github.com/CharlyZeta/SalesHub (rama `master`)
 
@@ -21,12 +21,12 @@ documentado, con lint/CI reales y los problemas de sincronización resueltos**.
 | Área | Estado |
 |:--|:--|
 | Calidad | `npm run lint` (tsc + ESLint): **0 errores / 0 warnings** |
-| Tests | **12 archivos / 111 tests** (Vitest) |
-| Cobertura | utils **81,6 %** · global **76,0 %** (`security.ts` 95,5 %) |
+| Tests | **13 archivos / 122 tests** (Vitest) |
+| Cobertura | utils **82,5 %** · global **76,5 %** (`security.ts` 95,5 %) |
 | Build | Producción OK |
 | CI | GitHub Actions **en verde** en cada push (typecheck + lint, tests, build) |
 | Sincronización WooCommerce | **Funcionando según la configuración** (validado en uso real) |
-| Repositorio | Sincronizado: local = remoto = `0ed0da3`, árbol limpio |
+| Repositorio | Sincronizado: local = remoto, árbol limpio |
 
 ---
 
