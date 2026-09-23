@@ -1,7 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Plus, Trash2, Search, UserCheck, ShoppingCart, FileText, CheckCircle, Printer, Navigation, Loader2, AlertCircle } from 'lucide-react';
 import { Sale, SaleProductItem, Customer, CatalogProduct, SaleChannel, PaymentMethod, ShippingMethod, ShippingStatus, InvoiceType } from '../types';
-import { formatCurrency, validateRequiredSaleFields, generateSaleId, normalizePersonName, ARGENTINE_PROVINCES, DEFAULT_PROVINCE } from '../utils/formatters';
+import {
+  formatCurrency,
+  validateRequiredSaleFields,
+  generateSaleId,
+  normalizePersonName,
+  ARGENTINE_PROVINCES,
+  DEFAULT_PROVINCE,
+  parseCustomerIdentityFromWoo,
+  parseCombinedAddress
+} from '../utils/formatters';
 import { ProductSearchPicker } from './ProductSearchPicker';
 import { SaleLocationMap } from './SaleLocationMap';
 import { addSystemLog } from '../utils/logger';
@@ -258,33 +267,21 @@ const SaleFormModalInner: React.FC<SaleFormModalProps> = ({
 
   // Auto-fill customer if selected from directory
   const handleSelectCustomer = (c: Customer) => {
-    let rawNombre = c.nombre || '';
-    let rawApellido = c.apellido || '';
+    // Desglose de identidad (CLI-XXX, apellido y nombre)
+    const identity = parseCustomerIdentityFromWoo(c.nombre, c.apellido, c.clienteId);
+    // Desglose de dirección, localidad y provincia
+    const address = parseCombinedAddress(c.direccion, c.localidad, c.provincia);
 
-    // Desglose inteligente si el registro histórico guardó todo en nombre
-    if (!rawApellido && rawNombre.includes(',')) {
-      const parts = rawNombre.split(',').map((p) => p.trim());
-      rawApellido = parts[0] || '';
-      rawNombre = parts.slice(1).join(' ') || '';
-    } else if (!rawApellido && rawNombre.trim().split(/\s+/).length >= 2) {
-      const parts = rawNombre.trim().split(/\s+/);
-      rawApellido = parts.pop() || '';
-      rawNombre = parts.join(' ');
-    }
-
-    const normNombre = normalizePersonName(rawNombre);
-    const normApellido = normalizePersonName(rawApellido);
-
-    setClienteId(c.clienteId || '');
-    setClienteNombre(normNombre);
-    setClienteApellido(normApellido);
+    setClienteId(identity.clienteId);
+    setClienteNombre(identity.nombre);
+    setClienteApellido(identity.apellido);
     setClienteDniCuit(c.dniCuit || '');
     setClienteTelefono(c.telefono || '');
-    setClienteDireccion(c.direccion || '');
-    setClienteLocalidad(c.localidad || '');
+    setClienteDireccion(address.direccion);
+    setClienteLocalidad(address.localidad);
     setClienteCodigoPostal(c.codigoPostal || '');
-    setClienteProvincia(c.provincia || DEFAULT_PROVINCE);
-    setCustomerSearch(`${normNombre} ${normApellido}`.trim());
+    setClienteProvincia(address.provincia || DEFAULT_PROVINCE);
+    setCustomerSearch(`${identity.nombre} ${identity.apellido}`.trim());
     setShowCustomerDropdown(false);
   };
 

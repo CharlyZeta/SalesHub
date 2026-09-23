@@ -4,15 +4,15 @@
 > Es el índice que conviene leer **antes** de abrir archivos: una fila por módulo
 > con su responsabilidad y sus exports principales.
 
-**Resumen:** 40 archivos · 13.990 líneas.
+**Resumen:** 40 archivos · 14.165 líneas.
 
 | Directorio | Archivos | Líneas |
 |:--|--:|--:|
 | `scripts/` | 5 | 524 |
 | `src/` | 3 | 1.313 |
-| `src/components/` | 21 | 9.899 |
+| `src/components/` | 21 | 9.896 |
 | `src/data/` | 1 | 358 |
-| `src/utils/` | 10 | 1.896 |
+| `src/utils/` | 10 | 2.074 |
 
 ## `scripts/`
 
@@ -51,7 +51,7 @@
 | `KpiSummary.tsx` | 319 | Banner de KPIs mensuales, filtro por mes/canal y configuración de tarjetas visibles | KpiSummary |
 | `ProductSearchPicker.tsx` | 230 | Buscador autocompletable de productos del catálogo | ProductSearchPicker |
 | `RemitoModal.tsx` | 504 | Remito de entrega/despacho: datos de empresa, transporte, PDF e impresión | RemitoModal |
-| `SaleFormModal.tsx` | 1041 | Alta/edición de ventas: cliente, ítems con descuento, facturación, envío y borrador autoguardado | SaleFormModal |
+| `SaleFormModal.tsx` | 1038 | Alta/edición de ventas: cliente, ítems con descuento, facturación, envío y borrador autoguardado | SaleFormModal |
 | `SaleLocationMap.tsx` | 235 | Mapa Leaflet/OSM con geocodificación Nominatim y pin arrastrable | SaleLocationMap |
 | `SendBudgetModal.tsx` | 367 | Envío omnicanal de presupuestos por WhatsApp (wa.me) y correo (mailto) | SendBudgetModal |
 | `SpreadsheetGrid.tsx` | 1081 | Planilla interactiva de ventas: edición inline, filtros, paginación y tracking Andreani | SpreadsheetGrid |
@@ -73,11 +73,11 @@
 | `backupService.ts` | 331 | Backups en IndexedDB y disco (API /api/backup) con rotación | IDB_RETENTION, saveToIndexedDb, listFromIndexedDb, getFromIndexedDb, deleteFromIndexedDb, pruneIndexedDbBackups, saveToBackend, listFromBackend, getFromBackend, runBackup, listAllBackups, restoreBackup, checkAndTriggerAutoBackup, FullAppState, BackupItem |
 | `budgetDelivery.ts` | 152 | Plantillas de envío de presupuestos (WhatsApp/correo) y normalización de teléfonos | formatWhatsAppPhone, generateBudgetWhatsAppText, generateBudgetEmailSubject, generateBudgetEmailBody, openWhatsAppForBudget, openEmailForBudget |
 | `customerIndex.ts` | 53 | — | buildSalesCustomerIndex, filterCustomers, CustomerSalesSummary |
-| `formatters.ts` | 309 | Formateo ARS/fechas, validaciones de venta, IDs y sanitización de CSV | ARGENTINE_PROVINCES, DEFAULT_PROVINCE, formatCurrency, formatDate, parseDateToISO, parseAmountString, validateRequiredSaleFields, getCurrentMonthISO, generateSaleId, getMonthYearLabel, exportSalesToCSV, normalizePersonName, RecordValidationResult |
+| `formatters.ts` | 483 | Formateo ARS/fechas, validaciones de venta, IDs y sanitización de CSV | ARGENTINE_PROVINCES, DEFAULT_PROVINCE, ARGENTINE_PROVINCE_CODES, formatCurrency, formatDate, parseDateToISO, parseAmountString, validateRequiredSaleFields, getCurrentMonthISO, generateSaleId, getMonthYearLabel, exportSalesToCSV, normalizePersonName, resolveArgentineProvince, parseCombinedAddress, parseCustomerIdentityFromWoo, RecordValidationResult |
 | `logger.ts` | 125 | Motor de auditoría (localStorage + eventos) con filtros y exportación | getSystemLogs, addSystemLog, clearSystemLogs, filterSystemLogs, exportLogsJSON, exportLogsCSV, LogEntry, LogFilterOptions, LogLevel |
 | `numberToWords.ts` | 71 | Conversión de importes a texto (para comprobantes) | numberToWordsSpanish |
 | `security.ts` | 92 | Hash de PIN (SHA-256), verificación retrocompatible y escalada de bloqueo | PIN_SALT, isHashedPin, authLockWaitMs, hashPin, verifyPin |
-| `wooCommerceApi.ts` | 450 | Cliente REST de WooCommerce: productos y clientes paginados | buildWooApiUrl, transformWooProduct, transformWooCustomer, fetchWithCorsProxy, fetchWooCommerceProducts, fetchWooCommerceCustomers, WooProductDTO, WooCustomerDTO |
+| `wooCommerceApi.ts` | 454 | Cliente REST de WooCommerce: productos y clientes paginados | buildWooApiUrl, transformWooProduct, transformWooCustomer, fetchWithCorsProxy, fetchWooCommerceProducts, fetchWooCommerceCustomers, WooProductDTO, WooCustomerDTO |
 
 ## Documentación de referencia
 

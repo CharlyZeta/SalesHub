@@ -1,6 +1,6 @@
 import { CatalogProduct, Customer, WooCommerceConfig } from '../types';
 import { addSystemLog } from './logger';
-import { normalizePersonName } from './formatters';
+import { parseCustomerIdentityFromWoo, parseCombinedAddress } from './formatters';
 
 /**
  * Fix D / W5: el catálogo de demostración está **desactivado por defecto**. Ante un fallo
@@ -139,10 +139,14 @@ export const transformWooProduct = (item: WooProductDTO): CatalogProduct => {
 
 export const transformWooCustomer = (item: WooCustomerDTO): Customer => {
   const billing = item.billing || {};
-  const rawNombre = billing.first_name || item.first_name || 'Cliente';
-  const rawApellido = billing.last_name || item.last_name || 'WooCommerce';
-  const nombre = normalizePersonName(rawNombre);
-  const apellido = normalizePersonName(rawApellido);
+  const rawNombre = billing.first_name || item.first_name || '';
+  const rawApellido = billing.last_name || item.last_name || '';
+
+  // Desglosar Nº de cliente (CLI-XXX), Apellido y Nombre
+  const identity = parseCustomerIdentityFromWoo(rawNombre, rawApellido, `WC-${item.id}`);
+
+  // Desglosar Domicilio, Localidad y Provincia (incluyendo comas y códigos provinciales)
+  const address = parseCombinedAddress(billing.address_1, billing.city, billing.state);
 
   // Extract DNI/CUIT from WooCommerce meta_data fields if present
   let dniCuit = '';
@@ -179,7 +183,7 @@ export const transformWooCustomer = (item: WooCustomerDTO): Customer => {
 
   const razonSocial = billing.company && billing.company.trim() !== dniCuit
     ? billing.company.trim()
-    : `${nombre} ${apellido}`.trim();
+    : `${identity.nombre} ${identity.apellido}`.trim();
 
   // Extract phone number from WooCommerce meta_data fields if billing.phone is empty
   let telefono = billing.phone || '';
@@ -194,16 +198,16 @@ export const transformWooCustomer = (item: WooCustomerDTO): Customer => {
 
   return {
     id: `woo-cust-${item.id}`,
-    clienteId: `WC-${item.id}`,
-    nombre: nombre,
-    apellido: apellido,
+    clienteId: identity.clienteId,
+    nombre: identity.nombre || 'Cliente',
+    apellido: identity.apellido || 'WooCommerce',
     razonSocialNombre: razonSocial,
     dniCuit: dniCuit,
     telefono: telefono,
     email: item.email || billing.email || `cliente${item.id}@tienda.com`,
-    direccion: billing.address_1 || '',
-    localidad: billing.city || '',
-    provincia: billing.state || '',
+    direccion: address.direccion,
+    localidad: address.localidad,
+    provincia: address.provincia,
     codigoPostal: billing.postcode ? String(billing.postcode).trim() : '',
     canalHabitual: 'WooCommerce',
     origen: 'WooCommerce'

@@ -4,6 +4,17 @@ Todas las mejoras y fixes notables del proyecto.
 
 El formato se basa en Keep a Changelog, y el proyecto respeta Versionado Semántico.
 
+## [0.0.27] - 2026-09-23
+
+### FEAT-CUST-003: Parseo Inteligente de Clientes WooCommerce: Nº Interno CLI, Nombre/Apellido y Dirección Combinada
+
+#### Normalización e Integración de Clientes
+- **Extracción de Nº de Cliente interno (`CLI-[NÚMERO]`)**: Cuando un cliente de WooCommerce viene con un prefijo numérico delante del apellido o nombre (ej: `"325 Prai Nestor"` o `"3861 Morales Sergio"`), se extrae automáticamente el número y se asigna al campo interno `clienteId` con el formato `CLI-325` o `CLI-3861`.
+- **Desglose de Apellido y Nombre**: Tras extraer el número, se asigna el primer término al Apellido (`"Prai"`, `"Morales"`) y los restantes al Nombre (`"Nestor"`, `"Sergio"`), procesándolos con `normalizePersonName`.
+- **Desglose de Domicilio Combinado**: Si la dirección viene concatenada con comas (ej: `"TTE. LOZA 6900, SANTA FE, S"`), se separa limpiamente la calle y altura (`"Tte. Loza 6900"`), la localidad (`"Santa Fe"`) y se resuelve la provincia.
+- **Diccionario de Códigos de Jurisdicción Argentina**: Se incorporó el mapeo oficial de códigos de 1 o 2 letras (ISO 3166-2:AR / AFIP / patentes provinciales), traduciendo automáticamente `'S'` o `'SF'` a `"Santa Fe"`, `'B'` o `'BA'` a `"Buenos Aires"`, `'X'` o `'CBA'` a `"Córdoba"`, `'C'` o `'CABA'` a `"Ciudad Autónoma de Buenos Aires"`, etc.
+- **Consistencia total**: Aplicado de forma simétrica en el frontend ([`src/utils/wooCommerceApi.ts`](file:///d:/ProyectosDual/Ventas/Registro-de-ventas/src/utils/wooCommerceApi.ts)), backend ([`server-woo.js`](file:///d:/ProyectosDual/Ventas/Registro-de-ventas/server-woo.js)) y formulario de venta ([`SaleFormModal.tsx`](file:///d:/ProyectosDual/Ventas/Registro-de-ventas/src/components/SaleFormModal.tsx)).
+
 ## [0.0.26] - 2026-09-22
 
 ### FEAT-CUST-002: Normalización de Clientes, Extracción DNI WooCommerce y Distribución de Campos en Venta

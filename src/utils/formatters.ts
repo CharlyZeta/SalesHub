@@ -306,3 +306,177 @@ export const ARGENTINE_PROVINCES: string[] = [
 ];
 
 export const DEFAULT_PROVINCE = 'Santa Fe';
+
+/**
+ * Tabla de códigos de provincia y abreviaturas tradicionales en la República Argentina
+ * (ISO 3166-2:AR / AFIP / Códigos de patentes provinciales).
+ */
+export const ARGENTINE_PROVINCE_CODES: Record<string, string> = {
+  'A': 'Salta',
+  'B': 'Buenos Aires',
+  'C': 'Ciudad Autónoma de Buenos Aires',
+  'D': 'San Luis',
+  'E': 'Entre Ríos',
+  'F': 'La Rioja',
+  'G': 'Santiago del Estero',
+  'H': 'Chaco',
+  'J': 'San Juan',
+  'K': 'Catamarca',
+  'L': 'La Pampa',
+  'M': 'Mendoza',
+  'N': 'Misiones',
+  'P': 'Formosa',
+  'Q': 'Neuquén',
+  'R': 'Río Negro',
+  'S': 'Santa Fe',
+  'T': 'Tucumán',
+  'U': 'Chubut',
+  'V': 'Tierra del Fuego',
+  'W': 'Corrientes',
+  'X': 'Córdoba',
+  'Y': 'Jujuy',
+  'Z': 'Santa Cruz',
+  'CABA': 'Ciudad Autónoma de Buenos Aires',
+  'CF': 'Ciudad Autónoma de Buenos Aires',
+  'BA': 'Buenos Aires',
+  'SF': 'Santa Fe',
+  'CBA': 'Córdoba',
+  'ER': 'Entre Ríos'
+};
+
+/**
+ * Resuelve una provincia a su nombre oficial completo a partir de un código, abreviatura
+ * o nombre con distinta capitalización/tildes.
+ */
+export function resolveArgentineProvince(raw?: string | null): string {
+  if (!raw || typeof raw !== 'string') return '';
+  const cleaned = raw.trim();
+  if (!cleaned) return '';
+
+  // 1. Coincidencia por código de letra o abreviatura (ej: 'S' -> 'Santa Fe')
+  const codeMatch = ARGENTINE_PROVINCE_CODES[cleaned.toUpperCase()];
+  if (codeMatch) return codeMatch;
+
+  // 2. Coincidencia en listado oficial (insensible a mayúsculas y acentos)
+  const found = ARGENTINE_PROVINCES.find(
+    (p) => p.localeCompare(cleaned, undefined, { sensitivity: 'accent' }) === 0 ||
+           p.toLowerCase() === cleaned.toLowerCase()
+  );
+  if (found) return found;
+
+  return normalizePersonName(cleaned);
+}
+
+/**
+ * Desglosa una dirección que puede venir concatenada con comas
+ * (ej: "TTE. LOZA 6900, SANTA FE, S" o "San Martín 1234, Rosario")
+ * en calle/altura, localidad y provincia normalizada.
+ */
+export function parseCombinedAddress(
+  rawAddress?: string | null,
+  rawCity?: string | null,
+  rawState?: string | null
+): { direccion: string; localidad: string; provincia: string } {
+  const address = rawAddress ? String(rawAddress).trim() : '';
+  const city = rawCity ? String(rawCity).trim() : '';
+  const state = rawState ? String(rawState).trim() : '';
+
+  if (!address) {
+    return {
+      direccion: '',
+      localidad: normalizePersonName(city),
+      provincia: resolveArgentineProvince(state)
+    };
+  }
+
+  // Si contiene comas que separan calle, localidad y provincia
+  if (address.includes(',')) {
+    const parts = address.split(',').map((p) => p.trim()).filter(Boolean);
+    if (parts.length >= 3) {
+      return {
+        direccion: normalizePersonName(parts[0]),
+        localidad: normalizePersonName(city || parts[1]),
+        provincia: resolveArgentineProvince(state || parts[2])
+      };
+    }
+    if (parts.length === 2) {
+      // Si la segunda parte es código o nombre de provincia (ej: "San Martín 500, S")
+      const maybeProvince = ARGENTINE_PROVINCE_CODES[parts[1].toUpperCase()] ||
+        ARGENTINE_PROVINCES.find(p => p.toLowerCase() === parts[1].toLowerCase());
+      if (maybeProvince) {
+        return {
+          direccion: normalizePersonName(parts[0]),
+          localidad: normalizePersonName(city),
+          provincia: maybeProvince
+        };
+      }
+      return {
+        direccion: normalizePersonName(parts[0]),
+        localidad: normalizePersonName(city || parts[1]),
+        provincia: resolveArgentineProvince(state)
+      };
+    }
+  }
+
+  return {
+    direccion: normalizePersonName(address),
+    localidad: normalizePersonName(city),
+    provincia: resolveArgentineProvince(state)
+  };
+}
+
+/**
+ * Desglosa la identidad del cliente proveniente de WooCommerce.
+ * Si detecta un número de cliente al inicio del apellido o nombre (ej: "325 Prai Nestor"
+ * o "3861 Morales Sergio"), extrae el número con formato CLI-[NÚMERO] y separa el
+ * Apellido ("Prai") y el Nombre ("Nestor").
+ */
+export function parseCustomerIdentityFromWoo(
+  rawFirstName?: string | null,
+  rawLastName?: string | null,
+  fallbackClienteId?: string
+): { clienteId: string; nombre: string; apellido: string } {
+  const first = rawFirstName ? String(rawFirstName).trim() : '';
+  const last = rawLastName ? String(rawLastName).trim() : '';
+
+  let detectedNumber = '';
+  let cleanLast = last;
+  let cleanFirst = first;
+
+  // 1. Detectar si el apellido comienza con número (ej: "325 Prai Nestor" o "3861 Morales")
+  const numPrefixLast = cleanLast.match(/^(\d+)\s+(.+)$/);
+  if (numPrefixLast) {
+    detectedNumber = numPrefixLast[1];
+    cleanLast = numPrefixLast[2].trim();
+  } else {
+    // 2. O si el nombre comienza con número (ej: "325 Prai" con apellido "Nestor")
+    const numPrefixFirst = cleanFirst.match(/^(\d+)\s+(.+)$/);
+    if (numPrefixFirst) {
+      detectedNumber = numPrefixFirst[1];
+      cleanFirst = numPrefixFirst[2].trim();
+    }
+  }
+
+  // 3. Si el apellido contiene todo (apellido y nombre) y first está vacío:
+  //    ej: "Prai Nestor" -> apellido: "Prai", nombre: "Nestor"
+  if (!cleanFirst && cleanLast.includes(' ')) {
+    const parts = cleanLast.split(/\s+/);
+    cleanLast = parts[0];
+    cleanFirst = parts.slice(1).join(' ');
+  } else if (!cleanLast && cleanFirst.includes(' ')) {
+    // Si last está vacío y first contiene todo:
+    const parts = cleanFirst.split(/\s+/);
+    cleanLast = parts[0];
+    cleanFirst = parts.slice(1).join(' ');
+  }
+
+  const clienteId = detectedNumber
+    ? `CLI-${detectedNumber}`
+    : (fallbackClienteId || 'CLI-0000');
+
+  return {
+    clienteId,
+    nombre: normalizePersonName(cleanFirst),
+    apellido: normalizePersonName(cleanLast)
+  };
+}

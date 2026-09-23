@@ -93,13 +93,127 @@ function normalizePersonName(name) {
     .join(' ');
 }
 
+/** Códigos de provincia argentinos y abreviaturas */
+const ARGENTINE_PROVINCE_CODES = {
+  'A': 'Salta', 'B': 'Buenos Aires', 'C': 'Ciudad Autónoma de Buenos Aires',
+  'D': 'San Luis', 'E': 'Entre Ríos', 'F': 'La Rioja', 'G': 'Santiago del Estero',
+  'H': 'Chaco', 'J': 'San Juan', 'K': 'Catamarca', 'L': 'La Pampa',
+  'M': 'Mendoza', 'N': 'Misiones', 'P': 'Formosa', 'Q': 'Neuquén',
+  'R': 'Río Negro', 'S': 'Santa Fe', 'T': 'Tucumán', 'U': 'Chubut',
+  'V': 'Tierra del Fuego', 'W': 'Corrientes', 'X': 'Córdoba', 'Y': 'Jujuy',
+  'Z': 'Santa Cruz', 'CABA': 'Ciudad Autónoma de Buenos Aires', 'CF': 'Ciudad Autónoma de Buenos Aires',
+  'BA': 'Buenos Aires', 'SF': 'Santa Fe', 'CBA': 'Córdoba', 'ER': 'Entre Ríos'
+};
+
+/** Resuelve una provincia por código o abreviatura */
+function resolveArgentineProvince(raw) {
+  if (!raw || typeof raw !== 'string') return '';
+  const cleaned = raw.trim();
+  if (!cleaned) return '';
+
+  const codeMatch = ARGENTINE_PROVINCE_CODES[cleaned.toUpperCase()];
+  if (codeMatch) return codeMatch;
+  return normalizePersonName(cleaned);
+}
+
+/** Desglosa direcciones que vienen concatenadas por coma */
+function parseCombinedAddress(rawAddress, rawCity, rawState) {
+  const address = rawAddress ? String(rawAddress).trim() : '';
+  const city = rawCity ? String(rawCity).trim() : '';
+  const state = rawState ? String(rawState).trim() : '';
+
+  if (!address) {
+    return {
+      direccion: '',
+      localidad: normalizePersonName(city),
+      provincia: resolveArgentineProvince(state)
+    };
+  }
+
+  if (address.includes(',')) {
+    const parts = address.split(',').map((p) => p.trim()).filter(Boolean);
+    if (parts.length >= 3) {
+      return {
+        direccion: normalizePersonName(parts[0]),
+        localidad: normalizePersonName(city || parts[1]),
+        provincia: resolveArgentineProvince(state || parts[2])
+      };
+    }
+    if (parts.length === 2) {
+      const maybeProvince = ARGENTINE_PROVINCE_CODES[parts[1].toUpperCase()];
+      if (maybeProvince) {
+        return {
+          direccion: normalizePersonName(parts[0]),
+          localidad: normalizePersonName(city),
+          provincia: maybeProvince
+        };
+      }
+      return {
+        direccion: normalizePersonName(parts[0]),
+        localidad: normalizePersonName(city || parts[1]),
+        provincia: resolveArgentineProvince(state)
+      };
+    }
+  }
+
+  return {
+    direccion: normalizePersonName(address),
+    localidad: normalizePersonName(city),
+    provincia: resolveArgentineProvince(state)
+  };
+}
+
+/** Desglosa Nº cliente CLI-[NRO], Apellido y Nombre */
+function parseCustomerIdentityFromWoo(rawFirstName, rawLastName, fallbackClienteId) {
+  const first = rawFirstName ? String(rawFirstName).trim() : '';
+  const last = rawLastName ? String(rawLastName).trim() : '';
+
+  let detectedNumber = '';
+  let cleanLast = last;
+  let cleanFirst = first;
+
+  const numPrefixLast = cleanLast.match(/^(\d+)\s+(.+)$/);
+  if (numPrefixLast) {
+    detectedNumber = numPrefixLast[1];
+    cleanLast = numPrefixLast[2].trim();
+  } else {
+    const numPrefixFirst = cleanFirst.match(/^(\d+)\s+(.+)$/);
+    if (numPrefixFirst) {
+      detectedNumber = numPrefixFirst[1];
+      cleanFirst = numPrefixFirst[2].trim();
+    }
+  }
+
+  if (!cleanFirst && cleanLast.includes(' ')) {
+    const parts = cleanLast.split(/\s+/);
+    cleanLast = parts[0];
+    cleanFirst = parts.slice(1).join(' ');
+  } else if (!cleanLast && cleanFirst.includes(' ')) {
+    const parts = cleanFirst.split(/\s+/);
+    cleanLast = parts[0];
+    cleanFirst = parts.slice(1).join(' ');
+  }
+
+  const clienteId = detectedNumber
+    ? `CLI-${detectedNumber}`
+    : (fallbackClienteId || 'CLI-0000');
+
+  return {
+    clienteId,
+    nombre: normalizePersonName(cleanFirst),
+    apellido: normalizePersonName(cleanLast)
+  };
+}
+
 /** Cliente de WooCommerce → forma que consume la app (`Customer`). */
 function mapCustomer(item) {
   const billing = item.billing || {};
-  const rawNombre = billing.first_name || item.first_name || 'Cliente';
-  const rawApellido = billing.last_name || item.last_name || 'WooCommerce';
-  const nombre = normalizePersonName(rawNombre);
-  const apellido = normalizePersonName(rawApellido);
+  const rawNombre = billing.first_name || item.first_name || '';
+  const rawApellido = billing.last_name || item.last_name || '';
+
+  const identity = parseCustomerIdentityFromWoo(rawNombre, rawApellido, `WC-${item.id}`);
+  const address = parseCombinedAddress(billing.address_1, billing.city, billing.state);
+
   const meta = Array.isArray(item.meta_data) ? item.meta_data : [];
 
   const docKeys = [
@@ -136,20 +250,20 @@ function mapCustomer(item) {
 
   const razonSocial = billing.company && billing.company.trim() !== dniCuit
     ? billing.company.trim()
-    : `${nombre} ${apellido}`.trim();
+    : `${identity.nombre} ${identity.apellido}`.trim();
 
   return {
     id: `woo-cust-${item.id}`,
-    clienteId: `WC-${item.id}`,
-    nombre,
-    apellido,
+    clienteId: identity.clienteId,
+    nombre: identity.nombre || 'Cliente',
+    apellido: identity.apellido || 'WooCommerce',
     razonSocialNombre: razonSocial,
     dniCuit,
     telefono: billing.phone || (phoneMeta?.value ? String(phoneMeta.value).trim() : ''),
     email: item.email || billing.email || `cliente${item.id}@tienda.com`,
-    direccion: billing.address_1 || '',
-    localidad: billing.city || '',
-    provincia: billing.state || '',
+    direccion: address.direccion,
+    localidad: address.localidad,
+    provincia: address.provincia,
     codigoPostal: billing.postcode ? String(billing.postcode).trim() : '',
     canalHabitual: 'WooCommerce',
     origen: 'WooCommerce',

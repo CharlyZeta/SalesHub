@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { normalizePersonName, ARGENTINE_PROVINCES, DEFAULT_PROVINCE } from '../utils/formatters';
+import {
+  normalizePersonName,
+  ARGENTINE_PROVINCES,
+  DEFAULT_PROVINCE,
+  parseCustomerIdentityFromWoo,
+  parseCombinedAddress,
+  resolveArgentineProvince
+} from '../utils/formatters';
 import { transformWooCustomer } from '../utils/wooCommerceApi';
 
 describe('Normalización de Nombres de Clientes (FEAT-CUST-002)', () => {
@@ -143,5 +150,71 @@ describe('Desglose de datos de cliente para venta (FEAT-CUST-002)', () => {
 
     expect(normApellido).toBe('Martinez');
     expect(normNombre).toBe('Juan Ignacio');
+  });
+});
+
+describe('Parseo Inteligente de Clientes WooCommerce y Dirección Combinada (FEAT-CUST-003)', () => {
+  it('AC-001: extrae CLI-[NRO], apellido y nombre si viene "325 Prai Nestor"', () => {
+    const res = parseCustomerIdentityFromWoo('', '325 Prai Nestor', 'WC-100');
+    expect(res.clienteId).toBe('CLI-325');
+    expect(res.apellido).toBe('Prai');
+    expect(res.nombre).toBe('Nestor');
+  });
+
+  it('AC-002: extrae CLI-[NRO] de apellido y mantiene first_name: "3861 Morales" + "Sergio"', () => {
+    const res = parseCustomerIdentityFromWoo('Sergio', '3861 Morales', 'WC-101');
+    expect(res.clienteId).toBe('CLI-3861');
+    expect(res.apellido).toBe('Morales');
+    expect(res.nombre).toBe('Sergio');
+  });
+
+  it('conserva ID de respaldo si no hay prefijo numérico', () => {
+    const res = parseCustomerIdentityFromWoo('María', 'Gómez', 'WC-555');
+    expect(res.clienteId).toBe('WC-555');
+    expect(res.nombre).toBe('María');
+    expect(res.apellido).toBe('Gómez');
+  });
+
+  it('AC-003: desglosa dirección combinada "TTE. LOZA 6900, SANTA FE, S"', () => {
+    const addr = parseCombinedAddress('TTE. LOZA 6900, SANTA FE, S');
+    expect(addr.direccion).toBe('Tte. Loza 6900');
+    expect(addr.localidad).toBe('Santa Fe');
+    expect(addr.provincia).toBe('Santa Fe');
+  });
+
+  it('AC-004: resuelve códigos de provincia oficiales de 1 o 2 letras a su nombre completo', () => {
+    expect(resolveArgentineProvince('S')).toBe('Santa Fe');
+    expect(resolveArgentineProvince('s')).toBe('Santa Fe');
+    expect(resolveArgentineProvince('B')).toBe('Buenos Aires');
+    expect(resolveArgentineProvince('X')).toBe('Córdoba');
+    expect(resolveArgentineProvince('E')).toBe('Entre Ríos');
+    expect(resolveArgentineProvince('C')).toBe('Ciudad Autónoma de Buenos Aires');
+    expect(resolveArgentineProvince('CABA')).toBe('Ciudad Autónoma de Buenos Aires');
+    expect(resolveArgentineProvince('SF')).toBe('Santa Fe');
+  });
+
+  it('integración transformWooCustomer con prefijo numérico y dirección con comas', () => {
+    const rawWooItem: any = {
+      id: 999,
+      first_name: '',
+      last_name: '325 Prai Nestor',
+      billing: {
+        first_name: '',
+        last_name: '325 Prai Nestor',
+        address_1: 'TTE. LOZA 6900, SANTA FE, S',
+        city: '',
+        state: '',
+        postcode: '3000'
+      }
+    };
+
+    const customer = transformWooCustomer(rawWooItem);
+    expect(customer.clienteId).toBe('CLI-325');
+    expect(customer.apellido).toBe('Prai');
+    expect(customer.nombre).toBe('Nestor');
+    expect(customer.direccion).toBe('Tte. Loza 6900');
+    expect(customer.localidad).toBe('Santa Fe');
+    expect(customer.provincia).toBe('Santa Fe');
+    expect(customer.codigoPostal).toBe('3000');
   });
 });

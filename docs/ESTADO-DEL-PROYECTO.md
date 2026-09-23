@@ -4,8 +4,8 @@ Documento de **handoff**: qué se hizo, cómo quedó el repositorio y qué sigue
 Pensado para retomar el trabajo en cualquier momento (o para que otra persona entienda
 el punto exacto en el que está el desarrollo).
 
-**Última actualización:** 2026-09-22
-**Versión del proyecto:** 0.0.26
+**Última actualización:** 2026-09-23
+**Versión del proyecto:** 0.0.27
 **Commit de cierre:** el último de `master` (`git log -1 --oneline`)
 **Repositorio:** https://github.com/CharlyZeta/SalesHub (rama `master`)
 
@@ -21,7 +21,7 @@ documentado, con lint/CI reales y los problemas de sincronización resueltos**.
 | Área | Estado |
 |:--|:--|
 | Calidad | `npm run lint` (tsc + ESLint): **0 errores / 0 warnings** |
-| Tests | **13 archivos / 122 tests** (Vitest) |
+| Tests | **13 archivos / 128 tests** (Vitest) |
 | Cobertura | utils **82,5 %** · global **76,5 %** (`security.ts` 95,5 %) |
 | Build | Producción OK |
 | CI | GitHub Actions **en verde** en cada push (typecheck + lint, tests, build) |
