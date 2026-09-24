@@ -1,19 +1,29 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Plus, Trash2, Search, UserCheck, ShoppingCart, FileText, CheckCircle, Printer, Navigation, Loader2, AlertCircle } from 'lucide-react';
-import { Sale, SaleProductItem, Customer, CatalogProduct, SaleChannel, PaymentMethod, ShippingMethod, ShippingStatus, InvoiceType } from '../types';
+import { X, ShoppingCart, CheckCircle, Printer, Navigation, AlertCircle } from 'lucide-react';
 import {
-  formatCurrency,
+  Sale,
+  SaleProductItem,
+  Customer,
+  CatalogProduct,
+  SaleChannel,
+  PaymentMethod,
+  ShippingMethod,
+  ShippingStatus,
+  InvoiceType
+} from '../types';
+import {
   validateRequiredSaleFields,
   generateSaleId,
   normalizePersonName,
-  ARGENTINE_PROVINCES,
   DEFAULT_PROVINCE,
   parseCustomerIdentityFromWoo,
   parseCombinedAddress
 } from '../utils/formatters';
-import { ProductSearchPicker } from './ProductSearchPicker';
 import { SaleLocationMap } from './SaleLocationMap';
 import { addSystemLog } from '../utils/logger';
+import { SaleCustomerSection } from './sales/SaleCustomerSection';
+import { SaleProductsSection } from './sales/SaleProductsSection';
+import { SaleBillingSection } from './sales/SaleBillingSection';
 
 /** Clave del borrador autoguardado de la venta en curso (sobrevive recargas). */
 const SALE_DRAFT_KEY = 'app_sale_draft_v1';
@@ -51,7 +61,6 @@ const SaleFormModalInner: React.FC<SaleFormModalProps> = ({
   estadosEnvio = ['Pendiente', 'Pendiente de ingreso', 'En camino', 'Listo para retirar', 'Entregado', 'No entregado', 'Enviado', 'No Requiere'],
   onPrintRemito
 }) => {
-
   // Form states
   const [fecha, setFecha] = useState(existingSale ? existingSale.fecha : new Date().toISOString().split('T')[0]);
   const [clienteId, setClienteId] = useState(existingSale ? existingSale.clienteId : '');
@@ -66,7 +75,7 @@ const SaleFormModalInner: React.FC<SaleFormModalProps> = ({
 
   const [productos, setProductos] = useState<SaleProductItem[]>(
     existingSale && existingSale.productos.length > 0
-      ? existingSale.productos.map(p => ({ ...p, descuento: p.descuento ?? 0 }))
+      ? existingSale.productos.map((p) => ({ ...p, descuento: p.descuento ?? 0 }))
       : [{ id: '1', nombre: '', cantidad: 1, precioUnitario: 0, descuento: 0, subtotal: 0 }]
   );
 
@@ -87,7 +96,9 @@ const SaleFormModalInner: React.FC<SaleFormModalProps> = ({
   const [entregaLocalidad, setEntregaLocalidad] = useState(existingSale?.entregaLocalidad || '');
   const [entregaCodigoPostal, setEntregaCodigoPostal] = useState(existingSale?.entregaCodigoPostal || '');
   const [entregaProvincia, setEntregaProvincia] = useState(existingSale?.entregaProvincia || DEFAULT_PROVINCE);
-  const [entregaCoordenadas, setEntregaCoordenadas] = useState<{lat: number; lng: number} | undefined>(existingSale?.entregaCoordenadas);
+  const [entregaCoordenadas, setEntregaCoordenadas] = useState<{ lat: number; lng: number } | undefined>(
+    existingSale?.entregaCoordenadas
+  );
   const [showMap, setShowMap] = useState(false);
 
   // Search autocomplete helpers
@@ -95,7 +106,7 @@ const SaleFormModalInner: React.FC<SaleFormModalProps> = ({
   const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
   const [isCustomerSearchLoading, setIsCustomerSearchLoading] = useState(false);
 
-  // --- Borrador autoguardado: sobrevive recargas de pestaña y descarte por memoria ---
+  // Borrador autoguardado
   const draftEditingId = existingSale?.id ?? null;
   const [draftRestoredAt, setDraftRestoredAt] = useState<string | null>(null);
   const draftDisabledRef = useRef(false);
@@ -104,11 +115,11 @@ const SaleFormModalInner: React.FC<SaleFormModalProps> = ({
     try {
       localStorage.removeItem(SALE_DRAFT_KEY);
     } catch (_e) {
-      // localStorage no disponible: nada que limpiar
+      // localStorage no disponible
     }
   };
 
-  // Restaurar el borrador al abrir el modal (solo si corresponde a esta venta/edición)
+  // Restaurar el borrador al abrir el modal
   useEffect(() => {
     try {
       const raw = localStorage.getItem(SALE_DRAFT_KEY);
@@ -149,11 +160,9 @@ const SaleFormModalInner: React.FC<SaleFormModalProps> = ({
     } catch (_e) {
       clearSaleDraft();
     }
-    // Solo al montar: el borrador pertenece a esta apertura del modal
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [draftEditingId]);
 
-  // Autoguardado con debounce mientras se carga la venta
+  // Autoguardado con debounce
   useEffect(() => {
     if (draftDisabledRef.current) return;
     const hasContent = Boolean(
@@ -188,7 +197,7 @@ const SaleFormModalInner: React.FC<SaleFormModalProps> = ({
           entregaLocalidad,
           entregaCodigoPostal,
           entregaProvincia,
-          entregaCoordenadas,
+          entregaCoordenadas
         };
         localStorage.setItem(
           SALE_DRAFT_KEY,
@@ -226,10 +235,10 @@ const SaleFormModalInner: React.FC<SaleFormModalProps> = ({
     entregaCodigoPostal,
     entregaProvincia,
     entregaCoordenadas,
-    draftEditingId,
+    draftEditingId
   ]);
 
-  // Aviso del navegador si recargan/cierran con la venta a medio cargar
+  // Aviso del navegador si recargan con la venta a medio cargar
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (!localStorage.getItem(SALE_DRAFT_KEY)) return;
@@ -246,8 +255,6 @@ const SaleFormModalInner: React.FC<SaleFormModalProps> = ({
     setDraftRestoredAt(null);
   };
 
-  // Cierre explícito del usuario: se descarta el borrador (el autoguardado queda
-  // solo para recargas accidentales/descarte de pestaña)
   const handleCancelSale = () => {
     draftDisabledRef.current = true;
     clearSaleDraft();
@@ -267,9 +274,7 @@ const SaleFormModalInner: React.FC<SaleFormModalProps> = ({
 
   // Auto-fill customer if selected from directory
   const handleSelectCustomer = (c: Customer) => {
-    // Desglose de identidad (CLI-XXX, apellido y nombre)
     const identity = parseCustomerIdentityFromWoo(c.nombre, c.apellido, c.clienteId);
-    // Desglose de dirección, localidad y provincia
     const address = parseCombinedAddress(c.direccion, c.localidad, c.provincia);
 
     setClienteId(identity.clienteId);
@@ -293,7 +298,7 @@ const SaleFormModalInner: React.FC<SaleFormModalProps> = ({
     if (field === 'cantidad' || field === 'precioUnitario' || field === 'descuento') {
       const qty = field === 'cantidad' ? parseFloat(value) || 0 : current.cantidad;
       const price = field === 'precioUnitario' ? parseFloat(value) || 0 : current.precioUnitario;
-      const desc = field === 'descuento' ? parseFloat(value) || 0 : (current.descuento || 0);
+      const desc = field === 'descuento' ? parseFloat(value) || 0 : current.descuento || 0;
       current.subtotal = qty * price * (1 - desc / 100);
     }
 
@@ -353,7 +358,6 @@ const SaleFormModalInner: React.FC<SaleFormModalProps> = ({
     e.preventDefault();
 
     try {
-      // Auto generate internal client ID if empty
       const finalClienteId = clienteId.trim() || `CLI-${Math.floor(1000 + Math.random() * 9000)}`;
 
       const candidateSale: Sale = {
@@ -368,7 +372,7 @@ const SaleFormModalInner: React.FC<SaleFormModalProps> = ({
         clienteLocalidad: clienteLocalidad.trim(),
         clienteCodigoPostal: clienteCodigoPostal.trim(),
         clienteProvincia: clienteProvincia.trim() || DEFAULT_PROVINCE,
-        productos: productos.filter(p => p.nombre.trim() !== ''),
+        productos: productos.filter((p) => p.nombre.trim() !== ''),
         montoTotal: montoTotalCalculado,
         tipoFactura,
         numeroFactura,
@@ -381,13 +385,12 @@ const SaleFormModalInner: React.FC<SaleFormModalProps> = ({
         entregaDireccion: envioDomicilioDiferente ? entregaDireccion.trim() : '',
         entregaLocalidad: envioDomicilioDiferente ? entregaLocalidad.trim() : '',
         entregaCodigoPostal: envioDomicilioDiferente ? entregaCodigoPostal.trim() : '',
-        entregaProvincia: envioDomicilioDiferente ? (entregaProvincia.trim() || DEFAULT_PROVINCE) : '',
+        entregaProvincia: envioDomicilioDiferente ? entregaProvincia.trim() || DEFAULT_PROVINCE : '',
         entregaCoordenadas: envioDomicilioDiferente ? entregaCoordenadas : undefined,
         notas,
         creadoEn: existingSale ? existingSale.creadoEn : new Date().toISOString()
       };
 
-      // Requisito obligatorio: fecha, ncli, producto, precio, met. pago
       const valResult = validateRequiredSaleFields(candidateSale);
       if (!valResult.isValid) {
         addSystemLog('WARN', 'Ventas', `Intento de guardar venta incompleta. Faltan: ${valResult.missingFields.join(', ')}`);
@@ -408,10 +411,11 @@ const SaleFormModalInner: React.FC<SaleFormModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-      <div className={`bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full rounded-xl shadow-2xl overflow-hidden flex flex-col my-auto max-h-[92vh] transition-all duration-300 ${
-        showMap ? 'max-w-7xl' : 'max-w-4xl'
-      }`}>
-        
+      <div
+        className={`bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full rounded-xl shadow-2xl overflow-hidden flex flex-col my-auto max-h-[92vh] transition-all duration-300 ${
+          showMap ? 'max-w-7xl' : 'max-w-4xl'
+        }`}
+      >
         {/* Modal Header */}
         <div className="bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 px-5 py-3.5 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -450,587 +454,157 @@ const SaleFormModalInner: React.FC<SaleFormModalProps> = ({
           <div className="flex-1 overflow-y-auto flex">
             {/* Formulario (Left panel) */}
             <div className={`p-5 space-y-4 flex-1 ${showMap ? 'max-w-[65%]' : 'w-full'}`}>
-          
-          {draftRestoredAt && (
-            <div className="flex items-start justify-between gap-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-lg p-3 text-amber-900 dark:text-amber-200">
-              <div className="flex items-start gap-2">
-                <AlertCircle className="w-4 h-4 mt-0.5 shrink-0 text-amber-600 dark:text-amber-400" />
-                <span className="text-[11px] leading-relaxed">
-                  <strong>Borrador recuperado.</strong> Se restauró una venta sin guardar del{' '}
-                  {new Date(draftRestoredAt).toLocaleString()}. Guardá la venta para conservarla o descartá el borrador.
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={handleDiscardDraft}
-                className="shrink-0 text-[11px] font-bold bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700 rounded px-2 py-1 hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors cursor-pointer"
-              >
-                Descartar borrador
-              </button>
-            </div>
-          )}
-
-          {/* Section 1: Data & Client */}
-          <div className="bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-lg p-4 space-y-3">
-            <div className="font-semibold text-slate-800 dark:text-slate-200 text-xs border-b border-slate-200 dark:border-slate-700 pb-2 flex items-center gap-2">
-              <UserCheck className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-              <span>Información General & Cliente</span>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-              
-              {/* Fecha */}
-              <div>
-                <label className="block text-slate-500 dark:text-slate-400 mb-1">Fecha de Venta *</label>
-                <input
-                  type="date"
-                  required
-                  value={fecha}
-                  onChange={(e) => setFecha(e.target.value)}
-                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500 font-mono shadow-xs"
-                />
-              </div>
-
-              {/* Canal / Origen */}
-              <div>
-                <label className="block text-slate-500 dark:text-slate-400 mb-1">Canal de Venta *</label>
-                <select
-                  value={canal}
-                  onChange={(e) => setCanal(e.target.value as SaleChannel)}
-                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500 font-medium shadow-xs"
-                >
-                  {canales.map((c) => (
-                    <option key={c} value={c} className="dark:bg-slate-900">{c}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* ID Cliente Interno */}
-              <div>
-                <label className="block text-slate-500 dark:text-slate-400 mb-1">Nº Cliente Interno</label>
-                <input
-                  type="text"
-                  placeholder="Ej: CLI-1002 (auto)"
-                  value={clienteId}
-                  onChange={(e) => setClienteId(e.target.value)}
-                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1.5 text-blue-600 dark:text-blue-400 font-mono focus:outline-none focus:border-blue-500 shadow-xs"
-                />
-              </div>
-
-              {/* Quick Customer Search Autocomplete */}
-              <div className="relative customer-search-container">
-                <label className="block text-slate-500 dark:text-slate-400 mb-1">Buscar Cliente Existente</label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Buscar por nombre o DNI..."
-                    value={customerSearch}
-                    onChange={(e) => {
-                      setCustomerSearch(e.target.value);
-                      setShowCustomerDropdown(true);
-                      setIsCustomerSearchLoading(true);
-                      setTimeout(() => setIsCustomerSearchLoading(false), 150);
-                    }}
-                    onFocus={() => {
-                      setShowCustomerDropdown(true);
-                      setIsCustomerSearchLoading(true);
-                      setTimeout(() => setIsCustomerSearchLoading(false), 150);
-                    }}
-                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md pl-8 pr-2.5 py-1.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500 shadow-xs"
-                  />
-                  {isCustomerSearchLoading ? (
-                    <Loader2 className="w-3.5 h-3.5 absolute left-2.5 top-2 text-blue-600 dark:text-blue-400 animate-spin" />
-                  ) : (
-                    <Search className="w-3.5 h-3.5 absolute left-2.5 top-2 text-slate-400 dark:text-slate-500" />
-                  )}
-                </div>
-
-                {showCustomerDropdown && (
-                  <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md shadow-xl z-20 max-h-48 overflow-y-auto">
-                    {isCustomerSearchLoading ? (
-                      <div className="p-3 flex items-center justify-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-                        <Loader2 className="w-4 h-4 animate-spin text-blue-600 dark:text-blue-400" />
-                        <span>Cargando clientes ({customers.length})...</span>
-                      </div>
-                    ) : (
-                      <>
-                        {customers
-                          .filter((c) => {
-                            if (customerSearch.trim() === '') return true;
-                            return `${c.nombre} ${c.apellido} ${c.clienteId} ${c.dniCuit}`
-                              .toLowerCase()
-                              .includes(customerSearch.toLowerCase());
-                          })
-                          .slice(0, 25)
-                          .map((c) => (
-                            <div
-                              key={c.clienteId}
-                              onClick={() => handleSelectCustomer(c)}
-                              className="p-2 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer border-b border-slate-100 dark:border-slate-700 flex items-center justify-between"
-                            >
-                              <div>
-                                <span className="font-bold text-slate-800 dark:text-slate-200">{c.nombre} {c.apellido}</span>
-                                <span className="ml-2 font-mono text-blue-600 dark:text-blue-400 text-[10px]">{c.clienteId}</span>
-                              </div>
-                              <span className="text-slate-400 text-[10px]">{c.dniCuit}</span>
-                            </div>
-                          ))}
-                        {customers.filter((c) => {
-                          if (customerSearch.trim() === '') return true;
-                          return `${c.nombre} ${c.apellido} ${c.clienteId} ${c.dniCuit}`
-                            .toLowerCase()
-                            .includes(customerSearch.toLowerCase());
-                        }).length === 0 && (
-                          <div className="p-2 text-center text-xs text-slate-500 dark:text-slate-400">
-                            No se encontraron clientes
-                          </div>
-                        )}
-                      </>
-                    )}
+              {draftRestoredAt && (
+                <div className="flex items-start justify-between gap-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-lg p-3 text-amber-900 dark:text-amber-200">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 mt-0.5 shrink-0 text-amber-600 dark:text-amber-400" />
+                    <span className="text-[11px] leading-relaxed">
+                      <strong>Borrador recuperado.</strong> Se restauró una venta sin guardar del{' '}
+                      {new Date(draftRestoredAt).toLocaleString()}. Guardá la venta para conservarla o descartá el borrador.
+                    </span>
                   </div>
-                )}
-              </div>
-            </div>
-
-            {/* Customer Details Row */}
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 pt-1">
-              <div>
-                <label className="block text-slate-500 dark:text-slate-400 mb-1">Nombre *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Juan"
-                  value={clienteNombre}
-                  onChange={(e) => setClienteNombre(e.target.value)}
-                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500 shadow-xs"
-                />
-              </div>
-              <div>
-                <label className="block text-slate-500 dark:text-slate-400 mb-1">Apellido</label>
-                <input
-                  type="text"
-                  placeholder="Pérez"
-                  value={clienteApellido}
-                  onChange={(e) => setClienteApellido(e.target.value)}
-                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500 shadow-xs"
-                />
-              </div>
-              <div>
-                <label className="block text-slate-500 dark:text-slate-400 mb-1">DNI / CUIT</label>
-                <input
-                  type="text"
-                  placeholder="20-30123456-7"
-                  value={clienteDniCuit}
-                  onChange={(e) => setClienteDniCuit(e.target.value)}
-                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500 font-mono shadow-xs"
-                />
-              </div>
-              <div>
-                <label className="block text-slate-500 dark:text-slate-400 mb-1">Teléfono</label>
-                <input
-                  type="text"
-                  placeholder="342-4500000"
-                  value={clienteTelefono}
-                  onChange={(e) => setClienteTelefono(e.target.value)}
-                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500 shadow-xs"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 pt-1">
-              <div className="sm:col-span-4">
-                <label className="block text-slate-500 dark:text-slate-400 mb-1">Domicilio del Cliente</label>
-                <input
-                  type="text"
-                  placeholder="Calle y altura"
-                  value={clienteDireccion}
-                  onChange={(e) => setClienteDireccion(e.target.value)}
-                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500 shadow-xs"
-                />
-              </div>
-              <div className="sm:col-span-3">
-                <label className="block text-slate-500 dark:text-slate-400 mb-1">Localidad Cliente</label>
-                <input
-                  type="text"
-                  placeholder="Localidad"
-                  value={clienteLocalidad}
-                  onChange={(e) => setClienteLocalidad(e.target.value)}
-                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500 shadow-xs"
-                />
-              </div>
-              <div className="sm:col-span-2">
-                <label className="block text-slate-500 dark:text-slate-400 mb-1">Código Postal</label>
-                <input
-                  type="text"
-                  placeholder="CP (ej: 3000)"
-                  value={clienteCodigoPostal}
-                  onChange={(e) => setClienteCodigoPostal(e.target.value)}
-                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500 shadow-xs font-mono"
-                />
-              </div>
-              <div className="sm:col-span-3">
-                <label className="block text-slate-500 dark:text-slate-400 mb-1">Provincia Cliente</label>
-                <select
-                  value={clienteProvincia}
-                  onChange={(e) => setClienteProvincia(e.target.value)}
-                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500 shadow-xs"
-                >
-                  {ARGENTINE_PROVINCES.map((prov) => (
-                    <option key={prov} value={prov} className="dark:bg-slate-900">{prov}</option>
-                  ))}
-                  {!ARGENTINE_PROVINCES.includes(clienteProvincia) && clienteProvincia && (
-                    <option value={clienteProvincia} className="dark:bg-slate-900">{clienteProvincia}</option>
-                  )}
-                </select>
-              </div>
-            </div>
-
-            {/* Opción de domicilio alternativo */}
-            <div className="col-span-12 mt-2 bg-slate-50 dark:bg-slate-950 p-3 rounded-lg border border-slate-200 dark:border-slate-800">
-              <label className="flex items-center gap-2 cursor-pointer font-medium text-slate-800 dark:text-slate-200">
-                <input
-                  type="checkbox"
-                  checked={envioDomicilioDiferente}
-                  onChange={(e) => setEnvioDomicilioDiferente(e.target.checked)}
-                  className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900"
-                />
-                <span>¿Enviar a un domicilio diferente al del cliente?</span>
-              </label>
-
-              {envioDomicilioDiferente && (
-                <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 mt-3 pt-3 border-t border-slate-200 dark:border-slate-800">
-                  <div className="sm:col-span-4">
-                    <label className="block text-slate-500 dark:text-slate-400 mb-1">Dirección de Entrega *</label>
-                    <input
-                      type="text"
-                      placeholder="Calle y número"
-                      value={entregaDireccion}
-                      onChange={(e) => setEntregaDireccion(e.target.value)}
-                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500 shadow-xs"
-                      required
-                    />
-                  </div>
-                  <div className="sm:col-span-3">
-                    <label className="block text-slate-500 dark:text-slate-400 mb-1">Localidad de Entrega *</label>
-                    <input
-                      type="text"
-                      placeholder="Ej: Rosario"
-                      value={entregaLocalidad}
-                      onChange={(e) => setEntregaLocalidad(e.target.value)}
-                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500 shadow-xs"
-                      required
-                    />
-                  </div>
-                  <div className="sm:col-span-2">
-                    <label className="block text-slate-500 dark:text-slate-400 mb-1">CP Entrega</label>
-                    <input
-                      type="text"
-                      placeholder="CP (ej: 2000)"
-                      value={entregaCodigoPostal}
-                      onChange={(e) => setEntregaCodigoPostal(e.target.value)}
-                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500 shadow-xs font-mono"
-                    />
-                  </div>
-                  <div className="sm:col-span-3">
-                    <label className="block text-slate-500 dark:text-slate-400 mb-1">Provincia Entrega *</label>
-                    <select
-                      value={entregaProvincia}
-                      onChange={(e) => setEntregaProvincia(e.target.value)}
-                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500 shadow-xs"
-                      required
-                    >
-                      {ARGENTINE_PROVINCES.map((prov) => (
-                        <option key={prov} value={prov} className="dark:bg-slate-900">{prov}</option>
-                      ))}
-                      {!ARGENTINE_PROVINCES.includes(entregaProvincia) && entregaProvincia && (
-                        <option value={entregaProvincia} className="dark:bg-slate-900">{entregaProvincia}</option>
-                      )}
-                    </select>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={handleDiscardDraft}
+                    className="shrink-0 text-[11px] font-bold bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700 rounded px-2 py-1 hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors cursor-pointer"
+                  >
+                    Descartar borrador
+                  </button>
                 </div>
               )}
-            </div>
-          </div>
 
-          {/* Section 2: Products Lines */}
-          <div className="bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-lg p-4 space-y-3">
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-2">
-              <span className="font-semibold text-slate-800 dark:text-slate-200 text-xs flex items-center gap-2">
-                <ShoppingCart className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                Detalle de Productos Vendidos
-              </span>
-              <button
-                type="button"
-                onClick={handleAddProductLine}
-                className="bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 px-2.5 py-1 rounded text-[11px] font-medium flex items-center gap-1 cursor-pointer shadow-2xs"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Agregar Producto</span>
-              </button>
-            </div>
+              {/* Section 1: Customer */}
+              <SaleCustomerSection
+                fecha={fecha}
+                setFecha={setFecha}
+                canal={canal}
+                setCanal={setCanal}
+                canales={canales}
+                clienteId={clienteId}
+                setClienteId={setClienteId}
+                clienteNombre={clienteNombre}
+                setClienteNombre={setClienteNombre}
+                clienteApellido={clienteApellido}
+                setClienteApellido={setClienteApellido}
+                clienteDniCuit={clienteDniCuit}
+                setClienteDniCuit={setClienteDniCuit}
+                clienteTelefono={clienteTelefono}
+                setClienteTelefono={setClienteTelefono}
+                clienteDireccion={clienteDireccion}
+                setClienteDireccion={setClienteDireccion}
+                clienteLocalidad={clienteLocalidad}
+                setClienteLocalidad={setClienteLocalidad}
+                clienteCodigoPostal={clienteCodigoPostal}
+                setClienteCodigoPostal={setClienteCodigoPostal}
+                clienteProvincia={clienteProvincia}
+                setClienteProvincia={setClienteProvincia}
+                envioDomicilioDiferente={envioDomicilioDiferente}
+                setEnvioDomicilioDiferente={setEnvioDomicilioDiferente}
+                entregaDireccion={entregaDireccion}
+                setEntregaDireccion={setEntregaDireccion}
+                entregaLocalidad={entregaLocalidad}
+                setEntregaLocalidad={setEntregaLocalidad}
+                entregaCodigoPostal={entregaCodigoPostal}
+                setEntregaCodigoPostal={setEntregaCodigoPostal}
+                entregaProvincia={entregaProvincia}
+                setEntregaProvincia={setEntregaProvincia}
+                customerSearch={customerSearch}
+                setCustomerSearch={setCustomerSearch}
+                showCustomerDropdown={showCustomerDropdown}
+                setShowCustomerDropdown={setShowCustomerDropdown}
+                isCustomerSearchLoading={isCustomerSearchLoading}
+                setIsCustomerSearchLoading={setIsCustomerSearchLoading}
+                customers={customers}
+                handleSelectCustomer={handleSelectCustomer}
+              />
 
-            <div className="space-y-2">
-              {productos.map((prod, idx) => (
-                <div key={idx} className="grid grid-cols-12 gap-2 items-center bg-white dark:bg-slate-900 p-2 rounded-lg border border-slate-200 dark:border-slate-800 shadow-2xs">
-                  
-                  {/* Búsqueda Sensitiva de Producto con Imagen */}
-                  <div className="col-span-12 sm:col-span-5">
-                    <label className="block text-[10px] text-slate-500 dark:text-slate-400 mb-0.5">Producto (Búsqueda sensible con imagen)</label>
-                    <ProductSearchPicker
-                      catalog={catalog}
-                      value={prod.nombre}
-                      onChangeText={(text) => handleProductChange(idx, 'nombre', text)}
-                      onSelectProduct={(catProd) => handleSelectCatalogProduct(idx, catProd)}
-                      selectedImageUrl={prod.imagenUrl}
-                      placeholder="Buscar producto por nombre, SKU o categoría..."
-                    />
-                  </div>
+              {/* Section 2: Products */}
+              <SaleProductsSection
+                productos={productos}
+                catalog={catalog}
+                handleAddProductLine={handleAddProductLine}
+                handleRemoveProductLine={handleRemoveProductLine}
+                handleProductChange={handleProductChange}
+                handleSelectCatalogProduct={handleSelectCatalogProduct}
+                montoTotalCalculado={montoTotalCalculado}
+              />
 
-                  {/* Cantidad (reducido al 50%) */}
-                  <div className="col-span-3 sm:col-span-1">
-                    <label className="block text-[10px] text-slate-500 dark:text-slate-400 mb-0.5 text-center">Cant.</label>
-                    <input
-                      type="number"
-                      min="1"
-                      value={prod.cantidad}
-                      onChange={(e) => handleProductChange(idx, 'cantidad', e.target.value)}
-                      className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 px-1 py-1 rounded text-center focus:outline-none focus:border-blue-500 font-mono"
-                    />
-                  </div>
-
-                  {/* Precio Unitario */}
-                  <div className="col-span-3 sm:col-span-2">
-                    <label className="block text-[10px] text-slate-500 dark:text-slate-400 mb-0.5 text-right">Precio Unit. ($)</label>
-                    <input
-                      type="number"
-                      min="0"
-                      value={prod.precioUnitario}
-                      onChange={(e) => handleProductChange(idx, 'precioUnitario', e.target.value)}
-                      className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 px-2 py-1 rounded text-right focus:outline-none focus:border-blue-500 font-mono"
-                    />
-                  </div>
-
-                  {/* Descuento (%) */}
-                  <div className="col-span-3 sm:col-span-2">
-                    <label className="block text-[10px] text-slate-500 dark:text-slate-400 mb-0.5 text-center">Desc. (%)</label>
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={prod.descuento ?? 0}
-                      onChange={(e) => handleProductChange(idx, 'descuento', e.target.value)}
-                      className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 px-2 py-1 rounded text-center focus:outline-none focus:border-blue-500 font-mono"
-                    />
-                  </div>
-
-                  {/* Subtotal & Delete */}
-                  <div className="col-span-3 sm:col-span-2 flex items-center justify-between gap-1 pl-1">
-                    <div>
-                      <span className="block text-[10px] text-slate-500 dark:text-slate-400">Subtotal</span>
-                      <span className="font-mono font-bold text-emerald-700 dark:text-emerald-400">
-                        {formatCurrency(prod.subtotal)}
-                      </span>
-                    </div>
-
-                    {productos.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveProductLine(idx)}
-                        className="text-slate-400 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-400 p-1 cursor-pointer"
-                        title="Eliminar fila de producto"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-
-                </div>
-              ))}
-            </div>
-
-            {/* Total Footer */}
-            <div className="flex justify-end pt-2 border-t border-slate-200 dark:border-slate-700">
-              <div className="text-right">
-                <span className="text-slate-500 dark:text-slate-400 text-xs mr-2">Monto Total de la Venta:</span>
-                <span className="text-lg font-mono font-black text-emerald-700 dark:text-emerald-400">
-                  {formatCurrency(montoTotalCalculado)}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Section 3: Billing & Logistics */}
-          <div className="bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-lg p-4 space-y-3">
-            <div className="font-semibold text-slate-800 dark:text-slate-200 text-xs border-b border-slate-200 dark:border-slate-700 pb-2 flex items-center gap-2">
-              <FileText className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-              <span>Facturación, Cobro y Envíos</span>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              
-              {/* Tipo Factura */}
-              <div>
-                <label className="block text-slate-500 dark:text-slate-400 mb-1">Tipo de Comprobante</label>
-                <select
-                  value={tipoFactura}
-                  onChange={(e) => {
-                    const val = e.target.value as InvoiceType;
-                    setTipoFactura(val);
-                    if (val === 'Sin Factura') {
-                      setNumeroFactura('');
-                    } else {
-                      setNumeroFactura(generateDefaultInvoiceNumber(val));
-                    }
-                  }}
-                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1.5 text-slate-900 dark:text-slate-100 focus:outline-none shadow-xs"
-                >
-                  <option value="Factura B" className="dark:bg-slate-900">Factura B (Consumidor Final)</option>
-                  <option value="Factura A" className="dark:bg-slate-900">Factura A (Responsable Inscripto)</option>
-                  <option value="Factura C" className="dark:bg-slate-900">Factura C (Monotributo)</option>
-                  <option value="Ticket" className="dark:bg-slate-900">Ticket de Caja</option>
-                  <option value="Sin Factura" className="dark:bg-slate-900">Sin Factura / Remito</option>
-                </select>
-              </div>
-
-              {/* Nº Factura */}
-              <div>
-                <label className="block text-slate-500 dark:text-slate-400 mb-1">Nº Factura Emitida</label>
-                <input
-                  type="text"
-                  placeholder={tipoFactura === 'Sin Factura' ? 'Sin comprobante' : 'B-0003-00001234'}
-                  value={numeroFactura}
-                  onChange={(e) => setNumeroFactura(e.target.value)}
-                  disabled={tipoFactura === 'Sin Factura'}
-                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500 font-mono shadow-xs disabled:bg-slate-100 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-500 disabled:cursor-not-allowed"
-                />
-              </div>
-
-              {/* Método de Pago */}
-              <div>
-                <label className="block text-slate-500 dark:text-slate-400 mb-1">Método de Pago *</label>
-                <select
-                  value={metodoPago}
-                  onChange={(e) => setMetodoPago(e.target.value as PaymentMethod)}
-                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500 font-medium shadow-xs"
-                >
-                  {metodosPago.map((m) => (
-                    <option key={m} value={m} className="dark:bg-slate-900">{m}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Método de Envío */}
-              <div>
-                <label className="block text-slate-500 dark:text-slate-400 mb-1">Método de Envío</label>
-                <select
-                  value={metodoEnvio}
-                  onChange={(e) => setMetodoEnvio(e.target.value as ShippingMethod)}
-                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1.5 text-slate-900 dark:text-slate-100 focus:outline-none shadow-xs"
-                >
-                  {metodosEnvio.map((m) => (
-                    <option key={m} value={m} className="dark:bg-slate-900">{m}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Nº Seguimiento */}
-              <div>
-                <label className="block text-slate-500 dark:text-slate-400 mb-1">Nº Seguimiento / Guía</label>
-                <input
-                  type="text"
-                  placeholder="Ej: 390001294102"
-                  value={numeroSeguimiento}
-                  onChange={(e) => setNumeroSeguimiento(e.target.value)}
-                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1.5 text-slate-900 dark:text-slate-100 font-mono focus:outline-none focus:border-blue-500 shadow-xs"
-                />
-              </div>
-
-              {/* Estado de Envío */}
-              <div>
-                <label className="block text-slate-500 dark:text-slate-400 mb-1">Estado del Envío</label>
-                <select
-                  value={estadoEnvio}
-                  onChange={(e) => setEstadoEnvio(e.target.value as ShippingStatus)}
-                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1.5 text-slate-900 dark:text-slate-100 focus:outline-none shadow-xs"
-                >
-                  {estadosEnvio.map((status) => (
-                    <option key={status} value={status} className="dark:bg-slate-900">{status}</option>
-                  ))}
-                </select>
-              </div>
-
-            </div>
-
-            {/* Observaciones */}
-            <div>
-              <label className="block text-slate-500 dark:text-slate-400 mb-1">Observaciones / Notas Internas</label>
-              <textarea
-                rows={2}
-                placeholder="Aclaraciones sobre la venta, cliente o retiro..."
-                value={notas}
-                onChange={(e) => setNotas(e.target.value)}
-                className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500 shadow-xs"
+              {/* Section 3: Billing */}
+              <SaleBillingSection
+                tipoFactura={tipoFactura}
+                setTipoFactura={setTipoFactura}
+                numeroFactura={numeroFactura}
+                setNumeroFactura={setNumeroFactura}
+                metodoPago={metodoPago}
+                setMetodoPago={setMetodoPago}
+                metodosPago={metodosPago}
+                metodoEnvio={metodoEnvio}
+                setMetodoEnvio={setMetodoEnvio}
+                metodosEnvio={metodosEnvio}
+                numeroSeguimiento={numeroSeguimiento}
+                setNumeroSeguimiento={setNumeroSeguimiento}
+                estadoEnvio={estadoEnvio}
+                setEstadoEnvio={setEstadoEnvio}
+                estadosEnvio={estadosEnvio}
+                notas={notas}
+                setNotas={setNotas}
+                generateDefaultInvoiceNumber={generateDefaultInvoiceNumber}
               />
             </div>
 
-          </div>
-        </div>
-
-        {/* Mapa (Right panel) */}
-          {showMap && (
-            <div className="w-[35%] min-w-[320px] flex flex-col">
-              <SaleLocationMap
-                address={envioDomicilioDiferente ? entregaDireccion : clienteDireccion}
-                city={envioDomicilioDiferente ? entregaLocalidad : clienteLocalidad}
-                province={envioDomicilioDiferente ? entregaProvincia : clienteProvincia}
-                coordinates={entregaCoordenadas}
-                onChangeCoordinates={setEntregaCoordenadas}
-                clientName={`${clienteNombre} ${clienteApellido}`.trim()}
-                clientPhone={clienteTelefono}
-                productsText={productos
-                  .filter(p => p.nombre.trim() !== '')
-                  .map(p => `${p.nombre} (x${p.cantidad})`)
-                  .join(', ')}
-              />
-            </div>
-          )}
-        </div>
-
-        {/* Form Actions */}
-        <div className="flex items-center justify-between p-4 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
-          <div>
-            {existingSale && onPrintRemito && (
-              <button
-                type="button"
-                onClick={() => onPrintRemito(existingSale)}
-                className="bg-red-50 dark:bg-red-950/60 hover:bg-red-100 dark:hover:bg-red-900/60 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800 font-medium px-3.5 py-1.5 rounded-md flex items-center gap-1.5 text-xs transition-colors cursor-pointer"
-              >
-                <Printer className="w-4 h-4 text-red-600 dark:text-red-400" />
-                <span>Imprimir Remito</span>
-              </button>
+            {/* Mapa (Right panel) */}
+            {showMap && (
+              <div className="w-[35%] min-w-[320px] flex flex-col">
+                <SaleLocationMap
+                  address={envioDomicilioDiferente ? entregaDireccion : clienteDireccion}
+                  city={envioDomicilioDiferente ? entregaLocalidad : clienteLocalidad}
+                  province={envioDomicilioDiferente ? entregaProvincia : clienteProvincia}
+                  coordinates={entregaCoordenadas}
+                  onChangeCoordinates={setEntregaCoordenadas}
+                  clientName={`${clienteNombre} ${clienteApellido}`.trim()}
+                  clientPhone={clienteTelefono}
+                  productsText={productos
+                    .filter((p) => p.nombre.trim() !== '')
+                    .map((p) => `${p.nombre} (x${p.cantidad})`)
+                    .join(', ')}
+                />
+              </div>
             )}
           </div>
 
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={handleCancelSale}
-              className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-md transition-colors cursor-pointer"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              className="bg-slate-900 dark:bg-blue-600 hover:bg-slate-800 dark:hover:bg-blue-500 text-white font-medium px-5 py-2 rounded-md flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
-            >
-              <CheckCircle className="w-4 h-4" />
-              <span>{existingSale ? 'Guardar Cambios' : 'Registrar Venta'}</span>
-            </button>
+          {/* Form Actions */}
+          <div className="flex items-center justify-between p-4 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
+            <div>
+              {existingSale && onPrintRemito && (
+                <button
+                  type="button"
+                  onClick={() => onPrintRemito(existingSale)}
+                  className="bg-red-50 dark:bg-red-950/60 hover:bg-red-100 dark:hover:bg-red-900/60 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800 font-medium px-3.5 py-1.5 rounded-md flex items-center gap-1.5 text-xs transition-colors cursor-pointer"
+                >
+                  <Printer className="w-4 h-4 text-red-600 dark:text-red-400" />
+                  <span>Imprimir Remito</span>
+                </button>
+              )}
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={handleCancelSale}
+                className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-md transition-colors cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                className="bg-slate-900 dark:bg-blue-600 hover:bg-slate-800 dark:hover:bg-blue-500 text-white font-medium px-5 py-2 rounded-md flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+              >
+                <CheckCircle className="w-4 h-4" />
+                <span>{existingSale ? 'Guardar Cambios' : 'Registrar Venta'}</span>
+              </button>
+            </div>
           </div>
-        </div>
-
-      </form>
-
+        </form>
       </div>
     </div>
   );

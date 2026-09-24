@@ -4,8 +4,8 @@ Documento de **handoff**: qué se hizo, cómo quedó el repositorio y qué sigue
 Pensado para retomar el trabajo en cualquier momento (o para que otra persona entienda
 el punto exacto en el que está el desarrollo).
 
-**Última actualización:** 2026-09-23
-**Versión del proyecto:** 0.0.27
+**Última actualización:** 2026-09-24
+**Versión del proyecto:** 0.0.28
 **Commit de cierre:** el último de `master` (`git log -1 --oneline`)
 **Repositorio:** https://github.com/CharlyZeta/SalesHub (rama `master`)
 
@@ -16,14 +16,15 @@ el punto exacto en el que está el desarrollo).
 SalesHub es el sistema de **front-office comercial** (ventas, presupuestos AFIP, remitos,
 omnicanalidad y seguimiento de envíos) que complementa al ERP de la firma. En esta sesión
 el proyecto pasó de un estado funcional pero con deuda acumulada a un estado **ordenado,
-documentado, con lint/CI reales y los problemas de sincronización resueltos**.
+documentado, con lint/CI reales y con arquitectura modularizada y optimizada**.
 
 | Área | Estado |
 |:--|:--|
 | Calidad | `npm run lint` (tsc + ESLint): **0 errores / 0 warnings** |
-| Tests | **13 archivos / 128 tests** (Vitest) |
-| Cobertura | utils **82,5 %** · global **76,5 %** (`security.ts` 95,5 %) |
-| Build | Producción OK |
+| Tests | **15 archivos / 133 tests** (Vitest) |
+| Rendimiento | Chunk principal: **301 kB** (-74% respecto al monolito original) |
+| Dependencias | **0 ciclos circulares** (Madge, 69 módulos analizados) |
+| Build | Producción OK (Code-Splitting y Rollup `manualChunks`) |
 | CI | GitHub Actions **en verde** en cada push (typecheck + lint, tests, build) |
 | Sincronización WooCommerce | **Funcionando según la configuración** (validado en uso real) |
 | Repositorio | Sincronizado: local = remoto, árbol limpio |
@@ -91,14 +92,21 @@ documentado, con lint/CI reales y los problemas de sincronización resueltos**.
 | `7d11d9e` | **W2 / Fix E paso 2**: programación en el servidor + importación del snapshot en la app |
 | `d0bdbec` | **W5 / Fix D**: merge en lugar de reemplazo y fin del catálogo demo como falso éxito |
 
+### 2.8 Modernización Arquitectónica, Code-Splitting y Descomposición Modular (FEAT-ARCH-001) ✅
+- **Code-Splitting y Chunks Diferidos**: Los 10 modales se cargan con `React.lazy()` y `<Suspense>`. Se configuraron `manualChunks` en `vite.config.ts`, logrando una reducción del 74% en el chunk inicial (`301.87 kB` vs `1.16 MB`).
+- **Descomposición de Monolitos ("God Components")**: `BudgetModal.tsx`, `SaleFormModal.tsx` y `SpreadsheetGrid.tsx` modularizados en submódulos especializados (`src/components/budget/`, `src/components/sales/`, `src/components/grid/`).
+- **Custom Hooks de Dominio**: `useSalesState`, `useWooCommerceSync`, `useCatalogState`, `useSecurityRole` y `useBudgetCalculation` encapsulan el ciclo de vida y reducen `App.tsx` a un orquestador conciso.
+- **Storage Repository Pattern**: `src/services/storageRepository.ts` (`IStorageRepository`) unifica y desacopla la persistencia.
+- **Grilla Reactiva Aislada**: `GridRow` memoizado con `React.memo` aísla los re-renderizados de edición de celda.
+
 ---
 
 ## 3. Estado técnico actual
 
 - **Stack:** React 19 · TypeScript 5.8 · Vite 6 · Tailwind CSS 4.1 · Recharts · Leaflet ·
   Lucide · Motion. Tooling: Vitest 4.1 · ESLint 10 · Prettier 3.9.
-- **Tamaño:** 21 componentes y 9 módulos de utilidades (~12.800 líneas de producción).
-- **Persistencia:** `localStorage` (estado de la app) + IndexedDB y disco (backups).
+- **Tamaño:** 28 componentes y 10 módulos de utilidades/hooks (~12.800 líneas organizadas y desacopladas).
+- **Persistencia:** `localStorage` (estado de la app vía `storageRepository`) + IndexedDB y disco (backups).
   Definido para **una sola PC en el local** (no requiere backend de datos).
 - **Datos demo:** desactivados por defecto (`VITE_SEED_DEMO`); una instalación nueva arranca
   vacía.
@@ -117,7 +125,6 @@ Detalle completo, con causa y plan, en `docs/FIXES.md`.
 | Media | **B3 (resto)** | Tests de componentes UI (requiere `@testing-library/react` + jsdom) y completar cobertura de `wooCommerceApi` |
 | Baja | **B1** | Aplicar Prettier al código y verificar format en CI (diff grande, commit exclusivo) |
 | Baja | **B2** | Migrar los 53 `any` explícitos (regla hoy desactivada en el baseline) |
-| Baja | **B4** | Refactor de `BudgetModal.tsx` (~1.400 líneas) y `App.tsx` |
 | Baja | **B7** | Reemplazar 24 `console.*` por el logger propio o silenciarlos por entorno |
 | Baja | **B9** | Quitar residuos del entorno original (`metadata.json`, `.agents/`, `.superpowers/`, `graphify-out/`) |
 | Baja | **W6** | Mostrar la "próxima corrida" también cuando todo funciona (hoy se informa en el log) |
@@ -126,8 +133,9 @@ Detalle completo, con causa y plan, en `docs/FIXES.md`.
 
 > **Cerrado y probado:** W1 y W4 (validados en uso real), **W2 / Fix E** (sincronización
 > programada en el servidor, con prueba real del temporizador), **W5 / Fix D** (merge sin
-> borrados + fin del catálogo demo como falso éxito), y **W3 / FIX-W003** (autoguardado con
-> debounce y unmount seguro, verificado por contrato SDD-GL y tests unitarios).
+> borrados + fin del catálogo demo como falso éxito), **W3 / FIX-W003** (autoguardado con
+> debounce y unmount seguro), **B4 / FEAT-ARCH-001** (modernización modular de `BudgetModal`,
+> `SaleFormModal`, `SpreadsheetGrid`, `App.tsx`, code-splitting de bundle y tests unitarios).
 
 ---
 

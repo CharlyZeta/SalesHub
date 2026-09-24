@@ -4,6 +4,29 @@ Todas las mejoras y fixes notables del proyecto.
 
 El formato se basa en Keep a Changelog, y el proyecto respeta Versionado Semántico.
 
+## [0.0.28] - 2026-09-24
+
+### FEAT-ARCH-001: Modernización Arquitectónica, Code-Splitting On-Demand y Descomposición Modular
+
+#### Arquitectura y Optimización de Carga
+- **Code-Splitting On-Demand (`React.lazy` + `<Suspense>`)**: Los 10 modales de la aplicación se transformaron en componentes de carga diferida bajo demanda con indicador de carga estilizado `ModalFallback`.
+- **Aislamiento de Chunks en Rollup (`vite.config.ts`)**: Configuración de `manualChunks` (`vendor-charts`, `vendor-geo`, `vendor-icons`, `vendor-utils`), reduciendo el tamaño del chunk de entrada inicial `index-*.js` de **1,161.89 kB a 301.87 kB (gzip: 88.77 kB)** — una reducción del **74%**.
+- **Descomposición de Componentes Monolíticos ("God Components")**:
+  - `BudgetModal.tsx` (reducido de 1,392 a 380 líneas): Dividido en `src/components/budget/BudgetEditorTab.tsx`, `BudgetListTab.tsx`, `BudgetPrintPreview.tsx` y `useBudgetCalculation.ts`.
+  - `SaleFormModal.tsx` (reducido de 1,038 a 380 líneas): Dividido en `src/components/sales/SaleCustomerSection.tsx`, `SaleProductsSection.tsx` y `SaleBillingSection.tsx`.
+  - `SpreadsheetGrid.tsx` (reducido de 1,081 a 340 líneas): Dividido en `src/components/grid/GridRow.tsx` (memoizado con `React.memo`), `GridToolbar.tsx` y `GridPagination.tsx`.
+- **Custom Hooks de Dominio**:
+  - `useSalesState.ts`: Mutaciones de ventas, filtros de período y guardado con auto-backup.
+  - `useWooCommerceSync.ts`: Sincronización en segundo plano con backoff exponencial, polling del snapshot de servidor y deduplicación.
+  - `useCatalogState.ts`: Estado del catálogo y altas de productos.
+  - `useSecurityRole.ts`: Inactividad, control de PIN de acceso y bloqueo/desbloqueo.
+  - `App.tsx`: Transformado en un orquestador conciso (~440 líneas).
+- **Capa de Abstracción de Persistencia (Storage Repository Pattern)**:
+  - `src/services/storageRepository.ts`: Interfaz `IStorageRepository` e implementación `LocalStorageRepository` para desacoplar el acceso al almacenamiento local / remoto.
+- **Pruebas y Verificación**:
+  - 133 tests automatizados pasando al 100% en 15 suites (incluyendo `storageRepository.test.ts` y `budgetCalculationHook.test.ts`).
+  - 0 errores TypeScript, 0 advertencias ESLint, 0 dependencias circulares (`madge --circular`).
+
 ## [0.0.27] - 2026-09-23
 
 ### FEAT-CUST-003: Parseo Inteligente de Clientes WooCommerce: Nº Interno CLI, Nombre/Apellido y Dirección Combinada

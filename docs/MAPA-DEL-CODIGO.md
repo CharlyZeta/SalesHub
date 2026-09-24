@@ -4,14 +4,19 @@
 > Es el índice que conviene leer **antes** de abrir archivos: una fila por módulo
 > con su responsabilidad y sus exports principales.
 
-**Resumen:** 40 archivos · 14.165 líneas.
+**Resumen:** 55 archivos · 15.402 líneas.
 
 | Directorio | Archivos | Líneas |
 |:--|--:|--:|
 | `scripts/` | 5 | 524 |
-| `src/` | 3 | 1.313 |
-| `src/components/` | 21 | 9.896 |
+| `src/` | 3 | 876 |
+| `src/components/` | 21 | 8.193 |
+| `src/components/budget/` | 3 | 926 |
+| `src/components/grid/` | 3 | 814 |
+| `src/components/sales/` | 3 | 706 |
 | `src/data/` | 1 | 358 |
+| `src/hooks/` | 5 | 773 |
+| `src/services/` | 1 | 158 |
 | `src/utils/` | 10 | 2.074 |
 
 ## `scripts/`
@@ -28,7 +33,7 @@
 
 | Archivo | Líneas | Responsabilidad | Exports |
 |:--|--:|:--|:--|
-| `App.tsx` | 1069 | Orquestador principal: estado global, persistencia, efectos de sync y montaje de modales | (default) |
+| `App.tsx` | 632 | Orquestador principal: estado global, persistencia, efectos de sync y montaje de modales | (default) |
 | `main.tsx` | 11 | Punto de entrada de React (render del árbol en #root) | — |
 | `types.ts` | 233 | Modelo de dominio tipado (Sale, Budget, Customer, CatalogProduct, AppConfig, seguridad) | SaleProductItem, Sale, Customer, CatalogProduct, WooCommerceConfig, ColumnMapping, DateFilterRange, BudgetItem, Budget, SecurityConfig, BackupConfig, CompanyConfig, AppConfig, SaleChannel, PaymentMethod, ShippingMethod, ShippingStatus, InvoiceType, UserRole |
 
@@ -38,7 +43,7 @@
 |:--|--:|:--|:--|
 | `AnalyticsModal.tsx` | 293 | Panel de analítica con gráficos Recharts (tendencia y distribución por canal) | AnalyticsModal |
 | `AuthModal.tsx` | 271 | Auth Gate: PIN, selección de rol (RBAC) y bloqueo progresivo por intentos | AuthModal |
-| `BudgetModal.tsx` | 1392 | Presupuestos AFIP: ítems, IVA/percepciones, PDF y conversión a venta | BudgetModal |
+| `BudgetModal.tsx` | 682 | Presupuestos AFIP: ítems, IVA/percepciones, PDF y conversión a venta | BudgetModal |
 | `ConfigBackupsTab.tsx` | 212 | Pestaña Copias de seguridad: backup automático, copia manual y restauración | ConfigBackupsTab, ConfigBackupsTabProps |
 | `ConfigEmpresaTab.tsx` | 374 | Pestaña Empresa / Firma: identidad, logo, datos fiscales y puntos de venta | ConfigEmpresaTab, ConfigEmpresaTabProps |
 | `ConfigGeneralTab.tsx` | 431 | Pestaña General & Ventas: canales, pagos, envíos, Andreani, numeración e importación | ConfigGeneralTab, ConfigGeneralTabProps |
@@ -51,18 +56,58 @@
 | `KpiSummary.tsx` | 319 | Banner de KPIs mensuales, filtro por mes/canal y configuración de tarjetas visibles | KpiSummary |
 | `ProductSearchPicker.tsx` | 230 | Buscador autocompletable de productos del catálogo | ProductSearchPicker |
 | `RemitoModal.tsx` | 504 | Remito de entrega/despacho: datos de empresa, transporte, PDF e impresión | RemitoModal |
-| `SaleFormModal.tsx` | 1038 | Alta/edición de ventas: cliente, ítems con descuento, facturación, envío y borrador autoguardado | SaleFormModal |
+| `SaleFormModal.tsx` | 612 | Alta/edición de ventas: cliente, ítems con descuento, facturación, envío y borrador autoguardado | SaleFormModal |
 | `SaleLocationMap.tsx` | 235 | Mapa Leaflet/OSM con geocodificación Nominatim y pin arrastrable | SaleLocationMap |
 | `SendBudgetModal.tsx` | 367 | Envío omnicanal de presupuestos por WhatsApp (wa.me) y correo (mailto) | SendBudgetModal |
-| `SpreadsheetGrid.tsx` | 1081 | Planilla interactiva de ventas: edición inline, filtros, paginación y tracking Andreani | SpreadsheetGrid |
+| `SpreadsheetGrid.tsx` | 514 | Planilla interactiva de ventas: edición inline, filtros, paginación y tracking Andreani | SpreadsheetGrid |
 | `SystemLogsModal.tsx` | 367 | Consola de auditoría: filtros por nivel/categoría/fecha y exportación | SystemLogsModal |
 | `WooCommerceModal.tsx` | 820 | Sincronización WooCommerce: credenciales, catálogo, clientes y programación | WooCommerceModal |
+
+## `src/components/budget/`
+
+| Archivo | Líneas | Responsabilidad | Exports |
+|:--|--:|:--|:--|
+| `BudgetEditorTab.tsx` | 525 | — | BudgetEditorTab, BudgetEditorTabProps |
+| `BudgetListTab.tsx` | 143 | — | BudgetListTab, BudgetListTabProps |
+| `BudgetPrintPreview.tsx` | 258 | — | BudgetPrintPreview, BudgetPrintPreviewProps |
+
+## `src/components/grid/`
+
+| Archivo | Líneas | Responsabilidad | Exports |
+|:--|--:|:--|:--|
+| `GridPagination.tsx` | 82 | — | GridPagination, GridPaginationProps |
+| `GridRow.tsx` | 499 | Helper badge color for sales channel | GridRow, GridVisibleColumns, GridRowProps |
+| `GridToolbar.tsx` | 233 | — | GridToolbar, GridToolbarProps |
+
+## `src/components/sales/`
+
+| Archivo | Líneas | Responsabilidad | Exports |
+|:--|--:|:--|:--|
+| `SaleBillingSection.tsx` | 176 | — | SaleBillingSection, SaleBillingSectionProps |
+| `SaleCustomerSection.tsx` | 389 | — | SaleCustomerSection, SaleCustomerSectionProps |
+| `SaleProductsSection.tsx` | 141 | — | SaleProductsSection, SaleProductsSectionProps |
 
 ## `src/data/`
 
 | Archivo | Líneas | Responsabilidad | Exports |
 |:--|--:|:--|:--|
 | `initialData.ts` | 358 | Datos semilla opcionales (demo), configuración inicial y empresa por defecto | DEMO_SEED_ENABLED, INITIAL_DEMO_CUSTOMERS, INITIAL_COMPANY_CONFIG, INITIAL_CONFIG, INITIAL_BUDGETS, INITIAL_SALES, INITIAL_CATALOG, INITIAL_WOO_CONFIG |
+
+## `src/hooks/`
+
+| Archivo | Líneas | Responsabilidad | Exports |
+|:--|--:|:--|:--|
+| `useBudgetCalculation.ts` | 61 | — | calculateBudgetItemSubtotal, calculateBudgetTotals, useBudgetCalculation, BudgetCalculationResult |
+| `useCatalogState.ts` | 39 | — | useCatalogState, UseCatalogStateReturn |
+| `useSalesState.ts` | 241 | — | useSalesState, UseSalesStateProps, UseSalesStateReturn |
+| `useSecurityRole.ts` | 97 | — | useSecurityRole, UseSecurityRoleReturn |
+| `useWooCommerceSync.ts` | 335 | — | useWooCommerceSync, UseWooCommerceSyncProps, UseWooCommerceSyncReturn |
+
+## `src/services/`
+
+| Archivo | Líneas | Responsabilidad | Exports |
+|:--|--:|:--|:--|
+| `storageRepository.ts` | 158 | — | defaultStorageRepository, IStorageRepository, LocalStorageRepository |
 
 ## `src/utils/`
 
