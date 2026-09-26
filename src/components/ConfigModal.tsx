@@ -78,6 +78,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
   const [puntoVenta, setPuntoVenta] = useState<string>(config.puntoVentaPresupuesto || defaultEmpresa.puntoVentaPresupuesto || '0001');
   const [ultimoNumero, setUltimoNumero] = useState<number>(config.ultimoNumeroPresupuesto || 311);
   const [andreaniHash, setAndreaniHash] = useState<string>(config.andreaniHash || '');
+  const [googleMapsApiKey, setGoogleMapsApiKey] = useState<string>(config.googleMapsApiKey || '');
 
   // Security config state
   const defaultSec: SecurityConfig = {
@@ -132,6 +133,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
       setMetodosEnvio(config.metodosEnvio || ['Retiro en Local', 'Correo Argentino', 'Andreani', 'OCA', 'Cadetería / Moto', 'Mercado Envíos', 'Otro']);
       setEstadosEnvio(config.estadosEnvio || ['Pendiente', 'Pendiente de ingreso', 'En camino', 'Listo para retirar', 'Entregado', 'No entregado', 'Enviado', 'No Requiere']);
       setAndreaniHash(config.andreaniHash || '');
+      setGoogleMapsApiKey(config.googleMapsApiKey || '');
       setSecConfig(config.seguridad || defaultSec);
       setAutoBackup(config.backup?.autoBackup ?? false);
       setPeriodicity(config.backup?.periodicity ?? 'daily');
@@ -248,6 +250,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
         puntoVentaPresupuesto: pvPresupuesto.trim() || puntoVenta.trim() || '0001',
         ultimoNumeroPresupuesto: Number(ultimoNumero) || 1,
         andreaniHash: andreaniHash.trim(),
+        googleMapsApiKey: googleMapsApiKey.trim(),
         empresa: {
           nombre: nombreEmpresa.trim() || 'Mi Empresa',
           subtitulo: subtituloEmpresa.trim(),
@@ -379,6 +382,8 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
               setEstadosEnvio={setEstadosEnvio}
               andreaniHash={andreaniHash}
               setAndreaniHash={setAndreaniHash}
+              googleMapsApiKey={googleMapsApiKey}
+              setGoogleMapsApiKey={setGoogleMapsApiKey}
               puntoVenta={puntoVenta}
               setPuntoVenta={setPuntoVenta}
               ultimoNumero={ultimoNumero}

@@ -21,6 +21,7 @@ interface SaleLocationMapProps {
   clientName?: string;
   clientPhone?: string;
   productsText?: string;
+  googleMapsApiKey?: string;
 }
 
 export const SaleLocationMap: React.FC<SaleLocationMapProps> = ({
@@ -32,6 +33,7 @@ export const SaleLocationMap: React.FC<SaleLocationMapProps> = ({
   clientName = '',
   clientPhone = '',
   productsText = '',
+  googleMapsApiKey,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
@@ -54,40 +56,50 @@ export const SaleLocationMap: React.FC<SaleLocationMapProps> = ({
   }, [onChangeCoordinates]);
   const initialCoordsRef = useRef({ lat: currentLat, lng: currentLng });
 
-  // Geolocate address using Nominatim OSM geocoding API
-  const geocodeAddress = useCallback(async (addrStr: string) => {
-    if (!addrStr.trim()) return;
-    setIsSearching(true);
-    setStatusText('Buscando dirección...');
-    addSystemLog('API', 'Maps', `Iniciando geocodificación OSM/Nominatim para: "${addrStr}"`);
-    try {
-      const query = encodeURIComponent(`${addrStr}`);
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${query}`,
-        { headers: { 'Accept-Language': 'es' } }
-      );
-      const data = await res.json();
-      if (data && data.length > 0) {
-        const lat = parseFloat(data[0].lat);
-        const lng = parseFloat(data[0].lon);
-        onChangeCoordinatesRef.current({ lat, lng });
-        setStatusText('¡Dirección localizada!');
-        addSystemLog('INFO', 'Maps', `Geolocalización exitosa para "${addrStr}"`, { lat, lng });
-        if (mapRef.current) {
-          mapRef.current.setView([lat, lng], 15);
-        }
-      } else {
-        setStatusText('No se encontraron coordenadas para esta dirección.');
-        addSystemLog('WARN', 'Maps', `Sin resultados de geolocalización para: "${addrStr}"`);
+   // Geolocate address using Google Geocoding API
+const geocodeAddress = useCallback(async (addrStr: string) => {
+      if (!addrStr.trim()) return;
+      const apiKey = googleMapsApiKey || import.meta.env.VITE_GOOGLE_MAPS_KEY;
+      if (!apiKey) {
+        addSystemLog('ERROR', 'Maps', 'No se encontró la API Key de Google Maps en configuración ni en variables de entorno');
+        setStatusText('API Key de Google Maps no configurada en Configuración → General & Ventas');
+        return;
       }
-    } catch (err: any) {
-      console.error('Error al geolocalizar:', err);
-      setStatusText('Error al geolocalizar.');
-      addSystemLog('ERROR', 'Maps', `Fallo en geocodificación OSM/Nominatim: ${err?.message || err}`);
-    } finally {
-      setIsSearching(false);
-    }
-  }, []);
+      setIsSearching(true);
+      setStatusText('Buscando dirección...');
+      addSystemLog('API', 'Maps', `Iniciando geocodificación Google Maps para: "${addrStr}"`);
+      try {
+        const query = encodeURIComponent(`${addrStr}`);
+        const res = await fetch(
+          `https://maps.googleapis.com/maps/api/geocode/json?address=${query}&key=${apiKey}`,
+        );
+        if (res.status === 429) {
+          setStatusText('No hay cupo disponible en la API de Google. Intenta nuevamente más tarde.');
+          addSystemLog('ERROR', 'Maps', 'RATE_LIMIT: Error 429 de Google Geocoding API (código: 429)');
+          return;
+        }
+        const data = await res.json();
+        if (data && data.results && data.results.length > 0) {
+          const lat = data.results[0].geometry.location.lat;
+          const lng = data.results[0].geometry.location.lng;
+          onChangeCoordinatesRef.current({ lat, lng });
+          setStatusText('¡Dirección localizada!');
+          addSystemLog('INFO', 'Maps', `Geolocalización exitosa para "${addrStr}"`, { lat, lng });
+          if (mapRef.current) {
+            mapRef.current.setView([lat, lng], 15);
+          }
+        } else {
+          setStatusText('No se encontraron coordenadas para esta dirección.');
+          addSystemLog('WARN', 'Maps', `Sin resultados de geolocalización para: "${addrStr}"`);
+        }
+      } catch (err: any) {
+        console.error('Error al geolocalizar:', err);
+        setStatusText('Error al geolocalizar.');
+        addSystemLog('ERROR', 'Maps', `Fallo en geocodificación Google Maps: ${err?.message || err}`);
+      } finally {
+        setIsSearching(false);
+      }
+    }, [googleMapsApiKey]);
 
   // Instantiate map once
   useEffect(() => {

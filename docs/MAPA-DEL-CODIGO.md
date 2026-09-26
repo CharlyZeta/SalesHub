@@ -4,17 +4,17 @@
 > Es el índice que conviene leer **antes** de abrir archivos: una fila por módulo
 > con su responsabilidad y sus exports principales.
 
-**Resumen:** 55 archivos · 15.402 líneas.
+**Resumen:** 55 archivos · 15.461 líneas.
 
 | Directorio | Archivos | Líneas |
 |:--|--:|--:|
 | `scripts/` | 5 | 524 |
-| `src/` | 3 | 876 |
-| `src/components/` | 21 | 8.193 |
+| `src/` | 3 | 878 |
+| `src/components/` | 21 | 8.249 |
 | `src/components/budget/` | 3 | 926 |
 | `src/components/grid/` | 3 | 814 |
 | `src/components/sales/` | 3 | 706 |
-| `src/data/` | 1 | 358 |
+| `src/data/` | 1 | 359 |
 | `src/hooks/` | 5 | 773 |
 | `src/services/` | 1 | 158 |
 | `src/utils/` | 10 | 2.074 |
@@ -33,9 +33,9 @@
 
 | Archivo | Líneas | Responsabilidad | Exports |
 |:--|--:|:--|:--|
-| `App.tsx` | 632 | Orquestador principal: estado global, persistencia, efectos de sync y montaje de modales | (default) |
+| `App.tsx` | 633 | Orquestador principal: estado global, persistencia, efectos de sync y montaje de modales | (default) |
 | `main.tsx` | 11 | Punto de entrada de React (render del árbol en #root) | — |
-| `types.ts` | 233 | Modelo de dominio tipado (Sale, Budget, Customer, CatalogProduct, AppConfig, seguridad) | SaleProductItem, Sale, Customer, CatalogProduct, WooCommerceConfig, ColumnMapping, DateFilterRange, BudgetItem, Budget, SecurityConfig, BackupConfig, CompanyConfig, AppConfig, SaleChannel, PaymentMethod, ShippingMethod, ShippingStatus, InvoiceType, UserRole |
+| `types.ts` | 234 | Modelo de dominio tipado (Sale, Budget, Customer, CatalogProduct, AppConfig, seguridad) | SaleProductItem, Sale, Customer, CatalogProduct, WooCommerceConfig, ColumnMapping, DateFilterRange, BudgetItem, Budget, SecurityConfig, BackupConfig, CompanyConfig, AppConfig, SaleChannel, PaymentMethod, ShippingMethod, ShippingStatus, InvoiceType, UserRole |
 
 ## `src/components/`
 
@@ -46,8 +46,8 @@
 | `BudgetModal.tsx` | 682 | Presupuestos AFIP: ítems, IVA/percepciones, PDF y conversión a venta | BudgetModal |
 | `ConfigBackupsTab.tsx` | 212 | Pestaña Copias de seguridad: backup automático, copia manual y restauración | ConfigBackupsTab, ConfigBackupsTabProps |
 | `ConfigEmpresaTab.tsx` | 374 | Pestaña Empresa / Firma: identidad, logo, datos fiscales y puntos de venta | ConfigEmpresaTab, ConfigEmpresaTabProps |
-| `ConfigGeneralTab.tsx` | 431 | Pestaña General & Ventas: canales, pagos, envíos, Andreani, numeración e importación | ConfigGeneralTab, ConfigGeneralTabProps |
-| `ConfigModal.tsx` | 477 | Configuración del sistema: shell del modal, estado compartido, guardado y pestañas | ConfigModal |
+| `ConfigGeneralTab.tsx` | 467 | Pestaña General & Ventas: canales, pagos, envíos, Andreani, numeración e importación | ConfigGeneralTab, ConfigGeneralTabProps |
+| `ConfigModal.tsx` | 482 | Configuración del sistema: shell del modal, estado compartido, guardado y pestañas | ConfigModal |
 | `ConfigSecurityTab.tsx` | 155 | Pestaña Seguridad & PIN: control de acceso, inactividad y restricciones por rol | ConfigSecurityTab, ConfigSecurityTabProps |
 | `CustomerDirectoryModal.tsx` | 461 | Directorio de clientes: búsqueda, historial de compras y alta de clientes | CustomerDirectoryModal |
 | `ExportModal.tsx` | 124 | Exportador de ventas a CSV por rango y canal | ExportModal |
@@ -56,8 +56,8 @@
 | `KpiSummary.tsx` | 319 | Banner de KPIs mensuales, filtro por mes/canal y configuración de tarjetas visibles | KpiSummary |
 | `ProductSearchPicker.tsx` | 230 | Buscador autocompletable de productos del catálogo | ProductSearchPicker |
 | `RemitoModal.tsx` | 504 | Remito de entrega/despacho: datos de empresa, transporte, PDF e impresión | RemitoModal |
-| `SaleFormModal.tsx` | 612 | Alta/edición de ventas: cliente, ítems con descuento, facturación, envío y borrador autoguardado | SaleFormModal |
-| `SaleLocationMap.tsx` | 235 | Mapa Leaflet/OSM con geocodificación Nominatim y pin arrastrable | SaleLocationMap |
+| `SaleFormModal.tsx` | 615 | Alta/edición de ventas: cliente, ítems con descuento, facturación, envío y borrador autoguardado | SaleFormModal |
+| `SaleLocationMap.tsx` | 247 | Mapa Leaflet/OSM con geocodificación Nominatim y pin arrastrable | SaleLocationMap |
 | `SendBudgetModal.tsx` | 367 | Envío omnicanal de presupuestos por WhatsApp (wa.me) y correo (mailto) | SendBudgetModal |
 | `SpreadsheetGrid.tsx` | 514 | Planilla interactiva de ventas: edición inline, filtros, paginación y tracking Andreani | SpreadsheetGrid |
 | `SystemLogsModal.tsx` | 367 | Consola de auditoría: filtros por nivel/categoría/fecha y exportación | SystemLogsModal |
@@ -91,7 +91,7 @@
 
 | Archivo | Líneas | Responsabilidad | Exports |
 |:--|--:|:--|:--|
-| `initialData.ts` | 358 | Datos semilla opcionales (demo), configuración inicial y empresa por defecto | DEMO_SEED_ENABLED, INITIAL_DEMO_CUSTOMERS, INITIAL_COMPANY_CONFIG, INITIAL_CONFIG, INITIAL_BUDGETS, INITIAL_SALES, INITIAL_CATALOG, INITIAL_WOO_CONFIG |
+| `initialData.ts` | 359 | Datos semilla opcionales (demo), configuración inicial y empresa por defecto | DEMO_SEED_ENABLED, INITIAL_DEMO_CUSTOMERS, INITIAL_COMPANY_CONFIG, INITIAL_CONFIG, INITIAL_BUDGETS, INITIAL_SALES, INITIAL_CATALOG, INITIAL_WOO_CONFIG |
 
 ## `src/hooks/`
 

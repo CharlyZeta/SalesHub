@@ -41,6 +41,7 @@ interface SaleFormModalProps {
   metodosEnvio?: string[];
   estadosEnvio?: string[];
   onPrintRemito?: (sale: Sale) => void;
+  googleMapsApiKey?: string;
 }
 
 export const SaleFormModal: React.FC<SaleFormModalProps> = (props) => {
@@ -59,7 +60,8 @@ const SaleFormModalInner: React.FC<SaleFormModalProps> = ({
   metodosPago = ['Efectivo', 'Transferencia', 'Tarjeta de Débito', 'Tarjeta de Crédito', 'MercadoPago', 'Efectivo contra entrega', 'Cheque / eCheq', 'Otro'],
   metodosEnvio = ['Retiro en Local', 'Correo Argentino', 'Andreani', 'OCA', 'Cadetería / Moto', 'Mercado Envíos', 'Otro'],
   estadosEnvio = ['Pendiente', 'Pendiente de ingreso', 'En camino', 'Listo para retirar', 'Entregado', 'No entregado', 'Enviado', 'No Requiere'],
-  onPrintRemito
+  onPrintRemito,
+  googleMapsApiKey,
 }) => {
   // Form states
   const [fecha, setFecha] = useState(existingSale ? existingSale.fecha : new Date().toISOString().split('T')[0]);
@@ -567,6 +569,7 @@ const SaleFormModalInner: React.FC<SaleFormModalProps> = ({
                     .filter((p) => p.nombre.trim() !== '')
                     .map((p) => `${p.nombre} (x${p.cantidad})`)
                     .join(', ')}
+                  googleMapsApiKey={googleMapsApiKey}
                 />
               </div>
             )}

@@ -10,6 +10,7 @@ import {
   ClipboardList,
   FileCode,
   FileSpreadsheet,
+  Map,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -147,6 +148,8 @@ export interface ConfigGeneralTabProps {
   setEstadosEnvio: Dispatch<SetStateAction<string[]>>;
   andreaniHash: string;
   setAndreaniHash: (value: string) => void;
+  googleMapsApiKey: string;
+  setGoogleMapsApiKey: (value: string) => void;
   puntoVenta: string;
   setPuntoVenta: (value: string) => void;
   ultimoNumero: number;
@@ -171,6 +174,8 @@ export const ConfigGeneralTab: React.FC<ConfigGeneralTabProps> = ({
   setEstadosEnvio,
   andreaniHash,
   setAndreaniHash,
+  googleMapsApiKey,
+  setGoogleMapsApiKey,
   puntoVenta,
   setPuntoVenta,
   ultimoNumero,
@@ -351,6 +356,37 @@ export const ConfigGeneralTab: React.FC<ConfigGeneralTabProps> = ({
           </div>
           <p className="text-[10px] text-slate-500 dark:text-slate-400 italic">
             Hash provisto por Andreani para la integración. Se utiliza para obtener tokens de sesión y actualizar el estado de tus envíos de forma automática.
+          </p>
+        </div>
+      </div>
+
+      {/* 2e. Integración con Google Maps (Geocodificación) */}
+      <div className="bg-slate-50/70 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-lg p-4 space-y-3">
+        <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-2">
+          <span className="font-semibold text-slate-900 dark:text-slate-100 text-xs flex items-center gap-2">
+            <Map className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+            Integración con Google Maps (Geocodificación de Direcciones)
+          </span>
+          <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold border ${
+            googleMapsApiKey ? 'bg-emerald-100 border-emerald-200 text-emerald-800 dark:bg-emerald-950/80 dark:border-emerald-800 dark:text-emerald-300' : 'bg-slate-100 border-slate-200 text-slate-500 dark:bg-slate-850 dark:border-slate-750 dark:text-slate-400'
+          }`}>
+            {googleMapsApiKey ? 'Configurado' : 'No Configurado'}
+          </span>
+        </div>
+
+        <div className="space-y-2">
+          <label className="block text-slate-600 dark:text-slate-400 font-medium">Clave API de Google Maps</label>
+          <div className="relative">
+            <input
+              type="password"
+              placeholder="Ingrese su clave API de Google Maps..."
+              value={googleMapsApiKey}
+              onChange={(e) => setGoogleMapsApiKey(e.target.value)}
+              className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-md px-3 py-1.5 text-xs font-mono focus:outline-none focus:border-blue-500 shadow-2xs"
+            />
+          </div>
+          <p className="text-[10px] text-slate-500 dark:text-slate-400 italic">
+            Obtenida en <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">Google Cloud Console</a> → APIs & Servicios → Credenciales → Agregar API key. Se usa para geocodificación precisa de direcciones de clientes. Límite gratuito de 2,500 requests/día.
           </p>
         </div>
       </div>

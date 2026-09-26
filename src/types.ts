@@ -228,5 +228,6 @@ export interface AppConfig {
   seguridad?: SecurityConfig;
   backup?: BackupConfig;
   andreaniHash?: string;
+  googleMapsApiKey?: string;
 }
 

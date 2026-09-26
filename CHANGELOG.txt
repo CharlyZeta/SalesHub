@@ -4,7 +4,34 @@ Todas las mejoras y fixes notables del proyecto.
 
 El formato se basa en Keep a Changelog, y el proyecto respeta Versionado Semántico.
 
-## [0.0.28] - 2026-09-24
+## [0.0.29] - 2026-09-27
+
+### FEAT-GEO-001: Configuración Multiusuario de Clave API de Google Maps para Geocodificación de Direcciones
+
+#### Funcionalidades Agregadas
+- **Nueva configuración en interfaz** (modal “General & Ventas”): campo tipo `password` para la API key de Google Maps.
+- **Lector multiusuario**: El `SaleLocationMap` utiliza `config.googleMapsApiKey` (de la configuración del usuario) con fallback a `import.meta.env.VITE_GOOGLE_MAPS_KEY` para desarrollo.
+- **Geocodificación mejorada**: Reemplazado el servicio gratuito `Nominatim/OSM` por la API de Google Geocoding (precisión superior), manteniendo los tiles del mapa de OpenStreetMap.
+- **Manejo de rate limit**: HTTP 429 → notificación al usuario (`No hay cupo disponible en la API de Google. Intenta nuevamente más tarde.`) + registro `RATE_LIMIT`.
+- **UX**: Link a la consola Google Cloud (`https://console.cloud.google.com/apis/credentials`) dentro del campo.
+
+#### Cobertura
+- **Acceptance Criteria**:
+  - AC-001: Geocodificación precisa con Google (varias direcciones problemáticas resueltas)
+  - AC-002: UI accesible en modal de configuración del sistema
+  - AC-003: No configurada → mensaje de error claro
+  - AC-004: Sin resultados → msg `No se encontraron coordenadas para esta dirección.`
+  - AC-005: Lint, typecheck, build sin warnings
+  - AC-006: Mismo flujo UI/UX con marcador arrastrable y compartir por WhatsApp
+- **Entidades afectadas**: `src/components/SaleLocationMap`, `src/components/ConfigModal`, `src/components/ConfigGeneralTab`, `src/types.ts`, `src/data/initialData.ts`, `src/components/SaleFormModal`, `src/App.tsx`
+
+#### Beneficios
+- Los operadores pueden ahora configurar sus propias claves de Google Maps
+- Evita exponer API keys en Git (multiusuario)
+- Mantiene OSM gratuito (tiles) y agrega Google preciso para geocodificación
+
+### Empresas
+
 
 ### FEAT-ARCH-001: Modernización Arquitectónica, Code-Splitting On-Demand y Descomposición Modular
 

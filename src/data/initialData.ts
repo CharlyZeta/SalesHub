@@ -59,7 +59,8 @@ export const INITIAL_CONFIG: AppConfig = {
     bloquearSincronizacionWooCommerce: false,
     bloquearBorradoLogs: false,
     rolActual: 'ADMIN'
-  }
+  },
+  googleMapsApiKey: ''
 };
 
 export const INITIAL_BUDGETS: Budget[] = [

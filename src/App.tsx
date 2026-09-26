@@ -482,6 +482,7 @@ export default function App() {
             metodosPago={config.metodosPago}
             metodosEnvio={config.metodosEnvio}
             estadosEnvio={config.estadosEnvio}
+            googleMapsApiKey={config.googleMapsApiKey}
             onPrintRemito={(sale) => {
               setRemitoSale(sale);
               setIsRemitoOpen(true);
