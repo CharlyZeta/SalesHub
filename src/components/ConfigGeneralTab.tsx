@@ -11,8 +11,14 @@ import {
   FileCode,
   FileSpreadsheet,
   Map,
+  Eye,
+  EyeOff,
+  Loader2,
+  CheckCircle2,
+  AlertCircle,
   type LucideIcon,
 } from 'lucide-react';
+import { testGoogleMapsApiKey, type GoogleMapsTestResult } from '../utils/googleMapsService';
 
 /**
  * Editor genérico de listas de etiquetas (canales / métodos de pago / envíos /
@@ -183,6 +189,28 @@ export const ConfigGeneralTab: React.FC<ConfigGeneralTabProps> = ({
   onOpenImport,
   onClose,
 }) => {
+  const [showApiKey, setShowApiKey] = useState(false);
+  const [isTestingKey, setIsTestingKey] = useState(false);
+  const [testResult, setTestResult] = useState<GoogleMapsTestResult | null>(null);
+
+  const handleTestApiKey = async () => {
+    if (isTestingKey) return;
+    setIsTestingKey(true);
+    setTestResult(null);
+    try {
+      const result = await testGoogleMapsApiKey(googleMapsApiKey);
+      setTestResult(result);
+    } catch (err: any) {
+      setTestResult({
+        success: false,
+        status: 'ERROR',
+        message: `Error al ejecutar la prueba: ${err?.message || err}`
+      });
+    } finally {
+      setIsTestingKey(false);
+    }
+  };
+
   const addChannel = (value: string): boolean => {
     if (!value) return false;
     if (canales.includes(value)) {
@@ -376,15 +404,89 @@ export const ConfigGeneralTab: React.FC<ConfigGeneralTabProps> = ({
 
         <div className="space-y-2">
           <label className="block text-slate-600 dark:text-slate-400 font-medium">Clave API de Google Maps</label>
-          <div className="relative">
-            <input
-              type="password"
-              placeholder="Ingrese su clave API de Google Maps..."
-              value={googleMapsApiKey}
-              onChange={(e) => setGoogleMapsApiKey(e.target.value)}
-              className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-md px-3 py-1.5 text-xs font-mono focus:outline-none focus:border-blue-500 shadow-2xs"
-            />
+          <div className="flex flex-col sm:flex-row gap-2">
+            <div className="relative flex-1">
+              <input
+                type={showApiKey ? 'text' : 'password'}
+                placeholder="Ingrese su clave API de Google Maps..."
+                value={googleMapsApiKey}
+                onChange={(e) => {
+                  setGoogleMapsApiKey(e.target.value);
+                  if (testResult) setTestResult(null);
+                }}
+                className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-md pl-3 pr-9 py-1.5 text-xs font-mono focus:outline-none focus:border-blue-500 shadow-2xs"
+              />
+              <button
+                type="button"
+                onClick={() => setShowApiKey(!showApiKey)}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+                title={showApiKey ? 'Ocultar clave' : 'Mostrar clave'}
+              >
+                {showApiKey ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+              </button>
+            </div>
+            <button
+              type="button"
+              onClick={handleTestApiKey}
+              disabled={isTestingKey}
+              className={`px-3 py-1.5 rounded-md text-xs font-medium flex items-center justify-center gap-1.5 transition-colors border shadow-2xs shrink-0 ${
+                isTestingKey
+                  ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700 cursor-not-allowed'
+                  : 'bg-blue-600 hover:bg-blue-700 text-white border-blue-600 dark:bg-blue-600 dark:hover:bg-blue-500 cursor-pointer'
+              }`}
+            >
+              {isTestingKey ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>Probando...</span>
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>Probar Clave</span>
+                </>
+              )}
+            </button>
           </div>
+
+          {/* Feedback de la prueba */}
+          {testResult && (
+            <div
+              className={`p-2.5 rounded-md border text-xs flex items-start gap-2 animate-in fade-in duration-200 ${
+                testResult.success
+                  ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300'
+                  : testResult.status === 'EMPTY_KEY'
+                  ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300'
+                  : 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-300'
+              }`}
+            >
+              {testResult.success ? (
+                <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600 dark:text-emerald-400 mt-0.5" />
+              ) : (
+                <AlertCircle
+                  className={`w-4 h-4 shrink-0 mt-0.5 ${
+                    testResult.status === 'EMPTY_KEY'
+                      ? 'text-amber-600 dark:text-amber-400'
+                      : 'text-rose-600 dark:text-rose-400'
+                  }`}
+                />
+              )}
+              <div className="space-y-1">
+                <p className="font-semibold">{testResult.message}</p>
+                {testResult.details?.formattedAddress && (
+                  <p className="text-[11px] opacity-90">
+                    📍 Dirección de prueba: <span className="font-mono font-medium">{testResult.details.formattedAddress}</span> (Lat: {testResult.details.lat?.toFixed(4)}, Lng: {testResult.details.lng?.toFixed(4)})
+                  </p>
+                )}
+                {testResult.details?.googleErrorMessage && (
+                  <p className="text-[11px] opacity-90 font-mono bg-rose-100/60 dark:bg-rose-900/40 px-1.5 py-0.5 rounded">
+                    Google: {testResult.details.googleErrorMessage}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
           <p className="text-[10px] text-slate-500 dark:text-slate-400 italic">
             Obtenida en <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">Google Cloud Console</a> → APIs & Servicios → Credenciales → Agregar API key. Se usa para geocodificación precisa de direcciones de clientes. Límite gratuito de 2,500 requests/día.
           </p>

@@ -4,6 +4,17 @@ Todas las mejoras y fixes notables del proyecto.
 
 El formato se basa en Keep a Changelog, y el proyecto respeta Versionado Semántico.
 
+## [0.0.30] - 2026-10-06
+
+### FEAT-GEO-002: Botón de Prueba y Validación de Clave API de Google Maps en Configurador
+
+#### Funcionalidades Agregadas
+- **Botón "Probar Clave" en Vivo**: Permite validar en tiempo real la clave de API ingresada en el modal de configuración antes de guardarla.
+- **Servicio de Validación (`testGoogleMapsApiKey`)**: Ejecuta una geocodificación de prueba contra `Google Geocoding API`, diagnosticando estados (`OK`, `REQUEST_DENIED`, `OVER_QUERY_LIMIT`, `ZERO_RESULTS`, `EMPTY_KEY`, `ERROR`) y extrayendo dirección formateada y coordenadas.
+- **Toggle de Visibilidad de Clave**: Botón con icono de ojo (`Eye` / `EyeOff`) para revelar u ocultar la clave al momento de introducirla.
+- **Feedback Visual y Diagnóstico**: Alertas dinámicas con diseño claro/oscuro que explican la causa exacta ante accesos denegados (falta de activación de `Geocoding API`, restricciones de referenciador o cuota de facturación).
+- **Pruebas Automatizadas**: 7 nuevos tests unitarios en `src/__tests__/googleMapsService.test.ts` (140 tests totales pasando al 100%).
+
 ## [0.0.29] - 2026-09-27
 
 ### FEAT-GEO-001: Configuración Multiusuario de Clave API de Google Maps para Geocodificación de Direcciones

@@ -4,20 +4,20 @@
 > Es el índice que conviene leer **antes** de abrir archivos: una fila por módulo
 > con su responsabilidad y sus exports principales.
 
-**Resumen:** 55 archivos · 15.461 líneas.
+**Resumen:** 56 archivos · 15.695 líneas.
 
 | Directorio | Archivos | Líneas |
 |:--|--:|--:|
 | `scripts/` | 5 | 524 |
 | `src/` | 3 | 878 |
-| `src/components/` | 21 | 8.249 |
+| `src/components/` | 21 | 8.351 |
 | `src/components/budget/` | 3 | 926 |
 | `src/components/grid/` | 3 | 814 |
 | `src/components/sales/` | 3 | 706 |
 | `src/data/` | 1 | 359 |
 | `src/hooks/` | 5 | 773 |
 | `src/services/` | 1 | 158 |
-| `src/utils/` | 10 | 2.074 |
+| `src/utils/` | 11 | 2.206 |
 
 ## `scripts/`
 
@@ -46,7 +46,7 @@
 | `BudgetModal.tsx` | 682 | Presupuestos AFIP: ítems, IVA/percepciones, PDF y conversión a venta | BudgetModal |
 | `ConfigBackupsTab.tsx` | 212 | Pestaña Copias de seguridad: backup automático, copia manual y restauración | ConfigBackupsTab, ConfigBackupsTabProps |
 | `ConfigEmpresaTab.tsx` | 374 | Pestaña Empresa / Firma: identidad, logo, datos fiscales y puntos de venta | ConfigEmpresaTab, ConfigEmpresaTabProps |
-| `ConfigGeneralTab.tsx` | 467 | Pestaña General & Ventas: canales, pagos, envíos, Andreani, numeración e importación | ConfigGeneralTab, ConfigGeneralTabProps |
+| `ConfigGeneralTab.tsx` | 569 | Pestaña General & Ventas: canales, pagos, envíos, Andreani, numeración e importación | ConfigGeneralTab, ConfigGeneralTabProps |
 | `ConfigModal.tsx` | 482 | Configuración del sistema: shell del modal, estado compartido, guardado y pestañas | ConfigModal |
 | `ConfigSecurityTab.tsx` | 155 | Pestaña Seguridad & PIN: control de acceso, inactividad y restricciones por rol | ConfigSecurityTab, ConfigSecurityTabProps |
 | `CustomerDirectoryModal.tsx` | 461 | Directorio de clientes: búsqueda, historial de compras y alta de clientes | CustomerDirectoryModal |
@@ -119,6 +119,7 @@
 | `budgetDelivery.ts` | 152 | Plantillas de envío de presupuestos (WhatsApp/correo) y normalización de teléfonos | formatWhatsAppPhone, generateBudgetWhatsAppText, generateBudgetEmailSubject, generateBudgetEmailBody, openWhatsAppForBudget, openEmailForBudget |
 | `customerIndex.ts` | 53 | — | buildSalesCustomerIndex, filterCustomers, CustomerSalesSummary |
 | `formatters.ts` | 483 | Formateo ARS/fechas, validaciones de venta, IDs y sanitización de CSV | ARGENTINE_PROVINCES, DEFAULT_PROVINCE, ARGENTINE_PROVINCE_CODES, formatCurrency, formatDate, parseDateToISO, parseAmountString, validateRequiredSaleFields, getCurrentMonthISO, generateSaleId, getMonthYearLabel, exportSalesToCSV, normalizePersonName, resolveArgentineProvince, parseCombinedAddress, parseCustomerIdentityFromWoo, RecordValidationResult |
+| `googleMapsService.ts` | 132 | — | testGoogleMapsApiKey, GoogleMapsTestResult |
 | `logger.ts` | 125 | Motor de auditoría (localStorage + eventos) con filtros y exportación | getSystemLogs, addSystemLog, clearSystemLogs, filterSystemLogs, exportLogsJSON, exportLogsCSV, LogEntry, LogFilterOptions, LogLevel |
 | `numberToWords.ts` | 71 | Conversión de importes a texto (para comprobantes) | numberToWordsSpanish |
 | `security.ts` | 92 | Hash de PIN (SHA-256), verificación retrocompatible y escalada de bloqueo | PIN_SALT, isHashedPin, authLockWaitMs, hashPin, verifyPin |

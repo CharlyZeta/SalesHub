@@ -4,8 +4,8 @@ Documento de **handoff**: qué se hizo, cómo quedó el repositorio y qué sigue
 Pensado para retomar el trabajo en cualquier momento (o para que otra persona entienda
 el punto exacto en el que está el desarrollo).
 
-**Última actualización:** 2026-09-24
-**Versión del proyecto:** 0.0.28
+**Última actualización:** 2026-10-06
+**Versión del proyecto:** 0.0.30
 **Commit de cierre:** el último de `master` (`git log -1 --oneline`)
 **Repositorio:** https://github.com/CharlyZeta/SalesHub (rama `master`)
 
@@ -21,9 +21,9 @@ documentado, con lint/CI reales y con arquitectura modularizada y optimizada**.
 | Área | Estado |
 |:--|:--|
 | Calidad | `npm run lint` (tsc + ESLint): **0 errores / 0 warnings** |
-| Tests | **15 archivos / 133 tests** (Vitest) |
+| Tests | **16 archivos / 140 tests** (Vitest) |
 | Rendimiento | Chunk principal: **301 kB** (-74% respecto al monolito original) |
-| Dependencias | **0 ciclos circulares** (Madge, 69 módulos analizados) |
+| Dependencias | **0 ciclos circulares** (Madge, 71 módulos analizados) |
 | Build | Producción OK (Code-Splitting y Rollup `manualChunks`) |
 | CI | GitHub Actions **en verde** en cada push (typecheck + lint, tests, build) |
 | Sincronización WooCommerce | **Funcionando según la configuración** (validado en uso real) |
@@ -98,6 +98,12 @@ documentado, con lint/CI reales y con arquitectura modularizada y optimizada**.
 - **Custom Hooks de Dominio**: `useSalesState`, `useWooCommerceSync`, `useCatalogState`, `useSecurityRole` y `useBudgetCalculation` encapsulan el ciclo de vida y reducen `App.tsx` a un orquestador conciso.
 - **Storage Repository Pattern**: `src/services/storageRepository.ts` (`IStorageRepository`) unifica y desacopla la persistencia.
 - **Grilla Reactiva Aislada**: `GridRow` memoizado con `React.memo` aísla los re-renderizados de edición de celda.
+
+### 2.9 Botón de Validación y Prueba de Google Maps API (FEAT-GEO-002) ✅
+- **Prueba en Vivo**: Botón "Probar Clave" con spinner de carga y diagnóstico en tiempo real en la pestaña General & Ventas (`ConfigGeneralTab.tsx`).
+- **Servicio de Validación**: `src/utils/googleMapsService.ts` ejecuta geocodificación de prueba contra Google Geocoding API y reporta estados (`OK`, `REQUEST_DENIED`, `OVER_QUERY_LIMIT`, etc.).
+- **Toggle de Visibilidad**: Revelar/ocultar caracteres de la clave mediante icono de ojo.
+- **Tests Unitarios**: 7 casos de prueba en `src/__tests__/googleMapsService.test.ts` (140 tests totales).
 
 ---
 
