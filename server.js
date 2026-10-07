@@ -123,10 +123,18 @@ function serveStatic(req, res) {
   const ext = path.extname(filePath).toLowerCase();
   const contentType = MIME_TYPES[ext] || 'application/octet-stream';
   const stat = fs.statSync(filePath);
+  const isHtml = ext === '.html';
+  const isHashedAsset = pathname.startsWith('/assets/');
+  const cacheControl = isHtml
+    ? 'no-cache, no-store, must-revalidate'
+    : isHashedAsset
+    ? 'public, max-age=31536000, immutable'
+    : 'no-cache';
 
   res.writeHead(200, {
     'Content-Type': contentType,
     'Content-Length': stat.size,
+    'Cache-Control': cacheControl,
     'X-Content-Type-Options': 'nosniff',
   });
 

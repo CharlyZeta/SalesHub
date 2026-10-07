@@ -4,6 +4,38 @@ Todas las mejoras y fixes notables del proyecto.
 
 El formato se basa en Keep a Changelog, y el proyecto respeta Versionado Semántico.
 
+## [0.0.31] - 2026-10-07
+
+### FEAT-GEO-003: Limitador de Solicitudes Mensuales y Monitor de Consumo para Google Maps Geocoding API
+
+#### Funcionalidades Agregadas
+- **Control de Límite Mensual Configurable**:
+  - Campo numérico en el modal de configuración (pestaña General & Ventas) para definir el cupo mensual de consultas a Google Geocoding (por defecto: `2.500` consultas/mes).
+  - Presets rápidos (`1.000`, `2.500`, `5.000`, `10.000`, `Ilimitado (0)`).
+- **Monitor y Tarjeta Visual de Consumo**:
+  - Indicador del período en curso (`YYYY-MM`) y conteo numérico en tiempo real (`X / Y solicitudes` y porcentaje consumido).
+  - Barra de progreso dinámica con semáforo visual (Verde < 70%, Amarillo 70%-90%, Rojo ≥ 90% / Límite alcanzado).
+  - Registro de marca de tiempo (`lastRequestTimestamp`) para la última consulta efectuada.
+  - Botón interactivo de **Reinicio Manual de Contador** con confirmación.
+- **Protección Antigasto en el Mapa (`SaleLocationMap`)**:
+  - Comprobación preventiva de cuota antes de emitir peticiones de red hacia Google Geocoding Platform.
+  - Bloqueo de peticiones y mensaje de advertencia visual amigable cuando se agota el cupo configurado.
+  - Reseteo automático de cuota al iniciar un nuevo mes calendario (`YYYY-MM`).
+- **Pruebas Automatizadas**:
+  - 14 nuevos tests unitarios en `src/__tests__/googleMapsUsage.test.ts` (154 tests totales pasando al 100%).
+
+### FIX-BUDGET-001: Corrección de Renderizado en Presupuestos y Resiliencia en ProductSearchPicker
+
+#### Correcciones Aplicadas
+- **Resiliencia en `ProductSearchPicker`**:
+  - Corrección de desestructuración y soporte retrocompatible para props (`value` / `currentValue`, `onChangeText` / `onChangeValue`).
+  - Filtrado defensivo ante valores `undefined` o nulos en `searchTerm`, protegiendo el llamado a `.trim()`.
+  - Normalización segura de strings para coincidencia insensible a mayúsculas/minúsculas sobre `nombre`, `sku` y `categoria`.
+- **Alineación de props en `BudgetEditorTab`**:
+  - Estandarización del uso de `value={item.descripcion || ''}` y `onChangeText` en la tabla de ítems de presupuesto.
+- **Cabeceras de Control de Caché en `server.js`**:
+  - Incorporación de `Cache-Control: no-cache, no-store, must-revalidate` para archivos HTML y `Cache-Control: public, max-age=31536000, immutable` para assets con hash en `/assets/` para prevenir desincronizaciones de chunks SPA tras nuevas compilaciones.
+
 ## [0.0.30] - 2026-10-06
 
 ### FEAT-GEO-002: Botón de Prueba y Validación de Clave API de Google Maps en Configurador

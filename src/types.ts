@@ -217,6 +217,12 @@ export interface CompanyConfig {
   puntoVentaPresupuesto?: string;
 }
 
+export interface GoogleMapsUsage {
+  month: string; // 'YYYY-MM'
+  count: number;
+  lastRequestTimestamp?: string;
+}
+
 export interface AppConfig {
   canales: string[];
   metodosPago: string[];
@@ -229,5 +235,8 @@ export interface AppConfig {
   backup?: BackupConfig;
   andreaniHash?: string;
   googleMapsApiKey?: string;
+  googleMapsMonthlyLimit?: number; // Límite mensual (ej: 2500, 0 o undefined = ilimitado)
+  googleMapsUsage?: GoogleMapsUsage;
 }
+
 

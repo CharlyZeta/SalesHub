@@ -383,8 +383,8 @@ export const BudgetEditorTab: React.FC<BudgetEditorTabProps> = ({
                 <ProductSearchPicker
                   catalog={catalog}
                   onSelectProduct={(cat) => handleSelectCatalogItem(idx, cat)}
-                  currentValue={item.descripcion}
-                  onChangeValue={(val) => handleItemChange(idx, 'descripcion', val)}
+                  value={item.descripcion || ''}
+                  onChangeText={(val) => handleItemChange(idx, 'descripcion', val)}
                   selectedImageUrl={item.imagenUrl}
                   placeholder="Buscar producto o escribir item manual..."
                 />

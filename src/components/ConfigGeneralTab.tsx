@@ -16,9 +16,18 @@ import {
   Loader2,
   CheckCircle2,
   AlertCircle,
+  RotateCcw,
+  Gauge,
+  Calendar,
   type LucideIcon,
 } from 'lucide-react';
-import { testGoogleMapsApiKey, type GoogleMapsTestResult } from '../utils/googleMapsService';
+import {
+  testGoogleMapsApiKey,
+  getGoogleMapsUsageInfo,
+  getCurrentMonthKey,
+  type GoogleMapsTestResult
+} from '../utils/googleMapsService';
+import type { GoogleMapsUsage } from '../types';
 
 /**
  * Editor genérico de listas de etiquetas (canales / métodos de pago / envíos /
@@ -156,6 +165,10 @@ export interface ConfigGeneralTabProps {
   setAndreaniHash: (value: string) => void;
   googleMapsApiKey: string;
   setGoogleMapsApiKey: (value: string) => void;
+  googleMapsMonthlyLimit?: number;
+  setGoogleMapsMonthlyLimit?: (value: number) => void;
+  googleMapsUsage?: GoogleMapsUsage;
+  setGoogleMapsUsage?: Dispatch<SetStateAction<GoogleMapsUsage | undefined>>;
   puntoVenta: string;
   setPuntoVenta: (value: string) => void;
   ultimoNumero: number;
@@ -182,6 +195,10 @@ export const ConfigGeneralTab: React.FC<ConfigGeneralTabProps> = ({
   setAndreaniHash,
   googleMapsApiKey,
   setGoogleMapsApiKey,
+  googleMapsMonthlyLimit = 2500,
+  setGoogleMapsMonthlyLimit,
+  googleMapsUsage,
+  setGoogleMapsUsage,
   puntoVenta,
   setPuntoVenta,
   ultimoNumero,
@@ -193,12 +210,27 @@ export const ConfigGeneralTab: React.FC<ConfigGeneralTabProps> = ({
   const [isTestingKey, setIsTestingKey] = useState(false);
   const [testResult, setTestResult] = useState<GoogleMapsTestResult | null>(null);
 
+  const usageInfo = getGoogleMapsUsageInfo({
+    googleMapsMonthlyLimit,
+    googleMapsUsage
+  });
+
   const handleTestApiKey = async () => {
     if (isTestingKey) return;
     setIsTestingKey(true);
     setTestResult(null);
     try {
-      const result = await testGoogleMapsApiKey(googleMapsApiKey);
+      const result = await testGoogleMapsApiKey(googleMapsApiKey, () => {
+        setGoogleMapsUsage?.((prev) => {
+          const currentMonth = getCurrentMonthKey();
+          const currentCount = prev?.month === currentMonth ? (prev.count || 0) : 0;
+          return {
+            month: currentMonth,
+            count: currentCount + 1,
+            lastRequestTimestamp: new Date().toISOString()
+          };
+        });
+      });
       setTestResult(result);
     } catch (err: any) {
       setTestResult({
@@ -208,6 +240,27 @@ export const ConfigGeneralTab: React.FC<ConfigGeneralTabProps> = ({
       });
     } finally {
       setIsTestingKey(false);
+    }
+  };
+
+  const handleResetUsage = () => {
+    if (confirm('¿Confirma que desea reiniciar a 0 el contador de solicitudes de Google Maps para el mes en curso?')) {
+      setGoogleMapsUsage?.({
+        month: getCurrentMonthKey(),
+        count: 0,
+        lastRequestTimestamp: undefined
+      });
+    }
+  };
+
+  const formatMonthLabel = (monthKey: string) => {
+    try {
+      const [y, m] = monthKey.split('-').map(Number);
+      const date = new Date(y, m - 1, 1);
+      const monthName = date.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' });
+      return monthName.charAt(0).toUpperCase() + monthName.slice(1);
+    } catch {
+      return monthKey;
     }
   };
 
@@ -487,8 +540,148 @@ export const ConfigGeneralTab: React.FC<ConfigGeneralTabProps> = ({
             </div>
           )}
 
+          {/* Límite Mensual y Métricas de Consumo */}
+          <div className="pt-2 border-t border-slate-200 dark:border-slate-700/80 space-y-3">
+            {/* Campo de Límite Mensual */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className="block text-slate-700 dark:text-slate-300 font-medium flex items-center gap-1.5">
+                  <Gauge className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                  Límite Mensual de Solicitudes (0 = Sin límite / Ilimitado)
+                </label>
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                  {usageInfo.isUnlimited ? 'Modo Ilimitado' : `${usageInfo.limit.toLocaleString()} req/mes`}
+                </span>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
+                <input
+                  type="number"
+                  min="0"
+                  step="100"
+                  placeholder="Ej: 2500 (0 = sin límite)"
+                  value={googleMapsMonthlyLimit}
+                  onChange={(e) => {
+                    const val = Math.max(0, parseInt(e.target.value, 10) || 0);
+                    setGoogleMapsMonthlyLimit?.(val);
+                  }}
+                  className="w-full sm:w-48 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-md px-3 py-1.5 text-xs font-mono focus:outline-none focus:border-blue-500 shadow-2xs"
+                />
+                <div className="flex flex-wrap gap-1">
+                  {[
+                    { label: '1.000', value: 1000 },
+                    { label: '2.500', value: 2500 },
+                    { label: '5.000', value: 5000 },
+                    { label: '10.000', value: 10000 },
+                    { label: 'Ilimitado (0)', value: 0 }
+                  ].map((preset) => (
+                    <button
+                      key={preset.value}
+                      type="button"
+                      onClick={() => setGoogleMapsMonthlyLimit?.(preset.value)}
+                      className={`px-2 py-1 text-[11px] rounded font-medium transition-colors cursor-pointer border ${
+                        googleMapsMonthlyLimit === preset.value
+                          ? 'bg-blue-600 text-white border-blue-600 dark:bg-blue-600 dark:border-blue-500'
+                          : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'
+                      }`}
+                    >
+                      {preset.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Tarjeta Visual de Consumo del Mes */}
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/80 rounded-lg p-3 space-y-2.5 shadow-2xs">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 text-slate-800 dark:text-slate-200 font-semibold text-xs">
+                  <Calendar className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
+                  <span>Consumo del Mes: {formatMonthLabel(usageInfo.currentMonth)}</span>
+                </div>
+                <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold border ${
+                  usageInfo.isUnlimited
+                    ? 'bg-blue-100 border-blue-200 text-blue-800 dark:bg-blue-950/80 dark:border-blue-800 dark:text-blue-300'
+                    : usageInfo.isLimitExceeded
+                    ? 'bg-rose-100 border-rose-200 text-rose-800 dark:bg-rose-950/80 dark:border-rose-800 dark:text-rose-300 animate-pulse'
+                    : usageInfo.percentageUsed >= 70
+                    ? 'bg-amber-100 border-amber-200 text-amber-800 dark:bg-amber-950/80 dark:border-amber-800 dark:text-amber-300'
+                    : 'bg-emerald-100 border-emerald-200 text-emerald-800 dark:bg-emerald-950/80 dark:border-emerald-800 dark:text-emerald-300'
+                }`}>
+                  {usageInfo.isUnlimited
+                    ? 'Cuota Ilimitada'
+                    : usageInfo.isLimitExceeded
+                    ? '¡Límite Alcanzado (100%)!'
+                    : `${usageInfo.percentageUsed}% Utilizado`}
+                </span>
+              </div>
+
+              {/* Indicador Numérico */}
+              <div className="flex items-baseline justify-between text-xs">
+                <div className="text-slate-600 dark:text-slate-400">
+                  <span className="text-sm font-bold text-slate-900 dark:text-slate-100 font-mono">
+                    {usageInfo.count.toLocaleString()}
+                  </span>
+                  {usageInfo.isUnlimited ? (
+                    <span> solicitudes realizadas</span>
+                  ) : (
+                    <span> / {usageInfo.limit.toLocaleString()} solicitudes ({usageInfo.remaining.toLocaleString()} disponibles)</span>
+                  )}
+                </div>
+                {!usageInfo.isUnlimited && (
+                  <span className="font-mono text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                    {usageInfo.percentageUsed}%
+                  </span>
+                )}
+              </div>
+
+              {/* Barra de Progreso */}
+              {!usageInfo.isUnlimited && (
+                <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden border border-slate-200/60 dark:border-slate-700/60">
+                  <div
+                    className={`h-full transition-all duration-300 rounded-full ${
+                      usageInfo.isLimitExceeded || usageInfo.percentageUsed >= 90
+                        ? 'bg-rose-500 dark:bg-rose-500'
+                        : usageInfo.percentageUsed >= 70
+                        ? 'bg-amber-500 dark:bg-amber-500'
+                        : 'bg-emerald-500 dark:bg-emerald-500'
+                    }`}
+                    style={{ width: `${Math.min(100, Math.max(0, usageInfo.percentageUsed))}%` }}
+                  />
+                </div>
+              )}
+
+              {/* Alerta de bloqueo si se superó el límite */}
+              {usageInfo.isLimitExceeded && (
+                <div className="p-2 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 rounded text-rose-800 dark:text-rose-300 text-[11px] flex items-center gap-1.5">
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0 text-rose-600 dark:text-rose-400" />
+                  <span>
+                    Se ha alcanzado el límite mensual. Las solicitudes automáticas en el mapa están en pausa para evitar cargos no deseados. Puedes aumentar el límite o reiniciar el contador.
+                  </span>
+                </div>
+              )}
+
+              {/* Footer con fecha de última consulta y botón de reset */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1 text-[11px] text-slate-500 dark:text-slate-400 border-t border-slate-100 dark:border-slate-800">
+                <span>
+                  {usageInfo.lastRequestTimestamp
+                    ? `Última solicitud: ${new Date(usageInfo.lastRequestTimestamp).toLocaleString('es-AR')}`
+                    : 'Sin solicitudes registradas en este período'}
+                </span>
+                <button
+                  type="button"
+                  onClick={handleResetUsage}
+                  className="inline-flex items-center gap-1 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 hover:underline cursor-pointer"
+                  title="Reiniciar contador a 0 para el mes en curso"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                  <span>Reiniciar Contador</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
           <p className="text-[10px] text-slate-500 dark:text-slate-400 italic">
-            Obtenida en <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">Google Cloud Console</a> → APIs & Servicios → Credenciales → Agregar API key. Se usa para geocodificación precisa de direcciones de clientes. Límite gratuito de 2,500 requests/día.
+            Obtenida en <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">Google Cloud Console</a> → APIs & Servicios → Credenciales → Agregar API key. Se usa para geocodificación precisa de direcciones de clientes.
           </p>
         </div>
       </div>

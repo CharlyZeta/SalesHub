@@ -8,7 +8,7 @@ import {
   Database,
   Check,
 } from 'lucide-react';
-import { AppConfig, SecurityConfig } from '../types';
+import { AppConfig, SecurityConfig, GoogleMapsUsage } from '../types';
 import { INITIAL_COMPANY_CONFIG } from '../data/initialData';
 import { hashPin, isHashedPin } from '../utils/security';
 import { BackupItem, listAllBackups, runBackup, restoreBackup, deleteFromIndexedDb } from '../utils/backupService';
@@ -79,6 +79,10 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
   const [ultimoNumero, setUltimoNumero] = useState<number>(config.ultimoNumeroPresupuesto || 311);
   const [andreaniHash, setAndreaniHash] = useState<string>(config.andreaniHash || '');
   const [googleMapsApiKey, setGoogleMapsApiKey] = useState<string>(config.googleMapsApiKey || '');
+  const [googleMapsMonthlyLimit, setGoogleMapsMonthlyLimit] = useState<number>(
+    typeof config.googleMapsMonthlyLimit === 'number' ? config.googleMapsMonthlyLimit : 2500
+  );
+  const [googleMapsUsage, setGoogleMapsUsage] = useState<GoogleMapsUsage | undefined>(config.googleMapsUsage);
 
   // Security config state
   const defaultSec: SecurityConfig = {
@@ -134,6 +138,10 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
       setEstadosEnvio(config.estadosEnvio || ['Pendiente', 'Pendiente de ingreso', 'En camino', 'Listo para retirar', 'Entregado', 'No entregado', 'Enviado', 'No Requiere']);
       setAndreaniHash(config.andreaniHash || '');
       setGoogleMapsApiKey(config.googleMapsApiKey || '');
+      setGoogleMapsMonthlyLimit(
+        typeof config.googleMapsMonthlyLimit === 'number' ? config.googleMapsMonthlyLimit : 2500
+      );
+      setGoogleMapsUsage(config.googleMapsUsage);
       setSecConfig(config.seguridad || defaultSec);
       setAutoBackup(config.backup?.autoBackup ?? false);
       setPeriodicity(config.backup?.periodicity ?? 'daily');
@@ -251,6 +259,8 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
         ultimoNumeroPresupuesto: Number(ultimoNumero) || 1,
         andreaniHash: andreaniHash.trim(),
         googleMapsApiKey: googleMapsApiKey.trim(),
+        googleMapsMonthlyLimit: Number(googleMapsMonthlyLimit) >= 0 ? Number(googleMapsMonthlyLimit) : 2500,
+        googleMapsUsage: googleMapsUsage,
         empresa: {
           nombre: nombreEmpresa.trim() || 'Mi Empresa',
           subtitulo: subtituloEmpresa.trim(),
@@ -384,6 +394,10 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
               setAndreaniHash={setAndreaniHash}
               googleMapsApiKey={googleMapsApiKey}
               setGoogleMapsApiKey={setGoogleMapsApiKey}
+              googleMapsMonthlyLimit={googleMapsMonthlyLimit}
+              setGoogleMapsMonthlyLimit={setGoogleMapsMonthlyLimit}
+              googleMapsUsage={googleMapsUsage}
+              setGoogleMapsUsage={setGoogleMapsUsage}
               puntoVenta={puntoVenta}
               setPuntoVenta={setPuntoVenta}
               ultimoNumero={ultimoNumero}

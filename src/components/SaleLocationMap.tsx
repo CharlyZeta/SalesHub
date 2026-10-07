@@ -3,6 +3,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Search, MapPin, MessageSquare, Loader2 } from 'lucide-react';
 import { addSystemLog } from '../utils/logger';
+import { checkStoredGoogleMapsQuota, incrementStoredGoogleMapsUsage } from '../utils/googleMapsService';
 
 // Fix default Leaflet icon assets urls
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -56,29 +57,42 @@ export const SaleLocationMap: React.FC<SaleLocationMapProps> = ({
   }, [onChangeCoordinates]);
   const initialCoordsRef = useRef({ lat: currentLat, lng: currentLng });
 
-   // Geolocate address using Google Geocoding API
-const geocodeAddress = useCallback(async (addrStr: string) => {
-      if (!addrStr.trim()) return;
-      const apiKey = googleMapsApiKey || import.meta.env.VITE_GOOGLE_MAPS_KEY;
-      if (!apiKey) {
-        addSystemLog('ERROR', 'Maps', 'No se encontró la API Key de Google Maps en configuración ni en variables de entorno');
-        setStatusText('API Key de Google Maps no configurada en Configuración → General & Ventas');
+  // Geolocate address using Google Geocoding API
+  const geocodeAddress = useCallback(async (addrStr: string) => {
+    if (!addrStr.trim()) return;
+    const apiKey = googleMapsApiKey || import.meta.env.VITE_GOOGLE_MAPS_KEY;
+    if (!apiKey) {
+      addSystemLog('ERROR', 'Maps', 'No se encontró la API Key de Google Maps en configuración ni en variables de entorno');
+      setStatusText('API Key de Google Maps no configurada en Configuración → General & Ventas');
+      return;
+    }
+
+    // Validar límite de cuota mensual antes de disparar la consulta de red
+    const quotaCheck = checkStoredGoogleMapsQuota();
+    if (!quotaCheck.allowed) {
+      setStatusText(quotaCheck.reason || 'Límite mensual de consultas a Google Maps alcanzado.');
+      addSystemLog('WARN', 'Maps', `Geocodificación omitida por límite mensual: ${quotaCheck.reason}`);
+      return;
+    }
+
+    setIsSearching(true);
+    setStatusText('Buscando dirección...');
+    addSystemLog('API', 'Maps', `Iniciando geocodificación Google Maps para: "${addrStr}"`);
+    try {
+      const query = encodeURIComponent(`${addrStr}`);
+      const res = await fetch(
+        `https://maps.googleapis.com/maps/api/geocode/json?address=${query}&key=${apiKey}`,
+      );
+
+      // Registrar consumo de consulta en cuota mensual
+      incrementStoredGoogleMapsUsage();
+
+      if (res.status === 429) {
+        setStatusText('No hay cupo disponible en la API de Google. Intenta nuevamente más tarde.');
+        addSystemLog('ERROR', 'Maps', 'RATE_LIMIT: Error 429 de Google Geocoding API (código: 429)');
         return;
       }
-      setIsSearching(true);
-      setStatusText('Buscando dirección...');
-      addSystemLog('API', 'Maps', `Iniciando geocodificación Google Maps para: "${addrStr}"`);
-      try {
-        const query = encodeURIComponent(`${addrStr}`);
-        const res = await fetch(
-          `https://maps.googleapis.com/maps/api/geocode/json?address=${query}&key=${apiKey}`,
-        );
-        if (res.status === 429) {
-          setStatusText('No hay cupo disponible en la API de Google. Intenta nuevamente más tarde.');
-          addSystemLog('ERROR', 'Maps', 'RATE_LIMIT: Error 429 de Google Geocoding API (código: 429)');
-          return;
-        }
-        const data = await res.json();
+      const data = await res.json();
         if (data && data.results && data.results.length > 0) {
           const lat = data.results[0].geometry.location.lat;
           const lng = data.results[0].geometry.location.lng;

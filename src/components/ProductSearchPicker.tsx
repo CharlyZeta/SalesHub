@@ -3,31 +3,36 @@ import { Search, Package, AlertCircle, EyeOff } from 'lucide-react';
 import { CatalogProduct } from '../types';
 import { formatCurrency } from '../utils/formatters';
 
-interface ProductSearchPickerProps {
-  catalog: CatalogProduct[];
-  value: string;
-  onChangeText: (text: string) => void;
+export interface ProductSearchPickerProps {
+  catalog?: CatalogProduct[];
+  value?: string;
+  currentValue?: string;
+  onChangeText?: (text: string) => void;
+  onChangeValue?: (text: string) => void;
   onSelectProduct: (product: CatalogProduct) => void;
   placeholder?: string;
   selectedImageUrl?: string;
 }
 
 export const ProductSearchPicker: React.FC<ProductSearchPickerProps> = ({
-  catalog,
+  catalog = [],
   value,
+  currentValue,
   onChangeText,
+  onChangeValue,
   onSelectProduct,
   placeholder = 'Buscar o ingresar producto...',
   selectedImageUrl
 }) => {
+  const effectiveValue = value ?? currentValue ?? '';
   const [isOpen, setIsOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState<string>(effectiveValue);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Synchronize internal search term with external value on focus
   useEffect(() => {
-    setSearchTerm(value);
-  }, [value]);
+    setSearchTerm(effectiveValue);
+  }, [effectiveValue]);
 
   // Handle outside click to close dropdown
   useEffect(() => {
@@ -40,25 +45,33 @@ export const ProductSearchPicker: React.FC<ProductSearchPickerProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const triggerChange = (text: string) => {
+    onChangeText?.(text);
+    onChangeValue?.(text);
+  };
+
+  const safeSearchTerm = (searchTerm || '').trim();
+  const normalizedTerm = safeSearchTerm.toLowerCase();
+
   // Filter catalog sensitively (case-insensitive, matching name, SKU, or category)
-  const filteredCatalog = catalog.filter((prod) => {
-    if (!searchTerm.trim()) return true;
-    const term = searchTerm.toLowerCase().trim();
-    const matchName = prod.nombre.toLowerCase().includes(term);
-    const matchSku = prod.sku?.toLowerCase().includes(term);
-    const matchCat = prod.categoria?.toLowerCase().includes(term);
+  const filteredCatalog = (catalog || []).filter((prod) => {
+    if (!prod) return false;
+    if (!normalizedTerm) return true;
+    const matchName = Boolean(prod.nombre && prod.nombre.toLowerCase().includes(normalizedTerm));
+    const matchSku = Boolean(prod.sku && prod.sku.toLowerCase().includes(normalizedTerm));
+    const matchCat = Boolean(prod.categoria && prod.categoria.toLowerCase().includes(normalizedTerm));
     return matchName || matchSku || matchCat;
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setSearchTerm(val);
-    onChangeText(val);
+    triggerChange(val);
     if (!isOpen) setIsOpen(true);
   };
 
   const handlePickProduct = (product: CatalogProduct) => {
-    setSearchTerm(product.nombre);
+    setSearchTerm(product.nombre || '');
     onSelectProduct(product);
     setIsOpen(false);
   };
@@ -105,11 +118,11 @@ export const ProductSearchPicker: React.FC<ProductSearchPickerProps> = ({
           </div>
 
           {/* Dedicated Action to use typed text as custom manual product */}
-          {searchTerm.trim().length > 0 && (
+          {safeSearchTerm.length > 0 && (
             <button
               type="button"
               onClick={() => {
-                onChangeText(searchTerm.trim());
+                triggerChange(safeSearchTerm);
                 setIsOpen(false);
               }}
               className="w-full text-left p-2 bg-emerald-50/80 dark:bg-emerald-950/40 hover:bg-emerald-100/90 dark:hover:bg-emerald-900/60 border-b border-emerald-200/80 dark:border-emerald-800/80 transition-colors flex items-center gap-2 group cursor-pointer"
@@ -120,7 +133,7 @@ export const ProductSearchPicker: React.FC<ProductSearchPickerProps> = ({
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-1">
                   <span className="font-bold text-emerald-950 dark:text-emerald-200 text-xs truncate">
-                    Usar "{searchTerm.trim()}" como producto manual
+                    Usar "{safeSearchTerm}" como producto manual
                   </span>
                   <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 bg-white dark:bg-slate-900 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800 shrink-0">
                     Precio Libre
@@ -136,16 +149,16 @@ export const ProductSearchPicker: React.FC<ProductSearchPickerProps> = ({
           {filteredCatalog.length === 0 ? (
             <div className="p-3 text-center text-slate-500 dark:text-slate-400 text-xs space-y-2">
               <p>No se encontraron productos coincidentes en el catálogo de WooCommerce.</p>
-              {searchTerm.trim() && (
+              {safeSearchTerm.length > 0 && (
                 <button
                   type="button"
                   onClick={() => {
-                    onChangeText(searchTerm.trim());
+                    triggerChange(safeSearchTerm);
                     setIsOpen(false);
                   }}
                   className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-xs px-3 py-1.5 rounded transition-colors cursor-pointer shadow-2xs"
                 >
-                  Confirmar "{searchTerm.trim()}" como producto manual
+                  Confirmar "{safeSearchTerm}" como producto manual
                 </button>
               )}
             </div>

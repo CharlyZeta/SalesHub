@@ -60,7 +60,12 @@ export const INITIAL_CONFIG: AppConfig = {
     bloquearBorradoLogs: false,
     rolActual: 'ADMIN'
   },
-  googleMapsApiKey: ''
+  googleMapsApiKey: '',
+  googleMapsMonthlyLimit: 2500,
+  googleMapsUsage: {
+    month: '',
+    count: 0
+  }
 };
 
 export const INITIAL_BUDGETS: Budget[] = [
