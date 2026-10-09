@@ -41,7 +41,7 @@ const WooCommerceModalInner: React.FC<WooCommerceModalProps> = ({
   onSyncCatalog,
   currentRole = 'OPERADOR',
   blockCredentialEditing = false,
-  localData
+  localData,
 }) => {
   // Fix A: el flag de seguridad restringe la edición de claves al Administrador
   // (ya no apaga la sincronización automática, que depende de `autoSync`).
@@ -119,7 +119,7 @@ const WooCommerceModalInner: React.FC<WooCommerceModalProps> = ({
     } catch {
       // Sin servidor (por ejemplo, build estático servido por otro medio) se sigue
       // usando la programación del navegador.
-      setServerStatus(prev => ({ ...prev, available: false }));
+      setServerStatus((prev) => ({ ...prev, available: false }));
       return false;
     }
   };
@@ -188,7 +188,7 @@ const WooCommerceModalInner: React.FC<WooCommerceModalProps> = ({
           nextRunAt: status.nextRunAt ?? null,
         });
       } catch {
-        if (!cancelled) setServerStatus(prev => ({ ...prev, available: false }));
+        if (!cancelled) setServerStatus((prev) => ({ ...prev, available: false }));
       }
     })();
     return () => {
@@ -201,9 +201,7 @@ const WooCommerceModalInner: React.FC<WooCommerceModalProps> = ({
    * la sincronización enviando el catálogo/clientes locales y devuelve el snapshot combinado.
    * Si el servidor no está disponible, informa `available: false` para usar el modo navegador.
    */
-  const syncThroughServer = async (
-    cfg: WooCommerceConfig
-  ): Promise<{ available: boolean; snapshot?: any }> => {
+  const syncThroughServer = async (cfg: WooCommerceConfig): Promise<{ available: boolean; snapshot?: any }> => {
     try {
       const configRes = await fetch('/api/woo/config', {
         method: 'POST',
@@ -250,7 +248,7 @@ const WooCommerceModalInner: React.FC<WooCommerceModalProps> = ({
 
       return { available: true, snapshot: snapshotData?.snapshot ?? null };
     } catch {
-      setServerStatus(prev => ({ ...prev, available: false }));
+      setServerStatus((prev) => ({ ...prev, available: false }));
       return { available: false };
     }
   };
@@ -275,11 +273,15 @@ const WooCommerceModalInner: React.FC<WooCommerceModalProps> = ({
       autoSync,
       syncIntervalHours,
       ultimoSync: config.ultimoSync,
-      conectado: Boolean(url && consumerKey)
+      conectado: Boolean(url && consumerKey),
     };
     onUpdateConfig(updatedConfig);
     setSyncStatus('Configuración de WooCommerce y automatización guardadas.');
-    addSystemLog('INFO', 'WooCommerce', `Configuración actualizada (AutoSync: ${autoSync ? `Activo cada ${syncIntervalHours}h` : 'Inactivo'})`);
+    addSystemLog(
+      'INFO',
+      'WooCommerce',
+      `Configuración actualizada (AutoSync: ${autoSync ? `Activo cada ${syncIntervalHours}h` : 'Inactivo'})`
+    );
     // Fix E: el servidor se encarga de la programación (corre con la app cerrada)
     void publishConfigToServer(updatedConfig);
   };
@@ -296,7 +298,7 @@ const WooCommerceModalInner: React.FC<WooCommerceModalProps> = ({
         autoSync,
         syncIntervalHours,
         ultimoSync: new Date().toISOString(),
-        conectado: true
+        conectado: true,
       };
 
       // Fix D / W5: se intenta primero la sincronización EN EL SERVIDOR, que combina
@@ -318,7 +320,11 @@ const WooCommerceModalInner: React.FC<WooCommerceModalProps> = ({
             `(+${merge.productsAdded ?? 0} nuevos, ${merge.productsUpdated ?? 0} actualizados, ` +
             `${merge.productsLocalKept ?? 0} locales conservados) y ${snap.customers?.length ?? 0} clientes.`
         );
-        addSystemLog('SYNC', 'WooCommerce', 'Sincronización WooCommerce ejecutada por el servidor (con merge, sin borrados)');
+        addSystemLog(
+          'SYNC',
+          'WooCommerce',
+          'Sincronización WooCommerce ejecutada por el servidor (con merge, sin borrados)'
+        );
         return;
       }
 
@@ -338,7 +344,11 @@ const WooCommerceModalInner: React.FC<WooCommerceModalProps> = ({
       setSyncStatus(
         `¡Sincronización exitosa! ${fetchedProducts.length} productos de la tienda combinados con el catálogo local y ${fetchedCustomers.length} clientes procesados.`
       );
-      addSystemLog('SYNC', 'WooCommerce', `Sincronización (navegador) exitosa: ${fetchedProducts.length} productos, ${fetchedCustomers.length} clientes`);
+      addSystemLog(
+        'SYNC',
+        'WooCommerce',
+        `Sincronización (navegador) exitosa: ${fetchedProducts.length} productos, ${fetchedCustomers.length} clientes`
+      );
     } catch (error: any) {
       setSyncStatus(`Error de sincronización: ${error.message}`);
       addSystemLog('ERROR', 'WooCommerce', `Fallo al sincronizar WooCommerce: ${error.message}`);
@@ -360,7 +370,7 @@ const WooCommerceModalInner: React.FC<WooCommerceModalProps> = ({
       nombre: newNombre,
       precio: parseFloat(newPrecio) || 0,
       stock: parseInt(newStock, 10) || 10,
-      origen: 'Manual'
+      origen: 'Manual',
     };
 
     onAddCatalogProduct(created);
@@ -376,14 +386,17 @@ const WooCommerceModalInner: React.FC<WooCommerceModalProps> = ({
     `${p.nombre} ${p.sku} ${p.categoria}`.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const filteredCustomers = (wooCustomers.length > 0 ? wooCustomers : customers.filter(c => c.origen === 'WooCommerce' || c.canalHabitual === 'WooCommerce')).filter((c) =>
+  const filteredCustomers = (
+    wooCustomers.length > 0
+      ? wooCustomers
+      : customers.filter((c) => c.origen === 'WooCommerce' || c.canalHabitual === 'WooCommerce')
+  ).filter((c) =>
     `${c.razonSocialNombre} ${c.apellido} ${c.dniCuit} ${c.email}`.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-5xl rounded-xl shadow-2xl overflow-hidden flex flex-col my-auto max-h-[92vh]">
-        
         {/* Header */}
         <div className="bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 px-5 py-3.5 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -399,14 +412,16 @@ const WooCommerceModalInner: React.FC<WooCommerceModalProps> = ({
               </p>
             </div>
           </div>
-          <button onClick={onClose} className="text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 p-1 rounded-md hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors cursor-pointer">
+          <button
+            onClick={onClose}
+            className="text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 p-1 rounded-md hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+          >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Modal Body */}
         <div className="p-5 overflow-y-auto space-y-4 text-xs text-slate-800 dark:text-slate-200">
-          
           {/* Section 1: WooCommerce API Credentials */}
           <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-4 space-y-3">
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
@@ -473,8 +488,9 @@ const WooCommerceModalInner: React.FC<WooCommerceModalProps> = ({
               <div className="bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded p-2.5 text-[11px] text-slate-600 dark:text-slate-300 flex items-start gap-2">
                 <AlertCircle className="w-4 h-4 shrink-0 text-slate-500 dark:text-slate-400" />
                 <span>
-                  Las claves de API están bloqueadas para el perfil <strong>Operador</strong> (Configuración → Seguridad).
-                  Un Administrador puede editarlas. La sincronización programada sigue funcionando con las claves guardadas.
+                  Las claves de API están bloqueadas para el perfil <strong>Operador</strong> (Configuración →
+                  Seguridad). Un Administrador puede editarlas. La sincronización programada sigue funcionando con las
+                  claves guardadas.
                 </span>
               </div>
             )}
@@ -540,9 +556,7 @@ const WooCommerceModalInner: React.FC<WooCommerceModalProps> = ({
                     </span>
                   )}
                   {autoSaveState === 'idle' && (
-                    <span className="text-slate-400 dark:text-slate-500 ml-1">
-                      (autoguardado activo)
-                    </span>
+                    <span className="text-slate-400 dark:text-slate-500 ml-1">(autoguardado activo)</span>
                   )}
                 </div>
                 <div className="text-[11px]">
@@ -582,8 +596,15 @@ const WooCommerceModalInner: React.FC<WooCommerceModalProps> = ({
 
             {/* Sync Rules Info Notice */}
             <div className="bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-900/50 rounded p-2.5 text-[11px] text-purple-900 dark:text-purple-200/90 space-y-1">
-              <p><span className="font-bold text-purple-700 dark:text-purple-300">📦 Regla de Productos:</span> Al sincronizar, se reemplazan completamente todos los productos del catálogo por la lista actualizada recibida desde WooCommerce.</p>
-              <p><span className="font-bold text-purple-700 dark:text-purple-300">👥 Regla de Clientes:</span> Se agregan únicamente los clientes nuevos que no existían previamente en tu directorio de clientes.</p>
+              <p>
+                <span className="font-bold text-purple-700 dark:text-purple-300">📦 Regla de Productos:</span> Al
+                sincronizar, se reemplazan completamente todos los productos del catálogo por la lista actualizada
+                recibida desde WooCommerce.
+              </p>
+              <p>
+                <span className="font-bold text-purple-700 dark:text-purple-300">👥 Regla de Clientes:</span> Se agregan
+                únicamente los clientes nuevos que no existían previamente en tu directorio de clientes.
+              </p>
             </div>
 
             {syncStatus && (
@@ -623,7 +644,6 @@ const WooCommerceModalInner: React.FC<WooCommerceModalProps> = ({
 
           {/* Section 2: Tab Content */}
           <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-4 space-y-3">
-            
             {/* Search bar */}
             <div className="flex items-center justify-between gap-3">
               <div className="relative flex-1">
@@ -654,7 +674,10 @@ const WooCommerceModalInner: React.FC<WooCommerceModalProps> = ({
 
             {/* Add product form */}
             {activeTab === 'products' && showAddProduct && (
-              <form onSubmit={handleAddProduct} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-3 rounded-lg space-y-2">
+              <form
+                onSubmit={handleAddProduct}
+                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-3 rounded-lg space-y-2"
+              >
                 <h4 className="font-bold text-slate-800 dark:text-slate-300 text-xs">Nuevo Producto en Catálogo</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
                   <input
@@ -682,8 +705,19 @@ const WooCommerceModalInner: React.FC<WooCommerceModalProps> = ({
                   />
                 </div>
                 <div className="flex justify-end gap-2 pt-1">
-                  <button type="button" onClick={() => setShowAddProduct(false)} className="px-2 py-1 text-slate-500 dark:text-slate-400">Cancelar</button>
-                  <button type="submit" className="bg-emerald-600 text-white px-3 py-1 rounded font-medium cursor-pointer">Guardar</button>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddProduct(false)}
+                    className="px-2 py-1 text-slate-500 dark:text-slate-400"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="bg-emerald-600 text-white px-3 py-1 rounded font-medium cursor-pointer"
+                  >
+                    Guardar
+                  </button>
                 </div>
               </form>
             )}
@@ -719,11 +753,15 @@ const WooCommerceModalInner: React.FC<WooCommerceModalProps> = ({
                           <div>
                             <span className="font-semibold">{p.nombre}</span>
                             {p.categoria && (
-                              <span className="block text-[10px] text-slate-500 dark:text-slate-400">{p.categoria}</span>
+                              <span className="block text-[10px] text-slate-500 dark:text-slate-400">
+                                {p.categoria}
+                              </span>
                             )}
                           </div>
                         </td>
-                        <td className="p-2 text-right font-bold text-emerald-600 dark:text-emerald-400">{formatCurrency(p.precio)}</td>
+                        <td className="p-2 text-right font-bold text-emerald-600 dark:text-emerald-400">
+                          {formatCurrency(p.precio)}
+                        </td>
                         <td className="p-2 text-center text-slate-700 dark:text-slate-300">
                           {p.stock <= 0 ? (
                             <span className="bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-400 px-1.5 py-0.5 rounded text-[10px] border border-red-200 dark:border-red-800 font-bold">
@@ -735,7 +773,9 @@ const WooCommerceModalInner: React.FC<WooCommerceModalProps> = ({
                         </td>
                         <td className="p-2 text-slate-500 dark:text-slate-400 font-sans">
                           <div className="flex flex-wrap gap-1">
-                            <span className={`px-1.5 py-0.5 rounded text-[10px] ${p.origen === 'WooCommerce' ? 'bg-purple-100 dark:bg-purple-900/50 text-purple-800 dark:text-purple-300' : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}`}>
+                            <span
+                              className={`px-1.5 py-0.5 rounded text-[10px] ${p.origen === 'WooCommerce' ? 'bg-purple-100 dark:bg-purple-900/50 text-purple-800 dark:text-purple-300' : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}`}
+                            >
                               {p.origen}
                             </span>
                             {p.estadoWoo && p.estadoWoo !== 'publish' && (
@@ -772,8 +812,12 @@ const WooCommerceModalInner: React.FC<WooCommerceModalProps> = ({
                         <td colSpan={6} className="p-8 text-center text-slate-500 dark:text-slate-400 font-sans">
                           <div className="flex flex-col items-center justify-center gap-2">
                             <Loader2 className="w-6 h-6 animate-spin text-purple-600 dark:text-purple-400" />
-                            <span className="text-xs font-semibold">Cargando y sincronizando clientes desde WooCommerce...</span>
-                            <span className="text-[10px] text-slate-400">Por favor, ten paciencia mientras se consulta la API.</span>
+                            <span className="text-xs font-semibold">
+                              Cargando y sincronizando clientes desde WooCommerce...
+                            </span>
+                            <span className="text-[10px] text-slate-400">
+                              Por favor, ten paciencia mientras se consulta la API.
+                            </span>
                           </div>
                         </td>
                       </tr>
@@ -795,7 +839,9 @@ const WooCommerceModalInner: React.FC<WooCommerceModalProps> = ({
                             <div>{c.telefono}</div>
                             <div className="text-[10px] text-slate-500 dark:text-slate-500">{c.email}</div>
                           </td>
-                          <td className="p-2 font-sans text-slate-500 dark:text-slate-400 truncate max-w-[150px]">{c.direccion}</td>
+                          <td className="p-2 font-sans text-slate-500 dark:text-slate-400 truncate max-w-[150px]">
+                            {c.direccion}
+                          </td>
                           <td className="p-2 font-sans">
                             <span className="bg-purple-100 dark:bg-purple-900/50 text-purple-800 dark:text-purple-300 px-1.5 py-0.5 rounded text-[10px]">
                               WooCommerce
@@ -808,11 +854,8 @@ const WooCommerceModalInner: React.FC<WooCommerceModalProps> = ({
                 </table>
               </div>
             )}
-
           </div>
-
         </div>
-
       </div>
     </div>
   );

@@ -35,14 +35,14 @@ export async function fetchAndreaniTrackingsBulk(
   }
 
   const now = Date.now();
-  const cleanNumbers = Array.from(new Set(trackingNumbers.map(n => n.trim()))).filter(Boolean);
+  const cleanNumbers = Array.from(new Set(trackingNumbers.map((n) => n.trim()))).filter(Boolean);
 
   const results: AndreaniTrackResult[] = [];
   const toFetch: string[] = [];
 
   for (const num of cleanNumbers) {
     const cached = trackingCache.get(num);
-    if (!force && cached && (now - cached.timestamp) < CACHE_TTL_MS) {
+    if (!force && cached && now - cached.timestamp < CACHE_TTL_MS) {
       results.push(cached.data);
     } else {
       toFetch.push(num);
@@ -57,9 +57,9 @@ export async function fetchAndreaniTrackingsBulk(
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-andreani-hash': andreaniHash
+      'x-andreani-hash': andreaniHash,
     },
-    body: JSON.stringify({ trackingNumbers: toFetch })
+    body: JSON.stringify({ trackingNumbers: toFetch }),
   });
 
   if (!response.ok) {
@@ -77,7 +77,7 @@ export async function fetchAndreaniTrackingsBulk(
   if (Array.isArray(rawData)) {
     for (const item of rawData) {
       if (!item.tracking_number) continue;
-      
+
       const rawStatus = item.tracking_status || item.status || 'Pendiente de ingreso';
       const canonical = mapAndreaniTrackingStatus(rawStatus);
 
@@ -90,12 +90,12 @@ export async function fetchAndreaniTrackingsBulk(
         sales_order_number: item.sales_order_number,
         pedido_id: item.pedido_id,
         events: item.events || [],
-        updated_at: item.updated_at || new Date().toISOString()
+        updated_at: item.updated_at || new Date().toISOString(),
       };
 
       trackingCache.set(parsedResult.tracking_number, {
         data: parsedResult,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
 
       results.push(parsedResult);

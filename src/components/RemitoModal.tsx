@@ -1,5 +1,17 @@
 import React, { useState } from 'react';
-import { X, Printer, Truck, Copy, ExternalLink, Package, ShieldCheck, User, FileDown, Loader2, CheckCircle2 } from 'lucide-react';
+import {
+  X,
+  Printer,
+  Truck,
+  Copy,
+  ExternalLink,
+  Package,
+  ShieldCheck,
+  User,
+  FileDown,
+  Loader2,
+  CheckCircle2,
+} from 'lucide-react';
 import { Sale, Customer, AppConfig } from '../types';
 import { formatDate } from '../utils/formatters';
 import { addSystemLog } from '../utils/logger';
@@ -12,13 +24,7 @@ interface RemitoModalProps {
   config?: AppConfig;
 }
 
-export const RemitoModal: React.FC<RemitoModalProps> = ({
-  isOpen,
-  onClose,
-  sale,
-  customers = [],
-  config
-}) => {
+export const RemitoModal: React.FC<RemitoModalProps> = ({ isOpen, onClose, sale, customers = [], config }) => {
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [copiedMessage, setCopiedMessage] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -39,7 +45,7 @@ export const RemitoModal: React.FC<RemitoModalProps> = ({
   };
 
   // Find customer in directory to get shipping address if available
-  const matchedCustomer = customers.find(c => c.clienteId === sale.clienteId);
+  const matchedCustomer = customers.find((c) => c.clienteId === sale.clienteId);
 
   // Resolver domicilio de entrega: prioridad al domicilio alternativo si se especificó, sino domicilio del cliente
   let direccionEntrega = '';
@@ -50,11 +56,7 @@ export const RemitoModal: React.FC<RemitoModalProps> = ({
     const parts = [sale.clienteDireccion, sale.clienteLocalidad, sale.clienteProvincia].filter(Boolean);
     direccionEntrega = parts.join(', ');
   } else if (matchedCustomer) {
-    const parts = [
-      matchedCustomer.direccion,
-      matchedCustomer.localidad,
-      matchedCustomer.provincia
-    ].filter(Boolean);
+    const parts = [matchedCustomer.direccion, matchedCustomer.localidad, matchedCustomer.provincia].filter(Boolean);
     direccionEntrega = parts.join(', ') || 'Domicilio no especificado';
   } else {
     direccionEntrega = 'Domicilio no especificado';
@@ -127,7 +129,7 @@ export const RemitoModal: React.FC<RemitoModalProps> = ({
           cacheBust: true,
           backgroundColor: '#ffffff',
           pixelRatio: 2,
-          width: 794
+          width: 794,
         });
       } finally {
         printArea.innerHTML = '';
@@ -157,7 +159,9 @@ export const RemitoModal: React.FC<RemitoModalProps> = ({
       addSystemLog('INFO', 'Remitos', `Remito #${sale.id} exportado a PDF (${filename})`);
     } catch (err: any) {
       console.error('Error al generar PDF del remito:', err);
-      setErrorMsg('No se pudo generar el PDF automáticamente. Usá el botón "Imprimir" y en el diálogo elegí "Guardar como PDF".');
+      setErrorMsg(
+        'No se pudo generar el PDF automáticamente. Usá el botón "Imprimir" y en el diálogo elegí "Guardar como PDF".'
+      );
       addSystemLog('ERROR', 'Remitos', `Fallo al generar PDF del remito #${sale.id}: ${err?.message || err}`);
     } finally {
       setIsGeneratingPdf(false);
@@ -183,7 +187,6 @@ export const RemitoModal: React.FC<RemitoModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 overflow-y-auto print:p-0 print:static print:bg-white print:block">
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-4xl rounded-xl shadow-2xl overflow-hidden flex flex-col my-auto max-h-[95vh] print:max-h-none print:shadow-none print:border-none print:rounded-none">
-        
         {/* Header Bar - Hidden on print */}
         <div className="bg-slate-900 dark:bg-slate-950 text-white px-5 py-3.5 flex items-center justify-between print:hidden">
           <div className="flex items-center gap-3">
@@ -242,7 +245,6 @@ export const RemitoModal: React.FC<RemitoModalProps> = ({
 
         {/* Modal Scroll Content */}
         <div className="p-4 sm:p-6 overflow-y-auto print:p-0 print:overflow-visible">
-          
           {/* Error Message */}
           {errorMsg && (
             <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-3 flex items-center justify-between gap-2 print:hidden">
@@ -262,14 +264,14 @@ export const RemitoModal: React.FC<RemitoModalProps> = ({
           {isAndreani && (
             <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-3 flex flex-wrap items-center justify-between gap-2 print:hidden">
               <div className="flex items-center gap-2.5">
-                <div className="bg-red-600 text-white text-xs font-black px-2 py-1 rounded">
-                  ANDREANI
-                </div>
+                <div className="bg-red-600 text-white text-xs font-black px-2 py-1 rounded">ANDREANI</div>
                 <div>
                   <span className="text-xs font-bold text-slate-900">Envío Gestionado por Andreani</span>
                   <div className="text-[11px] text-slate-600 flex items-center gap-1">
                     <span>Nº Seguimiento:</span>
-                    <strong className="font-mono text-red-700">{sale.numeroSeguimiento || 'Pendiente de asignación'}</strong>
+                    <strong className="font-mono text-red-700">
+                      {sale.numeroSeguimiento || 'Pendiente de asignación'}
+                    </strong>
                   </div>
                 </div>
               </div>
@@ -305,12 +307,13 @@ export const RemitoModal: React.FC<RemitoModalProps> = ({
           )}
 
           {/* Printable Remito Sheet */}
-          <div id="remito-pdf-content" className="bg-white text-black p-6 sm:p-8 border border-slate-300 max-w-[800px] mx-auto font-sans print:border-none print:p-0 print:m-0 print:shadow-none shadow-md">
-            
+          <div
+            id="remito-pdf-content"
+            className="bg-white text-black p-6 sm:p-8 border border-slate-300 max-w-[800px] mx-auto font-sans print:border-none print:p-0 print:m-0 print:shadow-none shadow-md"
+          >
             {/* 1. Header Box */}
             <div className="border-2 border-black relative mb-3">
               <div className="grid grid-cols-12 text-xs">
-                
                 {/* Left Column: Firm Details */}
                 <div className="col-span-6 p-3 border-r-2 border-black relative">
                   {empresa.mostrarLogo && empresa.logoUrl ? (
@@ -335,8 +338,12 @@ export const RemitoModal: React.FC<RemitoModalProps> = ({
                     </div>
                   )}
                   <div className="text-[10px] space-y-0.5 leading-snug">
-                    <p><span className="font-semibold">Domicilio Comercial:</span> {empresa.domicilio}</p>
-                    <p><span className="font-semibold">Teléfono / Email:</span> {empresa.telefono} / {empresa.email}</p>
+                    <p>
+                      <span className="font-semibold">Domicilio Comercial:</span> {empresa.domicilio}
+                    </p>
+                    <p>
+                      <span className="font-semibold">Teléfono / Email:</span> {empresa.telefono} / {empresa.email}
+                    </p>
                     <p className="font-bold text-slate-800 pt-0.5">{empresa.condicionIva}</p>
                   </div>
                 </div>
@@ -349,13 +356,13 @@ export const RemitoModal: React.FC<RemitoModalProps> = ({
 
                 {/* Right Column: Remito Nº & Logistics */}
                 <div className="col-span-6 p-3 pl-6 text-[10px] space-y-1">
-                  <div className="text-base font-black text-right uppercase tracking-wider mb-1">
-                    REMITO DE ENTREGA
-                  </div>
+                  <div className="text-base font-black text-right uppercase tracking-wider mb-1">REMITO DE ENTREGA</div>
 
                   <div className="flex justify-between border-b border-slate-300 pb-1">
                     <span>Nº Remito Secuencial:</span>
-                    <strong className="font-mono text-xs">R0001-{(sale.id.replace(/\D/g, '') || '00000001').padStart(8, '0')}</strong>
+                    <strong className="font-mono text-xs">
+                      R0001-{(sale.id.replace(/\D/g, '') || '00000001').padStart(8, '0')}
+                    </strong>
                   </div>
 
                   <div className="flex justify-between pt-0.5">
@@ -369,27 +376,38 @@ export const RemitoModal: React.FC<RemitoModalProps> = ({
                   </div>
 
                   <div className="pt-1 text-[9px] space-y-0.5 text-slate-700">
-                    <p><span className="font-semibold">CUIT Empresa:</span> {empresa.cuit}</p>
-                    <p><span className="font-semibold">Ingresos Brutos:</span> {empresa.iibb}</p>
+                    <p>
+                      <span className="font-semibold">CUIT Empresa:</span> {empresa.cuit}
+                    </p>
+                    <p>
+                      <span className="font-semibold">Ingresos Brutos:</span> {empresa.iibb}
+                    </p>
                   </div>
                 </div>
-
               </div>
             </div>
 
             {/* 2. Customer & Shipping Destination Box */}
             <div className="border border-black p-3 mb-3 text-[11px] leading-relaxed grid grid-cols-12 gap-3 bg-slate-50/50">
-              
               {/* Customer Column */}
               <div className="col-span-12 sm:col-span-7 space-y-1">
                 <div className="font-bold border-b border-slate-300 pb-0.5 uppercase text-[10px] text-slate-700 flex items-center gap-1">
                   <User className="w-3 h-3" />
                   Datos del Destinatario / Cliente
                 </div>
-                <p><span className="font-bold">Nombre / Razón Social:</span> {sale.clienteNombre} {sale.clienteApellido || ''}</p>
-                <p><span className="font-bold">CUIT / DNI:</span> {sale.clienteDniCuit || 'No informado'}</p>
-                <p><span className="font-bold">Teléfono de Contacto:</span> {sale.clienteTelefono || 'No informado'}</p>
-                <p><span className="font-bold">Domicilio de Entrega:</span> {direccionEntrega}</p>
+                <p>
+                  <span className="font-bold">Nombre / Razón Social:</span> {sale.clienteNombre}{' '}
+                  {sale.clienteApellido || ''}
+                </p>
+                <p>
+                  <span className="font-bold">CUIT / DNI:</span> {sale.clienteDniCuit || 'No informado'}
+                </p>
+                <p>
+                  <span className="font-bold">Teléfono de Contacto:</span> {sale.clienteTelefono || 'No informado'}
+                </p>
+                <p>
+                  <span className="font-bold">Domicilio de Entrega:</span> {direccionEntrega}
+                </p>
               </div>
 
               {/* Transport / Shipping Column */}
@@ -398,9 +416,17 @@ export const RemitoModal: React.FC<RemitoModalProps> = ({
                   <Truck className="w-3 h-3" />
                   Empresa de Transporte y Envío
                 </div>
-                <p><span className="font-bold">Método / Transporte:</span> <span className="uppercase font-semibold">{sale.metodoEnvio || 'No especificado'}</span></p>
+                <p>
+                  <span className="font-bold">Método / Transporte:</span>{' '}
+                  <span className="uppercase font-semibold">{sale.metodoEnvio || 'No especificado'}</span>
+                </p>
                 {sale.metodoEnvio?.toLowerCase() !== 'retiro en local' && (
-                  <p><span className="font-bold">Nº de Seguimiento:</span> <span className="font-mono font-bold text-slate-900 bg-slate-100 px-1 py-0.5 border border-slate-300 rounded">{sale.numeroSeguimiento || '---'}</span></p>
+                  <p>
+                    <span className="font-bold">Nº de Seguimiento:</span>{' '}
+                    <span className="font-mono font-bold text-slate-900 bg-slate-100 px-1 py-0.5 border border-slate-300 rounded">
+                      {sale.numeroSeguimiento || '---'}
+                    </span>
+                  </p>
                 )}
 
                 {/* Andreani / Tracking Special Box */}
@@ -411,12 +437,14 @@ export const RemitoModal: React.FC<RemitoModalProps> = ({
                       Transporte: ANDREANI LOGÍSTICA
                     </p>
                     <p className="font-bold">
-                      Guía Andreani: <span className="font-mono text-red-700 bg-white px-1 py-0.5 border border-red-200 rounded">{sale.numeroSeguimiento}</span>
+                      Guía Andreani:{' '}
+                      <span className="font-mono text-red-700 bg-white px-1 py-0.5 border border-red-200 rounded">
+                        {sale.numeroSeguimiento}
+                      </span>
                     </p>
                   </div>
                 )}
               </div>
-
             </div>
 
             {/* 3. Dispatched Products Table */}
@@ -434,15 +462,21 @@ export const RemitoModal: React.FC<RemitoModalProps> = ({
                   {sale.productos && sale.productos.length > 0 ? (
                     sale.productos.map((prod, idx) => (
                       <tr key={idx}>
-                        <td className="p-2 border-r border-black text-center font-mono font-bold text-xs">{prod.cantidad}</td>
-                        <td className="p-2 border-r border-black font-mono text-[10px]">{prod.sku || `PRD-${idx + 1}`}</td>
+                        <td className="p-2 border-r border-black text-center font-mono font-bold text-xs">
+                          {prod.cantidad}
+                        </td>
+                        <td className="p-2 border-r border-black font-mono text-[10px]">
+                          {prod.sku || `PRD-${idx + 1}`}
+                        </td>
                         <td className="p-2 border-r border-black font-medium">{prod.nombre}</td>
                         <td className="p-2 text-center text-[10px] font-semibold text-slate-700">OK - Completo</td>
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={4} className="p-4 text-center text-slate-400">Sin productos detallados</td>
+                      <td colSpan={4} className="p-4 text-center text-slate-400">
+                        Sin productos detallados
+                      </td>
                     </tr>
                   )}
                 </tbody>
@@ -463,11 +497,11 @@ export const RemitoModal: React.FC<RemitoModalProps> = ({
                 CONFORMIDAD DE RECEPCIÓN Y ENTREGA DE MERCADERÍA
               </div>
               <p className="text-[9.5px] italic text-slate-700 text-center leading-tight">
-                Declaro haber recibido de conformidad la totalidad de la mercadería especificada en este remito, en perfecto estado, cantidad y funcionamiento.
+                Declaro haber recibido de conformidad la totalidad de la mercadería especificada en este remito, en
+                perfecto estado, cantidad y funcionamiento.
               </p>
 
               <div className="grid grid-cols-2 gap-8 pt-6 pb-2 text-[10px]">
-                
                 {/* Left: Firma Transportista */}
                 <div className="border-t border-black pt-1 text-center space-y-1">
                   <p className="font-bold">FIRMA DEL TRANSPORTISTA / ENTREGADO</p>
@@ -483,7 +517,6 @@ export const RemitoModal: React.FC<RemitoModalProps> = ({
                   <p className="text-slate-500">DNI / Documento: ________________________</p>
                   <p className="text-slate-500">Fecha de Recepción: _____ / _____ / _________</p>
                 </div>
-
               </div>
             </div>
 
@@ -492,11 +525,8 @@ export const RemitoModal: React.FC<RemitoModalProps> = ({
               <span>{empresa.nombre} - Sistema de Gestión de Ventas & Despachos</span>
               <span>Documento de Control Interno y Remisión de Mercadería</span>
             </div>
-
           </div>
-
         </div>
-
       </div>
     </div>
   );

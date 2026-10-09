@@ -1,5 +1,12 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { getSystemLogs, addSystemLog, clearSystemLogs, filterSystemLogs, exportLogsJSON, exportLogsCSV } from '../utils/logger';
+import {
+  getSystemLogs,
+  addSystemLog,
+  clearSystemLogs,
+  filterSystemLogs,
+  exportLogsJSON,
+  exportLogsCSV,
+} from '../utils/logger';
 
 describe('Logger Utility', () => {
   beforeEach(() => {
@@ -7,8 +14,12 @@ describe('Logger Utility', () => {
     const store: Record<string, string> = {};
     (globalThis as any).localStorage = {
       getItem: (key: string) => store[key] || null,
-      setItem: (key: string, value: string) => { store[key] = value; },
-      removeItem: (key: string) => { delete store[key]; }
+      setItem: (key: string, value: string) => {
+        store[key] = value;
+      },
+      removeItem: (key: string) => {
+        delete store[key];
+      },
     };
     clearSystemLogs();
   });
@@ -53,7 +64,7 @@ describe('Logger Utility', () => {
 
     const dateFilter = filterSystemLogs(allLogs, {
       startDate: '2020-01-01',
-      endDate: '2030-12-31'
+      endDate: '2030-12-31',
     });
     expect(dateFilter.length).toBe(3);
   });
@@ -73,7 +84,10 @@ describe('Logger Utility', () => {
 
   it('records Map geolocation, Remitos and Presupuestos logs with structured details', () => {
     addSystemLog('API', 'Maps', 'Iniciando geocodificación OSM/Nominatim para: "Av. Corrientes 1234, CABA"');
-    addSystemLog('INFO', 'Maps', 'Geolocalización exitosa para "Av. Corrientes 1234, CABA"', { lat: -34.6037, lng: -58.3816 });
+    addSystemLog('INFO', 'Maps', 'Geolocalización exitosa para "Av. Corrientes 1234, CABA"', {
+      lat: -34.6037,
+      lng: -58.3816,
+    });
     addSystemLog('ERROR', 'Maps', 'Fallo en geocodificación OSM/Nominatim: Network Error');
     addSystemLog('INFO', 'Remitos', 'Remito #1001 exportado a PDF (Remito_1001.pdf)');
     addSystemLog('INFO', 'Presupuestos', 'Presupuesto 0001-00000001 exportado a PDF');

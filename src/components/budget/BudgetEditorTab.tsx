@@ -102,7 +102,7 @@ export const BudgetEditorTab: React.FC<BudgetEditorTabProps> = ({
   handleSelectCatalogItem,
   calculations,
   handleSubmitForm,
-  onClose
+  onClose,
 }) => {
   return (
     <form onSubmit={handleSubmitForm} className="space-y-5">
@@ -460,7 +460,9 @@ export const BudgetEditorTab: React.FC<BudgetEditorTabProps> = ({
         {/* Subtotals & Percepciones */}
         <div className="pt-3 border-t border-slate-200 dark:border-slate-700 grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
           <div>
-            <label className="block text-slate-500 dark:text-slate-400 mb-1">Observaciones / Notas para el cliente</label>
+            <label className="block text-slate-500 dark:text-slate-400 mb-1">
+              Observaciones / Notas para el cliente
+            </label>
             <textarea
               rows={2}
               placeholder="Presupuesto válido por 15 días. Sujeto a disponibilidad de stock..."
@@ -493,7 +495,9 @@ export const BudgetEditorTab: React.FC<BudgetEditorTabProps> = ({
             </div>
             <div className="flex justify-between text-base font-black text-slate-900 dark:text-slate-100 border-t border-slate-300 dark:border-slate-700 pt-1">
               <span>IMPORTE TOTAL:</span>
-              <span className="text-blue-700 dark:text-blue-400">{formatCurrency(calculations.importeTotalCalculado)}</span>
+              <span className="text-blue-700 dark:text-blue-400">
+                {formatCurrency(calculations.importeTotalCalculado)}
+              </span>
             </div>
             <p className="text-[10px] font-sans italic text-slate-500 dark:text-slate-400 text-left pt-1">
               Son Pesos: {calculations.totalEnLetras}

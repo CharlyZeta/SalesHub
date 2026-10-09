@@ -31,10 +31,10 @@ export const IDB_RETENTION = { maxFiles: 30, minAgeDays: 7 };
 const openDb = (): Promise<IDBDatabase> => {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, 1);
-    
+
     request.onerror = () => reject(request.error);
     request.onsuccess = () => resolve(request.result);
-    
+
     request.onupgradeneeded = (_e) => {
       const db = request.result;
       if (!db.objectStoreNames.contains(STORE_NAME)) {
@@ -55,9 +55,9 @@ export const saveToIndexedDb = async (filename: string, data: FullAppState): Pro
       filename,
       date: new Date().toISOString(),
       size: jsonStr.length,
-      data
+      data,
     };
-    
+
     const request = store.put(item);
     request.onsuccess = () => {
       // Rotación best-effort: nunca bloquea ni invalida el guardado de la copia.
@@ -75,14 +75,14 @@ export const listFromIndexedDb = async (): Promise<BackupItem[]> => {
     const transaction = db.transaction(STORE_NAME, 'readonly');
     const store = transaction.objectStore(STORE_NAME);
     const request = store.getAll();
-    
+
     request.onsuccess = () => {
       const items = request.result || [];
-      const backupItems: BackupItem[] = items.map(item => ({
+      const backupItems: BackupItem[] = items.map((item) => ({
         filename: item.filename,
         date: item.date,
         size: item.size,
-        source: 'indexedDB'
+        source: 'indexedDB',
       }));
       resolve(backupItems.sort((a, b) => b.date.localeCompare(a.date)));
     };
@@ -97,7 +97,7 @@ export const getFromIndexedDb = async (filename: string): Promise<FullAppState> 
     const transaction = db.transaction(STORE_NAME, 'readonly');
     const store = transaction.objectStore(STORE_NAME);
     const request = store.get(filename);
-    
+
     request.onsuccess = () => {
       if (request.result) {
         resolve(request.result.data);
@@ -116,7 +116,7 @@ export const deleteFromIndexedDb = async (filename: string): Promise<void> => {
     const transaction = db.transaction(STORE_NAME, 'readwrite');
     const store = transaction.objectStore(STORE_NAME);
     const request = store.delete(filename);
-    
+
     request.onsuccess = () => resolve();
     request.onerror = () => reject(request.error);
   });
@@ -157,11 +157,13 @@ export const pruneIndexedDbBackups = async (
 
 // --- Backend API Integration ---
 
-export const saveToBackend = async (data: FullAppState): Promise<{ success: boolean; filename: string; timestamp: string }> => {
+export const saveToBackend = async (
+  data: FullAppState
+): Promise<{ success: boolean; filename: string; timestamp: string }> => {
   const response = await fetch('/api/backup', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
+    body: JSON.stringify(data),
   });
   if (!response.ok) {
     throw new Error(`Error del servidor: ${response.statusText}`);
@@ -178,7 +180,7 @@ export const listFromBackend = async (): Promise<BackupItem[]> => {
       filename: f.filename,
       date: f.date,
       size: f.size,
-      source: 'server' as const
+      source: 'server' as const,
     }));
   } catch (_e) {
     // Fail silently if server is offline or not running Vite dev server
@@ -190,7 +192,7 @@ export const getFromBackend = async (filename: string): Promise<FullAppState> =>
   const response = await fetch('/api/backup/restore', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ filename })
+    body: JSON.stringify({ filename }),
   });
   if (!response.ok) {
     throw new Error(`Error del servidor al recuperar backup: ${response.statusText}`);
@@ -207,10 +209,10 @@ export const runBackup = async (
   const dateStr = new Date().toISOString().split('T')[0];
   const timeStr = new Date().toTimeString().split(' ')[0].replace(/:/g, '-');
   const filename = `backup-${dateStr}-${timeStr}.json`;
-  
+
   let successServer = false;
   let successIndexedDb = false;
-  
+
   // 1. Try to save to Server
   try {
     const serverResult = await saveToBackend(state);
@@ -220,7 +222,7 @@ export const runBackup = async (
   } catch (e: any) {
     console.warn('Servidor de desarrollo no disponible para backup en disco.', e);
   }
-  
+
   // 2. Always save to IndexedDB
   try {
     await saveToIndexedDb(filename, state);
@@ -230,7 +232,7 @@ export const runBackup = async (
     console.error('Error al guardar backup en IndexedDB del navegador.', e);
     addSystemLog('ERROR', 'BACKUP', `Error al guardar copia de seguridad en navegador: ${e?.message || e}`);
   }
-  
+
   return { filename, successServer, successIndexedDb };
 };
 
@@ -238,7 +240,7 @@ export const runBackup = async (
 export const listAllBackups = async (): Promise<BackupItem[]> => {
   const dbItems = await listFromIndexedDb();
   const serverItems = await listFromBackend();
-  
+
   // Merge and sort by date descending
   return [...serverItems, ...dbItems].sort((a, b) => b.date.localeCompare(a.date));
 };
@@ -271,7 +273,7 @@ export const checkAndTriggerAutoBackup = async (
     case 'startup':
       // Handled during app mounting, skip here
       break;
-      
+
     case 'daily': {
       if (!lastDateStr) {
         shouldTrigger = true;
@@ -288,7 +290,7 @@ export const checkAndTriggerAutoBackup = async (
       }
       break;
     }
-      
+
     case 'weekly': {
       if (!lastDateStr) {
         shouldTrigger = true;
@@ -302,13 +304,13 @@ export const checkAndTriggerAutoBackup = async (
       }
       break;
     }
-      
+
     case 'ops_20':
       if (opsCount > 0 && opsCount % 20 === 0) {
         shouldTrigger = true;
       }
       break;
-      
+
     case 'ops_50':
       if (opsCount > 0 && opsCount % 50 === 0) {
         shouldTrigger = true;

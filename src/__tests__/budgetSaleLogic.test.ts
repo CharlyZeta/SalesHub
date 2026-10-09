@@ -2,11 +2,10 @@ import { describe, it, expect } from 'vitest';
 import { Budget, Sale } from '../types';
 
 describe('Budget and Sale Business Logic Helpers', () => {
-
   it('calculates total budget amount correctly from item quantities and unit prices', () => {
     const items = [
       { id: 'item-1', descripcion: 'Heladera 2 Puertas', cantidad: 2, precioUnitario: 500000, subtotal: 1000000 },
-      { id: 'item-2', descripcion: 'Balanza Digital', cantidad: 1, precioUnitario: 150000, subtotal: 150000 }
+      { id: 'item-2', descripcion: 'Balanza Digital', cantidad: 1, precioUnitario: 150000, subtotal: 150000 },
     ];
 
     const total = items.reduce((sum, i) => sum + i.cantidad * i.precioUnitario, 0);
@@ -38,7 +37,14 @@ describe('Budget and Sale Business Logic Helpers', () => {
       condicionFiscal: 'Responsable Inscripto',
       condicionVenta: 'TRANSFERENCIA BANCARIA',
       items: [
-        { id: 'bi-1', descripcion: 'Cocina Industrial 4 Hornallas', cantidad: 1, precioUnitario: 890000, descuentoPorcentaje: 0, subtotal: 890000 }
+        {
+          id: 'bi-1',
+          descripcion: 'Cocina Industrial 4 Hornallas',
+          cantidad: 1,
+          precioUnitario: 890000,
+          descuentoPorcentaje: 0,
+          subtotal: 890000,
+        },
       ],
       subtotal: 890000,
       descuentoTotal: 0,
@@ -46,7 +52,7 @@ describe('Budget and Sale Business Logic Helpers', () => {
       importeTotal: 1076900,
       observaciones: 'Garantía 1 año',
       estado: 'Pendiente',
-      creadoEn: '2026-07-27T10:00:00Z'
+      creadoEn: '2026-07-27T10:00:00Z',
     };
 
     const convertedSale: Sale = {
@@ -62,7 +68,7 @@ describe('Budget and Sale Business Logic Helpers', () => {
         nombre: i.descripcion,
         cantidad: i.cantidad,
         precioUnitario: i.precioUnitario,
-        subtotal: i.subtotal
+        subtotal: i.subtotal,
       })),
       montoTotal: mockBudget.importeTotal,
       numeroFactura: `FC-B-${mockBudget.puntoVenta}-${mockBudget.comprobanteNumero}`,
@@ -72,7 +78,7 @@ describe('Budget and Sale Business Logic Helpers', () => {
       metodoEnvio: 'Retiro en Local',
       estadoEnvio: 'Entregado',
       notas: `Convertido desde Presupuesto ${mockBudget.numeroPresupuesto}`,
-      creadoEn: new Date().toISOString()
+      creadoEn: new Date().toISOString(),
     };
 
     expect(convertedSale.montoTotal).toBe(1076900);
@@ -80,5 +86,4 @@ describe('Budget and Sale Business Logic Helpers', () => {
     expect(convertedSale.productos.length).toBe(1);
     expect(convertedSale.metodoPago).toBe('Transferencia');
   });
-
 });

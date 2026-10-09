@@ -20,14 +20,16 @@ export const BudgetPrintPreview: React.FC<BudgetPrintPreviewProps> = ({
   onOpenSendModal,
   onDownloadPdf,
   onPrint,
-  onConvert
+  onConvert,
 }) => {
   return (
     <div className="space-y-4">
       {/* Action Toolbar on screen */}
       <div className="flex flex-wrap items-center justify-between gap-2 bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-lg print:hidden">
         <div className="flex items-center gap-2">
-          <span className="font-bold text-slate-800 dark:text-slate-200">Presupuesto {selectedBudget.numeroPresupuesto}</span>
+          <span className="font-bold text-slate-800 dark:text-slate-200">
+            Presupuesto {selectedBudget.numeroPresupuesto}
+          </span>
           <span className="text-slate-500 dark:text-slate-400">| Cliente: {selectedBudget.razonSocialNombre}</span>
           {selectedBudget.estado === 'Convertido' && (
             <span className="bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 font-bold px-2 py-0.5 rounded text-[10px] border border-emerald-200 dark:border-emerald-800">
@@ -102,12 +104,13 @@ export const BudgetPrintPreview: React.FC<BudgetPrintPreviewProps> = ({
       </div>
 
       {/* PDF Sheet Layout - Matching official voucher standard */}
-      <div id="budget-pdf-content" className="bg-white text-black p-6 sm:p-8 border border-slate-300 max-w-[800px] mx-auto shadow-md font-sans print:shadow-none print:border-none print:p-0 print:m-0">
-        
+      <div
+        id="budget-pdf-content"
+        className="bg-white text-black p-6 sm:p-8 border border-slate-300 max-w-[800px] mx-auto shadow-md font-sans print:shadow-none print:border-none print:p-0 print:m-0"
+      >
         {/* Header Outer Container */}
         <div className="border border-black relative mb-2">
           <div className="grid grid-cols-12 text-xs">
-            
             {/* Left Column: Firm Details */}
             <div className="col-span-6 p-3 border-r border-black relative">
               {empresa.mostrarLogo && empresa.logoUrl ? (
@@ -129,8 +132,12 @@ export const BudgetPrintPreview: React.FC<BudgetPrintPreviewProps> = ({
               )}
 
               <div className="text-[10px] space-y-0.5">
-                <p><span className="font-semibold">Domicilio :</span> {empresa.domicilio}</p>
-                <p><span className="font-semibold">Tel./Email:</span> {empresa.telefono} / {empresa.email}</p>
+                <p>
+                  <span className="font-semibold">Domicilio :</span> {empresa.domicilio}
+                </p>
+                <p>
+                  <span className="font-semibold">Tel./Email:</span> {empresa.telefono} / {empresa.email}
+                </p>
                 <p className="mt-1 font-bold">{empresa.condicionIva}</p>
               </div>
             </div>
@@ -143,38 +150,66 @@ export const BudgetPrintPreview: React.FC<BudgetPrintPreviewProps> = ({
             {/* Right Column: Presupuesto & AFIP data */}
             <div className="col-span-6 p-3 pl-6 text-[10px] space-y-1">
               <div className="text-base font-bold text-right mb-2">Presupuesto</div>
-              
+
               <div className="flex justify-between border-b border-slate-200 pb-1">
-                <span>Punto de Venta: <strong className="font-mono">{selectedBudget.puntoVenta || '0001'}</strong></span>
-                <span>Comp. Nº: <strong className="font-mono">{selectedBudget.comprobanteNumero}</strong></span>
+                <span>
+                  Punto de Venta: <strong className="font-mono">{selectedBudget.puntoVenta || '0001'}</strong>
+                </span>
+                <span>
+                  Comp. Nº: <strong className="font-mono">{selectedBudget.comprobanteNumero}</strong>
+                </span>
               </div>
 
               <div className="flex justify-between pt-1">
                 <span className="font-semibold">Fecha de Emisión :</span>
-                <span className="font-mono font-bold">{selectedBudget.fechaEmision.split('-').reverse().join('/')}</span>
+                <span className="font-mono font-bold">
+                  {selectedBudget.fechaEmision.split('-').reverse().join('/')}
+                </span>
               </div>
 
               <div className="pt-2 text-[10px] space-y-0.5">
-                <p><span className="font-semibold">CUIT:</span> {empresa.cuit}</p>
-                <p><span className="font-semibold">Ing. Brutos:</span> {empresa.iibb}</p>
-                <p><span className="font-semibold">Fecha de Inicio de Actividades:</span> {empresa.inicioActividades || '01/07/2008'}</p>
+                <p>
+                  <span className="font-semibold">CUIT:</span> {empresa.cuit}
+                </p>
+                <p>
+                  <span className="font-semibold">Ing. Brutos:</span> {empresa.iibb}
+                </p>
+                <p>
+                  <span className="font-semibold">Fecha de Inicio de Actividades:</span>{' '}
+                  {empresa.inicioActividades || '01/07/2008'}
+                </p>
               </div>
             </div>
-
           </div>
         </div>
 
         {/* Client Information Section */}
         <div className="border border-black p-3 mb-2 text-[11px] leading-relaxed grid grid-cols-12 gap-2">
           <div className="col-span-12 sm:col-span-7 space-y-0.5">
-            <p><span className="font-bold">Razón Social:</span> {selectedBudget.razonSocialNombre} {selectedBudget.apellido}</p>
-            <p><span className="font-bold">Domicilio:</span> {selectedBudget.domicilio || '.- , .'} {selectedBudget.codigoPostal ? `(CP ${selectedBudget.codigoPostal})` : ''}</p>
-            <p><span className="font-bold">Condición Fiscal:</span> {selectedBudget.condicionFiscal}</p>
-            <p><span className="font-bold">Condición de Venta:</span> {selectedBudget.condicionVenta}</p>
+            <p>
+              <span className="font-bold">Razón Social:</span> {selectedBudget.razonSocialNombre}{' '}
+              {selectedBudget.apellido}
+            </p>
+            <p>
+              <span className="font-bold">Domicilio:</span> {selectedBudget.domicilio || '.- , .'}{' '}
+              {selectedBudget.codigoPostal ? `(CP ${selectedBudget.codigoPostal})` : ''}
+            </p>
+            <p>
+              <span className="font-bold">Condición Fiscal:</span> {selectedBudget.condicionFiscal}
+            </p>
+            <p>
+              <span className="font-bold">Condición de Venta:</span> {selectedBudget.condicionVenta}
+            </p>
           </div>
           <div className="col-span-12 sm:col-span-5 text-right space-y-0.5">
-            <p><span className="font-bold">CUIT / DNI:</span> {selectedBudget.dniCuit || '1'}</p>
-            {selectedBudget.telefono && <p><span className="font-bold">Teléfono:</span> {selectedBudget.telefono}</p>}
+            <p>
+              <span className="font-bold">CUIT / DNI:</span> {selectedBudget.dniCuit || '1'}
+            </p>
+            {selectedBudget.telefono && (
+              <p>
+                <span className="font-bold">Teléfono:</span> {selectedBudget.telefono}
+              </p>
+            )}
           </div>
         </div>
 
@@ -195,9 +230,15 @@ export const BudgetPrintPreview: React.FC<BudgetPrintPreviewProps> = ({
                 <tr key={i}>
                   <td className="p-1.5 border-r border-black text-center">{Number(item.cantidad || 0).toFixed(2)}</td>
                   <td className="p-1.5 border-r border-black font-sans">{item.descripcion}</td>
-                  <td className="p-1.5 border-r border-black text-right">{Number(item.precioUnitario || 0).toLocaleString('es-AR', { minimumFractionDigits: 2 })}</td>
-                  <td className="p-1.5 border-r border-black text-center">{Number(item.descuentoPorcentaje || 0).toFixed(2)}</td>
-                  <td className="p-1.5 text-right font-bold">{Number(item.subtotal || 0).toLocaleString('es-AR', { minimumFractionDigits: 2 })}</td>
+                  <td className="p-1.5 border-r border-black text-right">
+                    {Number(item.precioUnitario || 0).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                  </td>
+                  <td className="p-1.5 border-r border-black text-center">
+                    {Number(item.descuentoPorcentaje || 0).toFixed(2)}
+                  </td>
+                  <td className="p-1.5 text-right font-bold">
+                    {Number(item.subtotal || 0).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -233,24 +274,29 @@ export const BudgetPrintPreview: React.FC<BudgetPrintPreviewProps> = ({
               <span>Sub Total:</span>
               <span>{Number(selectedBudget.subtotal || 0).toLocaleString('es-AR', { minimumFractionDigits: 2 })}</span>
             </div>
-            
+
             <div className="flex justify-between">
               <span>Descuento:</span>
-              <span>{Number(selectedBudget.descuentoTotal || 0).toLocaleString('es-AR', { minimumFractionDigits: 2 })}</span>
+              <span>
+                {Number(selectedBudget.descuentoTotal || 0).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+              </span>
             </div>
 
             <div className="flex justify-between">
               <span>Percepciones:</span>
-              <span>{Number(selectedBudget.percepciones || 0).toLocaleString('es-AR', { minimumFractionDigits: 2 })}</span>
+              <span>
+                {Number(selectedBudget.percepciones || 0).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+              </span>
             </div>
 
             <div className="flex justify-between font-bold text-xs border-t border-black pt-1.5 mt-1 bg-slate-100 p-1">
               <span>IMPORTE TOTAL:</span>
-              <span>{Number(selectedBudget.importeTotal || 0).toLocaleString('es-AR', { minimumFractionDigits: 2 })}</span>
+              <span>
+                {Number(selectedBudget.importeTotal || 0).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+              </span>
             </div>
           </div>
         </div>
-
       </div>
     </div>
   );

@@ -129,7 +129,15 @@ describe('API WooCommerce del servidor (Fix E)', () => {
     const fetchMock = vi.fn(async (url: string) => {
       if (String(url).includes('/products')) {
         return wooResponse([
-          { id: 1, name: 'Heladera Showcase', sku: 'H1', price: '1500000', stock_quantity: 3, status: 'publish', categories: [{ name: 'Comercial' }] },
+          {
+            id: 1,
+            name: 'Heladera Showcase',
+            sku: 'H1',
+            price: '1500000',
+            stock_quantity: 3,
+            status: 'publish',
+            categories: [{ name: 'Comercial' }],
+          },
         ]);
       }
       return wooResponse([
@@ -154,8 +162,18 @@ describe('API WooCommerce del servidor (Fix E)', () => {
 
     const snapshotRes = await call(createReq({ url: '/api/woo/snapshot' }), { dataDir });
     const snapshot = snapshotRes.json().snapshot;
-    expect(snapshot.products[0]).toMatchObject({ id: 'woo-prod-1', nombre: 'Heladera Showcase', precio: 1500000, stock: 3 });
-    expect(snapshot.customers[0]).toMatchObject({ clienteId: 'WC-7', nombre: 'Ana', dniCuit: '27-30123456-4', localidad: 'Santa Fe' });
+    expect(snapshot.products[0]).toMatchObject({
+      id: 'woo-prod-1',
+      nombre: 'Heladera Showcase',
+      precio: 1500000,
+      stock: 3,
+    });
+    expect(snapshot.customers[0]).toMatchObject({
+      clienteId: 'WC-7',
+      nombre: 'Ana',
+      dniCuit: '27-30123456-4',
+      localidad: 'Santa Fe',
+    });
     expect(typeof snapshot.fetchedAt).toBe('string');
 
     const status = (await call(createReq({ url: '/api/woo/status' }), { dataDir })).json();
@@ -194,7 +212,11 @@ describe('API WooCommerce del servidor (Fix E)', () => {
 
   it('no sincroniza si faltan credenciales', async () => {
     await call(
-      createReq({ method: 'POST', url: '/api/woo/config', body: JSON.stringify({ url: 'https://tienda.com', autoSync: true }) }),
+      createReq({
+        method: 'POST',
+        url: '/api/woo/config',
+        body: JSON.stringify({ url: 'https://tienda.com', autoSync: true }),
+      }),
       { dataDir }
     );
     const fetchMock = vi.fn();
@@ -265,8 +287,20 @@ describe('Merge de catálogo y clientes (Fix D / W5)', () => {
 
   it('preserva el historial de compras de los clientes locales', () => {
     const result = mergeCustomers(
-      [{ clienteId: 'WC-5', nombre: 'Ana', email: 'ana@x.com', totalCompras: 500000, cantidadPedidos: 3, ultimaCompra: '2026-01-01' }],
-      [{ clienteId: 'WC-5', nombre: 'Ana María', email: 'ana@x.com', telefono: '3425551234' }, { clienteId: 'WC-6', nombre: 'Luis' }]
+      [
+        {
+          clienteId: 'WC-5',
+          nombre: 'Ana',
+          email: 'ana@x.com',
+          totalCompras: 500000,
+          cantidadPedidos: 3,
+          ultimaCompra: '2026-01-01',
+        },
+      ],
+      [
+        { clienteId: 'WC-5', nombre: 'Ana María', email: 'ana@x.com', telefono: '3425551234' },
+        { clienteId: 'WC-6', nombre: 'Luis' },
+      ]
     );
 
     expect(result.merged).toHaveLength(2);

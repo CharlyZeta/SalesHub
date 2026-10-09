@@ -93,5 +93,5 @@ export default tseslint.config(
   },
 
   // Reglas de estilo delegadas a Prettier: desactivar conflictos de formato.
-  prettierConfig,
+  prettierConfig
 );

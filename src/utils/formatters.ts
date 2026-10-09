@@ -31,12 +31,12 @@ export function formatDate(dateString: string): string {
 export function parseDateToISO(input: string): string {
   if (!input) return new Date().toISOString().split('T')[0];
   const cleaned = input.trim();
-  
+
   // Already YYYY-MM-DD
   if (/^\d{4}-\d{2}-\d{2}$/.test(cleaned)) {
     return cleaned;
   }
-  
+
   // DD/MM/YYYY or DD-MM-YYYY or D/M/YYYY
   const parts = cleaned.split(/[/.-]/);
   if (parts.length === 3) {
@@ -55,7 +55,7 @@ export function parseDateToISO(input: string): string {
       return `${year}-${month}-${day}`;
     }
   }
-  
+
   return new Date().toISOString().split('T')[0];
 }
 
@@ -97,13 +97,13 @@ export interface RecordValidationResult {
 }
 
 /**
-  * Checks mandatory required fields for each sale record:
-  * 1. fecha
-  * 2. ncli (clienteId)
-  * 3. producto
-  * 4. precio (montoTotal > 0)
-  * 5. met. pago (metodoPago)
-  */
+ * Checks mandatory required fields for each sale record:
+ * 1. fecha
+ * 2. ncli (clienteId)
+ * 3. producto
+ * 4. precio (montoTotal > 0)
+ * 5. met. pago (metodoPago)
+ */
 export function validateRequiredSaleFields(sale: Partial<Sale>): RecordValidationResult {
   const missingFields: string[] = [];
 
@@ -115,7 +115,8 @@ export function validateRequiredSaleFields(sale: Partial<Sale>): RecordValidatio
     missingFields.push('NCLI');
   }
 
-  const hasValidProduct = Array.isArray(sale.productos) && sale.productos.some(p => p.nombre && p.nombre.trim() !== '');
+  const hasValidProduct =
+    Array.isArray(sale.productos) && sale.productos.some((p) => p.nombre && p.nombre.trim() !== '');
   if (!hasValidProduct) {
     missingFields.push('Producto');
   }
@@ -130,7 +131,7 @@ export function validateRequiredSaleFields(sale: Partial<Sale>): RecordValidatio
 
   return {
     isValid: missingFields.length === 0,
-    missingFields
+    missingFields,
   };
 }
 
@@ -215,13 +216,11 @@ export function exportSalesToCSV(sales: Sale[], filename = 'ventas_exportadas.cs
     'Método de Envío',
     'Nº Seguimiento',
     'Estado Envío',
-    'Notas'
+    'Notas',
   ];
 
   const rows = sales.map((sale) => {
-    const productSummary = sale.productos
-      .map((p) => `${p.nombre} (x${p.cantidad})`)
-      .join('; ');
+    const productSummary = sale.productos.map((p) => `${p.nombre} (x${p.cantidad})`).join('; ');
 
     return [
       sale.id,
@@ -237,8 +236,10 @@ export function exportSalesToCSV(sales: Sale[], filename = 'ventas_exportadas.cs
       sale.metodoEnvio || '',
       sale.numeroSeguimiento || '',
       sale.estadoEnvio || '',
-      sale.notas || ''
-    ].map(escapeCsv).join(',');
+      sale.notas || '',
+    ]
+      .map(escapeCsv)
+      .join(',');
   });
 
   const csvContent = 'data:text/csv;charset=utf-8,\uFEFF' + [headers.map(escapeCsv).join(','), ...rows].join('\n');
@@ -302,7 +303,7 @@ export const ARGENTINE_PROVINCES: string[] = [
   'Santa Fe',
   'Santiago del Estero',
   'Tierra del Fuego',
-  'Tucumán'
+  'Tucumán',
 ];
 
 export const DEFAULT_PROVINCE = 'Santa Fe';
@@ -312,36 +313,36 @@ export const DEFAULT_PROVINCE = 'Santa Fe';
  * (ISO 3166-2:AR / AFIP / Códigos de patentes provinciales).
  */
 export const ARGENTINE_PROVINCE_CODES: Record<string, string> = {
-  'A': 'Salta',
-  'B': 'Buenos Aires',
-  'C': 'Ciudad Autónoma de Buenos Aires',
-  'D': 'San Luis',
-  'E': 'Entre Ríos',
-  'F': 'La Rioja',
-  'G': 'Santiago del Estero',
-  'H': 'Chaco',
-  'J': 'San Juan',
-  'K': 'Catamarca',
-  'L': 'La Pampa',
-  'M': 'Mendoza',
-  'N': 'Misiones',
-  'P': 'Formosa',
-  'Q': 'Neuquén',
-  'R': 'Río Negro',
-  'S': 'Santa Fe',
-  'T': 'Tucumán',
-  'U': 'Chubut',
-  'V': 'Tierra del Fuego',
-  'W': 'Corrientes',
-  'X': 'Córdoba',
-  'Y': 'Jujuy',
-  'Z': 'Santa Cruz',
-  'CABA': 'Ciudad Autónoma de Buenos Aires',
-  'CF': 'Ciudad Autónoma de Buenos Aires',
-  'BA': 'Buenos Aires',
-  'SF': 'Santa Fe',
-  'CBA': 'Córdoba',
-  'ER': 'Entre Ríos'
+  A: 'Salta',
+  B: 'Buenos Aires',
+  C: 'Ciudad Autónoma de Buenos Aires',
+  D: 'San Luis',
+  E: 'Entre Ríos',
+  F: 'La Rioja',
+  G: 'Santiago del Estero',
+  H: 'Chaco',
+  J: 'San Juan',
+  K: 'Catamarca',
+  L: 'La Pampa',
+  M: 'Mendoza',
+  N: 'Misiones',
+  P: 'Formosa',
+  Q: 'Neuquén',
+  R: 'Río Negro',
+  S: 'Santa Fe',
+  T: 'Tucumán',
+  U: 'Chubut',
+  V: 'Tierra del Fuego',
+  W: 'Corrientes',
+  X: 'Córdoba',
+  Y: 'Jujuy',
+  Z: 'Santa Cruz',
+  CABA: 'Ciudad Autónoma de Buenos Aires',
+  CF: 'Ciudad Autónoma de Buenos Aires',
+  BA: 'Buenos Aires',
+  SF: 'Santa Fe',
+  CBA: 'Córdoba',
+  ER: 'Entre Ríos',
 };
 
 /**
@@ -359,8 +360,8 @@ export function resolveArgentineProvince(raw?: string | null): string {
 
   // 2. Coincidencia en listado oficial (insensible a mayúsculas y acentos)
   const found = ARGENTINE_PROVINCES.find(
-    (p) => p.localeCompare(cleaned, undefined, { sensitivity: 'accent' }) === 0 ||
-           p.toLowerCase() === cleaned.toLowerCase()
+    (p) =>
+      p.localeCompare(cleaned, undefined, { sensitivity: 'accent' }) === 0 || p.toLowerCase() === cleaned.toLowerCase()
   );
   if (found) return found;
 
@@ -385,35 +386,39 @@ export function parseCombinedAddress(
     return {
       direccion: '',
       localidad: normalizePersonName(city),
-      provincia: resolveArgentineProvince(state)
+      provincia: resolveArgentineProvince(state),
     };
   }
 
   // Si contiene comas que separan calle, localidad y provincia
   if (address.includes(',')) {
-    const parts = address.split(',').map((p) => p.trim()).filter(Boolean);
+    const parts = address
+      .split(',')
+      .map((p) => p.trim())
+      .filter(Boolean);
     if (parts.length >= 3) {
       return {
         direccion: normalizePersonName(parts[0]),
         localidad: normalizePersonName(city || parts[1]),
-        provincia: resolveArgentineProvince(state || parts[2])
+        provincia: resolveArgentineProvince(state || parts[2]),
       };
     }
     if (parts.length === 2) {
       // Si la segunda parte es código o nombre de provincia (ej: "San Martín 500, S")
-      const maybeProvince = ARGENTINE_PROVINCE_CODES[parts[1].toUpperCase()] ||
-        ARGENTINE_PROVINCES.find(p => p.toLowerCase() === parts[1].toLowerCase());
+      const maybeProvince =
+        ARGENTINE_PROVINCE_CODES[parts[1].toUpperCase()] ||
+        ARGENTINE_PROVINCES.find((p) => p.toLowerCase() === parts[1].toLowerCase());
       if (maybeProvince) {
         return {
           direccion: normalizePersonName(parts[0]),
           localidad: normalizePersonName(city),
-          provincia: maybeProvince
+          provincia: maybeProvince,
         };
       }
       return {
         direccion: normalizePersonName(parts[0]),
         localidad: normalizePersonName(city || parts[1]),
-        provincia: resolveArgentineProvince(state)
+        provincia: resolveArgentineProvince(state),
       };
     }
   }
@@ -421,7 +426,7 @@ export function parseCombinedAddress(
   return {
     direccion: normalizePersonName(address),
     localidad: normalizePersonName(city),
-    provincia: resolveArgentineProvince(state)
+    provincia: resolveArgentineProvince(state),
   };
 }
 
@@ -470,13 +475,11 @@ export function parseCustomerIdentityFromWoo(
     cleanFirst = parts.slice(1).join(' ');
   }
 
-  const clienteId = detectedNumber
-    ? `CLI-${detectedNumber}`
-    : (fallbackClienteId || 'CLI-0000');
+  const clienteId = detectedNumber ? `CLI-${detectedNumber}` : fallbackClienteId || 'CLI-0000';
 
   return {
     clienteId,
     nombre: normalizePersonName(cleanFirst),
-    apellido: normalizePersonName(cleanLast)
+    apellido: normalizePersonName(cleanLast),
   };
 }

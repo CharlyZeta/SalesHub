@@ -1,11 +1,11 @@
 import { describe, it, expect, vi } from 'vitest';
-import { 
-  formatWhatsAppPhone, 
-  generateBudgetWhatsAppText, 
-  generateBudgetEmailSubject, 
+import {
+  formatWhatsAppPhone,
+  generateBudgetWhatsAppText,
+  generateBudgetEmailSubject,
   generateBudgetEmailBody,
   openWhatsAppForBudget,
-  openEmailForBudget
+  openEmailForBudget,
 } from '../utils/budgetDelivery';
 import { Budget } from '../types';
 
@@ -27,8 +27,22 @@ describe('Budget Delivery Utility (WhatsApp & Email)', () => {
     condicionFiscal: 'RESPONSABLE INSCRIPTO',
     condicionVenta: 'CONTADO',
     items: [
-      { id: 'i1', descripcion: 'Horno Pizzero 12 Moldes', cantidad: 1, precioUnitario: 450000, descuentoPorcentaje: 0, subtotal: 450000 },
-      { id: 'i2', descripcion: 'Bandejas Inoxidables', cantidad: 5, precioUnitario: 12000, descuentoPorcentaje: 10, subtotal: 54000 }
+      {
+        id: 'i1',
+        descripcion: 'Horno Pizzero 12 Moldes',
+        cantidad: 1,
+        precioUnitario: 450000,
+        descuentoPorcentaje: 0,
+        subtotal: 450000,
+      },
+      {
+        id: 'i2',
+        descripcion: 'Bandejas Inoxidables',
+        cantidad: 5,
+        precioUnitario: 12000,
+        descuentoPorcentaje: 10,
+        subtotal: 54000,
+      },
     ],
     subtotal: 510000,
     descuentoTotal: 6000,
@@ -36,7 +50,7 @@ describe('Budget Delivery Utility (WhatsApp & Email)', () => {
     importeTotal: 504000,
     observaciones: 'Validez 10 días',
     estado: 'Pendiente',
-    creadoEn: '2026-07-27T10:00:00Z'
+    creadoEn: '2026-07-27T10:00:00Z',
   };
 
   it('formats Argentine phone numbers into WhatsApp wa.me international format', () => {
@@ -71,7 +85,7 @@ describe('Budget Delivery Utility (WhatsApp & Email)', () => {
   it('opens WhatsApp URL via window.open', () => {
     (globalThis as any).window = {
       open: vi.fn(),
-      location: { href: '' }
+      location: { href: '' },
     };
 
     const res = openWhatsAppForBudget(sampleBudget, '3424883135');

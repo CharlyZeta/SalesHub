@@ -25,7 +25,7 @@ import {
   testGoogleMapsApiKey,
   getGoogleMapsUsageInfo,
   getCurrentMonthKey,
-  type GoogleMapsTestResult
+  type GoogleMapsTestResult,
 } from '../utils/googleMapsService';
 import type { GoogleMapsUsage } from '../types';
 
@@ -83,9 +83,7 @@ function TagListEditor({
           <Icon className={`w-4 h-4 ${iconClassName}`} />
           {title}
         </span>
-        <span className="text-[11px] text-slate-500 dark:text-slate-400">
-          {items.length} configurados
-        </span>
+        <span className="text-[11px] text-slate-500 dark:text-slate-400">{items.length} configurados</span>
       </div>
 
       <form onSubmit={handleAdd} className="flex gap-2">
@@ -119,7 +117,11 @@ function TagListEditor({
                   onChange={(e) => setEditingText(e.target.value)}
                   className="bg-slate-50 dark:bg-slate-950 border border-slate-350 dark:border-slate-650 rounded px-1.5 py-0.5 text-xs focus:outline-none text-slate-900 dark:text-slate-100 font-medium"
                 />
-                <button type="button" onClick={handleSaveEdit} className="text-emerald-600 hover:text-emerald-800 p-0.5">
+                <button
+                  type="button"
+                  onClick={handleSaveEdit}
+                  className="text-emerald-600 hover:text-emerald-800 p-0.5"
+                >
                   <Check className="w-4 h-4" />
                 </button>
               </div>
@@ -212,7 +214,7 @@ export const ConfigGeneralTab: React.FC<ConfigGeneralTabProps> = ({
 
   const usageInfo = getGoogleMapsUsageInfo({
     googleMapsMonthlyLimit,
-    googleMapsUsage
+    googleMapsUsage,
   });
 
   const handleTestApiKey = async () => {
@@ -223,11 +225,11 @@ export const ConfigGeneralTab: React.FC<ConfigGeneralTabProps> = ({
       const result = await testGoogleMapsApiKey(googleMapsApiKey, () => {
         setGoogleMapsUsage?.((prev) => {
           const currentMonth = getCurrentMonthKey();
-          const currentCount = prev?.month === currentMonth ? (prev.count || 0) : 0;
+          const currentCount = prev?.month === currentMonth ? prev.count || 0 : 0;
           return {
             month: currentMonth,
             count: currentCount + 1,
-            lastRequestTimestamp: new Date().toISOString()
+            lastRequestTimestamp: new Date().toISOString(),
           };
         });
       });
@@ -236,7 +238,7 @@ export const ConfigGeneralTab: React.FC<ConfigGeneralTabProps> = ({
       setTestResult({
         success: false,
         status: 'ERROR',
-        message: `Error al ejecutar la prueba: ${err?.message || err}`
+        message: `Error al ejecutar la prueba: ${err?.message || err}`,
       });
     } finally {
       setIsTestingKey(false);
@@ -248,7 +250,7 @@ export const ConfigGeneralTab: React.FC<ConfigGeneralTabProps> = ({
       setGoogleMapsUsage?.({
         month: getCurrentMonthKey(),
         count: 0,
-        lastRequestTimestamp: undefined
+        lastRequestTimestamp: undefined,
       });
     }
   };
@@ -417,15 +419,21 @@ export const ConfigGeneralTab: React.FC<ConfigGeneralTabProps> = ({
             <Truck className="w-4 h-4 text-red-600 dark:text-red-400" />
             Integración con Andreani (Seguimiento de Envíos)
           </span>
-          <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold border ${
-            andreaniHash ? 'bg-emerald-100 border-emerald-200 text-emerald-800 dark:bg-emerald-950/80 dark:border-emerald-800 dark:text-emerald-300' : 'bg-slate-100 border-slate-200 text-slate-500 dark:bg-slate-850 dark:border-slate-750 dark:text-slate-400'
-          }`}>
+          <span
+            className={`text-[10px] px-2 py-0.5 rounded-full font-bold border ${
+              andreaniHash
+                ? 'bg-emerald-100 border-emerald-200 text-emerald-800 dark:bg-emerald-950/80 dark:border-emerald-800 dark:text-emerald-300'
+                : 'bg-slate-100 border-slate-200 text-slate-500 dark:bg-slate-850 dark:border-slate-750 dark:text-slate-400'
+            }`}
+          >
             {andreaniHash ? 'Configurado' : 'No Configurado'}
           </span>
         </div>
 
         <div className="space-y-2">
-          <label className="block text-slate-600 dark:text-slate-400 font-medium">Hash de Autenticación de Andreani (HASH_ANDREANI)</label>
+          <label className="block text-slate-600 dark:text-slate-400 font-medium">
+            Hash de Autenticación de Andreani (HASH_ANDREANI)
+          </label>
           <div className="relative">
             <input
               type="password"
@@ -436,7 +444,8 @@ export const ConfigGeneralTab: React.FC<ConfigGeneralTabProps> = ({
             />
           </div>
           <p className="text-[10px] text-slate-500 dark:text-slate-400 italic">
-            Hash provisto por Andreani para la integración. Se utiliza para obtener tokens de sesión y actualizar el estado de tus envíos de forma automática.
+            Hash provisto por Andreani para la integración. Se utiliza para obtener tokens de sesión y actualizar el
+            estado de tus envíos de forma automática.
           </p>
         </div>
       </div>
@@ -448,9 +457,13 @@ export const ConfigGeneralTab: React.FC<ConfigGeneralTabProps> = ({
             <Map className="w-4 h-4 text-blue-600 dark:text-blue-400" />
             Integración con Google Maps (Geocodificación de Direcciones)
           </span>
-          <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold border ${
-            googleMapsApiKey ? 'bg-emerald-100 border-emerald-200 text-emerald-800 dark:bg-emerald-950/80 dark:border-emerald-800 dark:text-emerald-300' : 'bg-slate-100 border-slate-200 text-slate-500 dark:bg-slate-850 dark:border-slate-750 dark:text-slate-400'
-          }`}>
+          <span
+            className={`text-[10px] px-2 py-0.5 rounded-full font-bold border ${
+              googleMapsApiKey
+                ? 'bg-emerald-100 border-emerald-200 text-emerald-800 dark:bg-emerald-950/80 dark:border-emerald-800 dark:text-emerald-300'
+                : 'bg-slate-100 border-slate-200 text-slate-500 dark:bg-slate-850 dark:border-slate-750 dark:text-slate-400'
+            }`}
+          >
             {googleMapsApiKey ? 'Configurado' : 'No Configurado'}
           </span>
         </div>
@@ -509,8 +522,8 @@ export const ConfigGeneralTab: React.FC<ConfigGeneralTabProps> = ({
                 testResult.success
                   ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300'
                   : testResult.status === 'EMPTY_KEY'
-                  ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300'
-                  : 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-300'
+                    ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300'
+                    : 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-300'
               }`}
             >
               {testResult.success ? (
@@ -528,7 +541,9 @@ export const ConfigGeneralTab: React.FC<ConfigGeneralTabProps> = ({
                 <p className="font-semibold">{testResult.message}</p>
                 {testResult.details?.formattedAddress && (
                   <p className="text-[11px] opacity-90">
-                    📍 Dirección de prueba: <span className="font-mono font-medium">{testResult.details.formattedAddress}</span> (Lat: {testResult.details.lat?.toFixed(4)}, Lng: {testResult.details.lng?.toFixed(4)})
+                    📍 Dirección de prueba:{' '}
+                    <span className="font-mono font-medium">{testResult.details.formattedAddress}</span> (Lat:{' '}
+                    {testResult.details.lat?.toFixed(4)}, Lng: {testResult.details.lng?.toFixed(4)})
                   </p>
                 )}
                 {testResult.details?.googleErrorMessage && (
@@ -572,7 +587,7 @@ export const ConfigGeneralTab: React.FC<ConfigGeneralTabProps> = ({
                     { label: '2.500', value: 2500 },
                     { label: '5.000', value: 5000 },
                     { label: '10.000', value: 10000 },
-                    { label: 'Ilimitado (0)', value: 0 }
+                    { label: 'Ilimitado (0)', value: 0 },
                   ].map((preset) => (
                     <button
                       key={preset.value}
@@ -598,20 +613,22 @@ export const ConfigGeneralTab: React.FC<ConfigGeneralTabProps> = ({
                   <Calendar className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
                   <span>Consumo del Mes: {formatMonthLabel(usageInfo.currentMonth)}</span>
                 </div>
-                <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold border ${
-                  usageInfo.isUnlimited
-                    ? 'bg-blue-100 border-blue-200 text-blue-800 dark:bg-blue-950/80 dark:border-blue-800 dark:text-blue-300'
-                    : usageInfo.isLimitExceeded
-                    ? 'bg-rose-100 border-rose-200 text-rose-800 dark:bg-rose-950/80 dark:border-rose-800 dark:text-rose-300 animate-pulse'
-                    : usageInfo.percentageUsed >= 70
-                    ? 'bg-amber-100 border-amber-200 text-amber-800 dark:bg-amber-950/80 dark:border-amber-800 dark:text-amber-300'
-                    : 'bg-emerald-100 border-emerald-200 text-emerald-800 dark:bg-emerald-950/80 dark:border-emerald-800 dark:text-emerald-300'
-                }`}>
+                <span
+                  className={`text-[10px] px-2 py-0.5 rounded-full font-bold border ${
+                    usageInfo.isUnlimited
+                      ? 'bg-blue-100 border-blue-200 text-blue-800 dark:bg-blue-950/80 dark:border-blue-800 dark:text-blue-300'
+                      : usageInfo.isLimitExceeded
+                        ? 'bg-rose-100 border-rose-200 text-rose-800 dark:bg-rose-950/80 dark:border-rose-800 dark:text-rose-300 animate-pulse'
+                        : usageInfo.percentageUsed >= 70
+                          ? 'bg-amber-100 border-amber-200 text-amber-800 dark:bg-amber-950/80 dark:border-amber-800 dark:text-amber-300'
+                          : 'bg-emerald-100 border-emerald-200 text-emerald-800 dark:bg-emerald-950/80 dark:border-emerald-800 dark:text-emerald-300'
+                  }`}
+                >
                   {usageInfo.isUnlimited
                     ? 'Cuota Ilimitada'
                     : usageInfo.isLimitExceeded
-                    ? '¡Límite Alcanzado (100%)!'
-                    : `${usageInfo.percentageUsed}% Utilizado`}
+                      ? '¡Límite Alcanzado (100%)!'
+                      : `${usageInfo.percentageUsed}% Utilizado`}
                 </span>
               </div>
 
@@ -624,7 +641,11 @@ export const ConfigGeneralTab: React.FC<ConfigGeneralTabProps> = ({
                   {usageInfo.isUnlimited ? (
                     <span> solicitudes realizadas</span>
                   ) : (
-                    <span> / {usageInfo.limit.toLocaleString()} solicitudes ({usageInfo.remaining.toLocaleString()} disponibles)</span>
+                    <span>
+                      {' '}
+                      / {usageInfo.limit.toLocaleString()} solicitudes ({usageInfo.remaining.toLocaleString()}{' '}
+                      disponibles)
+                    </span>
                   )}
                 </div>
                 {!usageInfo.isUnlimited && (
@@ -642,8 +663,8 @@ export const ConfigGeneralTab: React.FC<ConfigGeneralTabProps> = ({
                       usageInfo.isLimitExceeded || usageInfo.percentageUsed >= 90
                         ? 'bg-rose-500 dark:bg-rose-500'
                         : usageInfo.percentageUsed >= 70
-                        ? 'bg-amber-500 dark:bg-amber-500'
-                        : 'bg-emerald-500 dark:bg-emerald-500'
+                          ? 'bg-amber-500 dark:bg-amber-500'
+                          : 'bg-emerald-500 dark:bg-emerald-500'
                     }`}
                     style={{ width: `${Math.min(100, Math.max(0, usageInfo.percentageUsed))}%` }}
                   />
@@ -655,7 +676,8 @@ export const ConfigGeneralTab: React.FC<ConfigGeneralTabProps> = ({
                 <div className="p-2 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 rounded text-rose-800 dark:text-rose-300 text-[11px] flex items-center gap-1.5">
                   <AlertCircle className="w-3.5 h-3.5 shrink-0 text-rose-600 dark:text-rose-400" />
                   <span>
-                    Se ha alcanzado el límite mensual. Las solicitudes automáticas en el mapa están en pausa para evitar cargos no deseados. Puedes aumentar el límite o reiniciar el contador.
+                    Se ha alcanzado el límite mensual. Las solicitudes automáticas en el mapa están en pausa para evitar
+                    cargos no deseados. Puedes aumentar el límite o reiniciar el contador.
                   </span>
                 </div>
               )}
@@ -681,7 +703,17 @@ export const ConfigGeneralTab: React.FC<ConfigGeneralTabProps> = ({
           </div>
 
           <p className="text-[10px] text-slate-500 dark:text-slate-400 italic">
-            Obtenida en <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">Google Cloud Console</a> → APIs & Servicios → Credenciales → Agregar API key. Se usa para geocodificación precisa de direcciones de clientes.
+            Obtenida en{' '}
+            <a
+              href="https://console.cloud.google.com/apis/credentials"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 dark:text-blue-400 hover:underline"
+            >
+              Google Cloud Console
+            </a>{' '}
+            → APIs & Servicios → Credenciales → Agregar API key. Se usa para geocodificación precisa de direcciones de
+            clientes.
           </p>
         </div>
       </div>
@@ -738,7 +770,8 @@ export const ConfigGeneralTab: React.FC<ConfigGeneralTabProps> = ({
           </span>
         </div>
         <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
-          Herramienta de migración para cargar filas históricas en lote desde un archivo <strong>CSV</strong> o directamente pegando las celdas copiadas desde <strong>Google Sheets</strong>.
+          Herramienta de migración para cargar filas históricas en lote desde un archivo <strong>CSV</strong> o
+          directamente pegando las celdas copiadas desde <strong>Google Sheets</strong>.
         </p>
         {onOpenImport && (
           <button

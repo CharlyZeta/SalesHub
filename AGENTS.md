@@ -8,13 +8,13 @@ tokens posible**.
 
 ## 1. Lectura mínima obligatoria (en este orden)
 
-| # | Archivo | Para qué | Tamaño |
-|:--|:--|:--|:--|
-| 1 | `docs/ESTADO-DEL-PROYECTO.md` | Estado actual, entregado, pendientes y cómo retomar | ~5 KB |
-| 2 | `docs/MAPA-DEL-CODIGO.md` | Índice: 1 fila por archivo con responsabilidad y exports | ~5 KB |
-| 3 | `docs/FIXES.md` | Registro histórico de incidencias con IDs (A*, B*, W*) | ~15 KB (leer solo la sección necesaria) |
-| 4 | `contracts/*.md` | Contratos SDD-GL del trabajo en curso o a ejecutar | ~2 KB por contrato |
-| 5 | `graphify-out/GRAPH_REPORT.md` | Reporte del grafo: comunidades y nodos centrales | solo si hace falta el panorama |
+| #   | Archivo                        | Para qué                                                 | Tamaño                                  |
+| :-- | :----------------------------- | :------------------------------------------------------- | :-------------------------------------- |
+| 1   | `docs/ESTADO-DEL-PROYECTO.md`  | Estado actual, entregado, pendientes y cómo retomar      | ~5 KB                                   |
+| 2   | `docs/MAPA-DEL-CODIGO.md`      | Índice: 1 fila por archivo con responsabilidad y exports | ~5 KB                                   |
+| 3   | `docs/FIXES.md`                | Registro histórico de incidencias con IDs (A*, B*, W*)   | ~15 KB (leer solo la sección necesaria) |
+| 4   | `contracts/*.md`               | Contratos SDD-GL del trabajo en curso o a ejecutar       | ~2 KB por contrato                      |
+| 5   | `graphify-out/GRAPH_REPORT.md` | Reporte del grafo: comunidades y nodos centrales         | solo si hace falta el panorama          |
 
 **No leer nunca `graphify-out/graph.json`** (535 KB ≈ 150k tokens). Para eso existen
 `graphify explain` / `graphify path`.
@@ -42,8 +42,10 @@ tokens posible**.
 ## 3. Ciclo de trabajo y Metodología SDD-GL
 
 ### Metodología de Desarrollo y Fixes (SDD-GL)
+
 Todo desarrollo, refactor o fix en este proyecto se rige obligatoriamente por el framework
 **Spec-Driven Development with Gate/Loop (SDD-GL)**:
+
 1. **Contrato formal**: Cada tarea debe contar con su archivo en `contracts/[FEAT|FIX]-XXXX.md`
    conforme a la especificación SDD-GL v0.3.0 (Intent, Use Case, Business Rules, Acceptance
    Criteria AC-XXX, Entities Affected, Ambiguity Log, Completion Map).
@@ -57,6 +59,7 @@ Todo desarrollo, refactor o fix en este proyecto se rige obligatoriamente por el
    Vitest (`npm test`), TypeScript estricto y cero tolerancia a errores o warnings de lint.
 
 **Al iniciar la sesión**
+
 ```bash
 npm run sdd:check        # verificar versión activa de SDD-GL y detectar nuevas versiones
 npm run graph:doctor     # estado del grafo, hooks y artefactos (sin costo de tokens)
@@ -64,6 +67,7 @@ npm run lint && npm test # confirmar que el punto de partida está sano
 ```
 
 **Durante**
+
 - Un pedido = un contrato SDD-GL o lote coordinado de contratos.
 - Cada cambio de comportamiento se acompaña de su entrada en `docs/FIXES.md` (o `contracts/`)
   y en `CHANGELOG.txt`.
@@ -71,27 +75,29 @@ npm run lint && npm test # confirmar que el punto de partida está sano
   aplique.
 
 **Al cerrar**
+
 ```bash
 npm run map              # (o lo hace el hook pre-commit automáticamente)
 # actualizar docs/ESTADO-DEL-PROYECTO.md (versión, commit, pendientes)
 git add -A && git commit -m "…" && git push origin master
 ```
+
 Luego verificar el CI en GitHub Actions y reportar el resultado. Los mensajes de commit
-siguen *Conventional Commits* en español (`feat:`, `fix:`, `docs:`, `refactor:`, `chore:`).
+siguen _Conventional Commits_ en español (`feat:`, `fix:`, `docs:`, `refactor:`, `chore:`).
 
 ---
 
 ## 4. Automatización ya instalada
 
-| Mecanismo | Qué hace | Cuándo corre |
-|:--|:--|:--|
-| `npm run sdd:check` | Chequea versión instalada y actualizaciones de SDD-GL | al iniciar sesión / a demanda |
-| `hooks:install` (script `prepare`) | Instala los hooks de git | automático en `npm install` / `npm ci` |
-| Hook `pre-commit` | Regenera y agrega `docs/MAPA-DEL-CODIGO.md` | en cada commit |
-| Hook `post-commit` (Graphify) | Reconstruye el grafo de conocimiento en segundo plano | en cada commit |
-| `npm run map:check` | Falla si el mapa quedó desactualizado | en CI |
-| `npm run graph:doctor` | Diagnóstico del grafo/hooks/artefactos | a demanda / inicio de sesión |
-| CI (`.github/workflows/ci.yml`) | Typecheck + ESLint, tests, build, mapa al día y ciclos de imports | en cada push/PR |
+| Mecanismo                          | Qué hace                                                          | Cuándo corre                           |
+| :--------------------------------- | :---------------------------------------------------------------- | :------------------------------------- |
+| `npm run sdd:check`                | Chequea versión instalada y actualizaciones de SDD-GL             | al iniciar sesión / a demanda          |
+| `hooks:install` (script `prepare`) | Instala los hooks de git                                          | automático en `npm install` / `npm ci` |
+| Hook `pre-commit`                  | Regenera y agrega `docs/MAPA-DEL-CODIGO.md`                       | en cada commit                         |
+| Hook `post-commit` (Graphify)      | Reconstruye el grafo de conocimiento en segundo plano             | en cada commit                         |
+| `npm run map:check`                | Falla si el mapa quedó desactualizado                             | en CI                                  |
+| `npm run graph:doctor`             | Diagnóstico del grafo/hooks/artefactos                            | a demanda / inicio de sesión           |
+| CI (`.github/workflows/ci.yml`)    | Typecheck + ESLint, tests, build, mapa al día y ciclos de imports | en cada push/PR                        |
 
 ---
 

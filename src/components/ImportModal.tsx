@@ -16,7 +16,6 @@ export const ImportModal: React.FC<ImportModalProps> = (props) => {
 };
 
 const ImportModalInner: React.FC<ImportModalProps> = ({ onClose, onImportSales }) => {
-
   const [activeTab, setActiveTab] = useState<'paste' | 'file'>('paste');
   const [pastedText, setPastedText] = useState('');
   const [parsedRawData, setParsedRawData] = useState<any[]>([]);
@@ -36,7 +35,7 @@ const ImportModalInner: React.FC<ImportModalProps> = ({ onClose, onImportSales }
     metodoPago: '',
     canal: '',
     metodoEnvio: '',
-    numeroSeguimiento: ''
+    numeroSeguimiento: '',
   });
 
   // Auto-detect matching headers
@@ -45,16 +44,25 @@ const ImportModalInner: React.FC<ImportModalProps> = ({ onClose, onImportSales }
     detectedHeaders.forEach((h) => {
       const lower = h.toLowerCase().trim();
       if (lower.includes('fech')) newMap.fecha = h;
-      else if (lower.includes('cli') && (lower.includes('nº') || lower.includes('id') || lower.includes('num'))) newMap.clienteId = h;
+      else if (lower.includes('cli') && (lower.includes('nº') || lower.includes('id') || lower.includes('num')))
+        newMap.clienteId = h;
       else if (lower.includes('client') || lower.includes('nombre')) newMap.clienteNombre = h;
       else if (lower.includes('apell')) newMap.clienteApellido = h;
-      else if (lower.includes('produc') || lower.includes('item') || lower.includes('detalle')) newMap.productoNombre = h;
-      else if (lower.includes('mont') || lower.includes('total') || lower.includes('precio') || lower.includes('importe')) newMap.montoTotal = h;
+      else if (lower.includes('produc') || lower.includes('item') || lower.includes('detalle'))
+        newMap.productoNombre = h;
+      else if (
+        lower.includes('mont') ||
+        lower.includes('total') ||
+        lower.includes('precio') ||
+        lower.includes('importe')
+      )
+        newMap.montoTotal = h;
       else if (lower.includes('fact') || lower.includes('comprobante')) newMap.numeroFactura = h;
       else if (lower.includes('pago') || lower.includes('medio')) newMap.metodoPago = h;
       else if (lower.includes('canal') || lower.includes('origen')) newMap.canal = h;
       else if (lower.includes('envio') || lower.includes('transporte')) newMap.metodoEnvio = h;
-      else if (lower.includes('track') || lower.includes('seguimiento') || lower.includes('guia')) newMap.numeroSeguimiento = h;
+      else if (lower.includes('track') || lower.includes('seguimiento') || lower.includes('guia'))
+        newMap.numeroSeguimiento = h;
     });
     setMapping(newMap);
   };
@@ -84,7 +92,7 @@ const ImportModalInner: React.FC<ImportModalProps> = ({ onClose, onImportSales }
       },
       error: (err) => {
         setFeedback({ type: 'error', message: `Error al procesar el texto: ${err.message}` });
-      }
+      },
     });
   };
 
@@ -108,7 +116,7 @@ const ImportModalInner: React.FC<ImportModalProps> = ({ onClose, onImportSales }
         } else {
           setFeedback({ type: 'error', message: 'El archivo CSV seleccionado está vacío o no tiene formato válido.' });
         }
-      }
+      },
     });
   };
 
@@ -130,7 +138,8 @@ const ImportModalInner: React.FC<ImportModalProps> = ({ onClose, onImportSales }
       let canalFinal: SaleChannel = 'Local';
       const lowerCanal = String(rawCanal).toLowerCase();
       if (lowerCanal.includes('mercadolibre') || lowerCanal.includes('meli')) canalFinal = 'MercadoLibre';
-      else if (lowerCanal.includes('woo') || lowerCanal.includes('web') || lowerCanal.includes('tienda')) canalFinal = 'WooCommerce';
+      else if (lowerCanal.includes('woo') || lowerCanal.includes('web') || lowerCanal.includes('tienda'))
+        canalFinal = 'WooCommerce';
 
       // Infer Payment
       let pagoFinal: PaymentMethod = 'Efectivo';
@@ -163,8 +172,8 @@ const ImportModalInner: React.FC<ImportModalProps> = ({ onClose, onImportSales }
             nombre: String(rawProducto),
             cantidad: 1,
             precioUnitario: cleanedMonto,
-            subtotal: cleanedMonto
-          }
+            subtotal: cleanedMonto,
+          },
         ],
         montoTotal: cleanedMonto,
         numeroFactura: mapping.numeroFactura ? row[mapping.numeroFactura] : `FC-B-0001-${10000 + idx}`,
@@ -174,7 +183,7 @@ const ImportModalInner: React.FC<ImportModalProps> = ({ onClose, onImportSales }
         numeroSeguimiento: String(tracking || ''),
         estadoEnvio: tracking ? 'Enviado' : 'Entregado',
         notas: 'Importado de planilla de cálculo',
-        creadoEn: new Date().toISOString()
+        creadoEn: new Date().toISOString(),
       };
     });
   };
@@ -187,14 +196,16 @@ const ImportModalInner: React.FC<ImportModalProps> = ({ onClose, onImportSales }
     }
 
     onImportSales(finalSales);
-    setFeedback({ type: 'success', message: `¡Éxito! Se importaron ${finalSales.length} ventas correctamente a la planilla.` });
+    setFeedback({
+      type: 'success',
+      message: `¡Éxito! Se importaron ${finalSales.length} ventas correctamente a la planilla.`,
+    });
     onClose();
   };
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-4xl rounded-xl shadow-2xl overflow-hidden flex flex-col my-auto max-h-[92vh]">
-        
         {/* Modal Header */}
         <div className="bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 px-5 py-3.5 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -210,28 +221,35 @@ const ImportModalInner: React.FC<ImportModalProps> = ({ onClose, onImportSales }
               </p>
             </div>
           </div>
-          <button onClick={onClose} className="text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 p-1 rounded-md hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors cursor-pointer">
+          <button
+            onClick={onClose}
+            className="text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 p-1 rounded-md hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+          >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Modal Body */}
         <div className="p-5 overflow-y-auto space-y-5 text-xs text-slate-800 dark:text-slate-200">
-          
           {feedback && (
-            <div className={`p-2.5 rounded-lg text-xs font-medium flex items-center gap-2 ${
-              feedback.type === 'error'
-                ? 'bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300'
-                : 'bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200'
-            }`}>
-              {feedback.type === 'error' ? <AlertTriangle className="w-4 h-4 shrink-0" /> : <CheckCircle2 className="w-4 h-4 shrink-0" />}
+            <div
+              className={`p-2.5 rounded-lg text-xs font-medium flex items-center gap-2 ${
+                feedback.type === 'error'
+                  ? 'bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300'
+                  : 'bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200'
+              }`}
+            >
+              {feedback.type === 'error' ? (
+                <AlertTriangle className="w-4 h-4 shrink-0" />
+              ) : (
+                <CheckCircle2 className="w-4 h-4 shrink-0" />
+              )}
               <span>{feedback.message}</span>
             </div>
           )}
 
           {step === 1 && (
             <div className="space-y-4">
-              
               {/* Tab options */}
               <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
                 <button
@@ -262,7 +280,12 @@ const ImportModalInner: React.FC<ImportModalProps> = ({ onClose, onImportSales }
               {activeTab === 'paste' && (
                 <div className="space-y-2">
                   <p className="text-slate-600 dark:text-slate-400">
-                    Abre tu planilla de Google Sheets, selecciona el rango de filas incluyendo la fila de encabezados, presiona <kbd className="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 px-1 py-0.5 rounded text-emerald-800 dark:text-emerald-400 font-mono font-bold">Ctrl + C</kbd> y pégalas aquí:
+                    Abre tu planilla de Google Sheets, selecciona el rango de filas incluyendo la fila de encabezados,
+                    presiona{' '}
+                    <kbd className="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 px-1 py-0.5 rounded text-emerald-800 dark:text-emerald-400 font-mono font-bold">
+                      Ctrl + C
+                    </kbd>{' '}
+                    y pégalas aquí:
                   </p>
                   <textarea
                     rows={8}
@@ -287,8 +310,12 @@ const ImportModalInner: React.FC<ImportModalProps> = ({ onClose, onImportSales }
               {activeTab === 'file' && (
                 <div className="border-2 border-dashed border-slate-200 dark:border-slate-800 hover:border-emerald-500 bg-slate-50/50 dark:bg-slate-950/50 rounded-xl p-8 text-center transition-colors">
                   <Upload className="w-10 h-10 text-emerald-600 dark:text-emerald-400 mx-auto mb-2" />
-                  <p className="font-semibold text-slate-800 dark:text-slate-200">Selecciona tu archivo .CSV exportado de Google Sheets</p>
-                  <p className="text-slate-500 dark:text-slate-400 text-xs mt-1 mb-4">Formato separado por comas o tabulaciones</p>
+                  <p className="font-semibold text-slate-800 dark:text-slate-200">
+                    Selecciona tu archivo .CSV exportado de Google Sheets
+                  </p>
+                  <p className="text-slate-500 dark:text-slate-400 text-xs mt-1 mb-4">
+                    Formato separado por comas o tabulaciones
+                  </p>
                   <input
                     type="file"
                     accept=".csv, .txt"
@@ -297,7 +324,6 @@ const ImportModalInner: React.FC<ImportModalProps> = ({ onClose, onImportSales }
                   />
                 </div>
               )}
-
             </div>
           )}
 
@@ -324,7 +350,6 @@ const ImportModalInner: React.FC<ImportModalProps> = ({ onClose, onImportSales }
                 </h3>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                  
                   {/* Fecha */}
                   <div>
                     <label className="block text-slate-500 dark:text-slate-400 mb-1">Fecha de la venta *</label>
@@ -335,14 +360,18 @@ const ImportModalInner: React.FC<ImportModalProps> = ({ onClose, onImportSales }
                     >
                       <option value="">-- Seleccionar Columna --</option>
                       {headers.map((h) => (
-                        <option key={h} value={h}>{h}</option>
+                        <option key={h} value={h}>
+                          {h}
+                        </option>
                       ))}
                     </select>
                   </div>
 
                   {/* Nombre Cliente */}
                   <div>
-                    <label className="block text-slate-500 dark:text-slate-400 mb-1">Nombre / Apellido del Cliente *</label>
+                    <label className="block text-slate-500 dark:text-slate-400 mb-1">
+                      Nombre / Apellido del Cliente *
+                    </label>
                     <select
                       value={mapping.clienteNombre}
                       onChange={(e) => setMapping({ ...mapping, clienteNombre: e.target.value })}
@@ -350,14 +379,18 @@ const ImportModalInner: React.FC<ImportModalProps> = ({ onClose, onImportSales }
                     >
                       <option value="">-- Seleccionar Columna --</option>
                       {headers.map((h) => (
-                        <option key={h} value={h}>{h}</option>
+                        <option key={h} value={h}>
+                          {h}
+                        </option>
                       ))}
                     </select>
                   </div>
 
                   {/* ID Cliente */}
                   <div>
-                    <label className="block text-slate-500 dark:text-slate-400 mb-1">Nº Cliente Interno (Opcional)</label>
+                    <label className="block text-slate-500 dark:text-slate-400 mb-1">
+                      Nº Cliente Interno (Opcional)
+                    </label>
                     <select
                       value={mapping.clienteId}
                       onChange={(e) => setMapping({ ...mapping, clienteId: e.target.value })}
@@ -365,7 +398,9 @@ const ImportModalInner: React.FC<ImportModalProps> = ({ onClose, onImportSales }
                     >
                       <option value="">-- Generar Automático --</option>
                       {headers.map((h) => (
-                        <option key={h} value={h}>{h}</option>
+                        <option key={h} value={h}>
+                          {h}
+                        </option>
                       ))}
                     </select>
                   </div>
@@ -380,7 +415,9 @@ const ImportModalInner: React.FC<ImportModalProps> = ({ onClose, onImportSales }
                     >
                       <option value="">-- Seleccionar Columna --</option>
                       {headers.map((h) => (
-                        <option key={h} value={h}>{h}</option>
+                        <option key={h} value={h}>
+                          {h}
+                        </option>
                       ))}
                     </select>
                   </div>
@@ -395,7 +432,9 @@ const ImportModalInner: React.FC<ImportModalProps> = ({ onClose, onImportSales }
                     >
                       <option value="">-- Seleccionar Columna --</option>
                       {headers.map((h) => (
-                        <option key={h} value={h}>{h}</option>
+                        <option key={h} value={h}>
+                          {h}
+                        </option>
                       ))}
                     </select>
                   </div>
@@ -410,14 +449,18 @@ const ImportModalInner: React.FC<ImportModalProps> = ({ onClose, onImportSales }
                     >
                       <option value="">-- Seleccionar Columna --</option>
                       {headers.map((h) => (
-                        <option key={h} value={h}>{h}</option>
+                        <option key={h} value={h}>
+                          {h}
+                        </option>
                       ))}
                     </select>
                   </div>
 
                   {/* Canal */}
                   <div>
-                    <label className="block text-slate-500 dark:text-slate-400 mb-1">Canal (Local vs MercadoLibre)</label>
+                    <label className="block text-slate-500 dark:text-slate-400 mb-1">
+                      Canal (Local vs MercadoLibre)
+                    </label>
                     <select
                       value={mapping.canal}
                       onChange={(e) => setMapping({ ...mapping, canal: e.target.value })}
@@ -425,7 +468,9 @@ const ImportModalInner: React.FC<ImportModalProps> = ({ onClose, onImportSales }
                     >
                       <option value="">-- Default Local --</option>
                       {headers.map((h) => (
-                        <option key={h} value={h}>{h}</option>
+                        <option key={h} value={h}>
+                          {h}
+                        </option>
                       ))}
                     </select>
                   </div>
@@ -440,7 +485,9 @@ const ImportModalInner: React.FC<ImportModalProps> = ({ onClose, onImportSales }
                     >
                       <option value="">-- Default Efectivo --</option>
                       {headers.map((h) => (
-                        <option key={h} value={h}>{h}</option>
+                        <option key={h} value={h}>
+                          {h}
+                        </option>
                       ))}
                     </select>
                   </div>
@@ -455,11 +502,12 @@ const ImportModalInner: React.FC<ImportModalProps> = ({ onClose, onImportSales }
                     >
                       <option value="">-- Seleccionar Columna --</option>
                       {headers.map((h) => (
-                        <option key={h} value={h}>{h}</option>
+                        <option key={h} value={h}>
+                          {h}
+                        </option>
                       ))}
                     </select>
                   </div>
-
                 </div>
               </div>
 
@@ -483,12 +531,24 @@ const ImportModalInner: React.FC<ImportModalProps> = ({ onClose, onImportSales }
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                       {parsedRawData.slice(0, 5).map((row, i) => (
                         <tr key={i} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                          <td className="p-2 text-slate-600 dark:text-slate-400">{parseDateToISO(row[mapping.fecha] || '')}</td>
-                          <td className="p-2 text-slate-900 dark:text-slate-100 font-sans">{row[mapping.clienteNombre] || '---'}</td>
-                          <td className="p-2 text-slate-700 dark:text-slate-300 font-sans truncate max-w-[150px]">{row[mapping.productoNombre] || '---'}</td>
-                          <td className="p-2 text-right font-bold text-emerald-700 dark:text-emerald-400">{row[mapping.montoTotal] || '$ 0'}</td>
-                          <td className="p-2 text-slate-500 dark:text-slate-400">{row[mapping.numeroFactura] || '---'}</td>
-                          <td className="p-2 text-slate-500 dark:text-slate-400 font-sans">{row[mapping.canal] || 'Local'}</td>
+                          <td className="p-2 text-slate-600 dark:text-slate-400">
+                            {parseDateToISO(row[mapping.fecha] || '')}
+                          </td>
+                          <td className="p-2 text-slate-900 dark:text-slate-100 font-sans">
+                            {row[mapping.clienteNombre] || '---'}
+                          </td>
+                          <td className="p-2 text-slate-700 dark:text-slate-300 font-sans truncate max-w-[150px]">
+                            {row[mapping.productoNombre] || '---'}
+                          </td>
+                          <td className="p-2 text-right font-bold text-emerald-700 dark:text-emerald-400">
+                            {row[mapping.montoTotal] || '$ 0'}
+                          </td>
+                          <td className="p-2 text-slate-500 dark:text-slate-400">
+                            {row[mapping.numeroFactura] || '---'}
+                          </td>
+                          <td className="p-2 text-slate-500 dark:text-slate-400 font-sans">
+                            {row[mapping.canal] || 'Local'}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -513,12 +573,9 @@ const ImportModalInner: React.FC<ImportModalProps> = ({ onClose, onImportSales }
                   <span>Confirmar Importación de {parsedRawData.length} Ventas</span>
                 </button>
               </div>
-
             </div>
           )}
-
         </div>
-
       </div>
     </div>
   );

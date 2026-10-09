@@ -3,7 +3,14 @@ import { X, Send, Mail, MessageSquare, Copy, Check, ExternalLink } from 'lucide-
 import { Budget } from '../types';
 import { formatCurrency } from '../utils/formatters';
 import { addSystemLog } from '../utils/logger';
-import { formatWhatsAppPhone, generateBudgetWhatsAppText, generateBudgetEmailSubject, generateBudgetEmailBody, openWhatsAppForBudget, openEmailForBudget } from '../utils/budgetDelivery';
+import {
+  formatWhatsAppPhone,
+  generateBudgetWhatsAppText,
+  generateBudgetEmailSubject,
+  generateBudgetEmailBody,
+  openWhatsAppForBudget,
+  openEmailForBudget,
+} from '../utils/budgetDelivery';
 
 interface SendBudgetModalProps {
   isOpen: boolean;
@@ -16,10 +23,10 @@ export const SendBudgetModal: React.FC<SendBudgetModalProps> = ({
   isOpen,
   onClose,
   budget,
-  initialChannel = 'whatsapp'
+  initialChannel = 'whatsapp',
 }) => {
   const [activeTab, setActiveTab] = useState<'whatsapp' | 'email'>(initialChannel);
-  
+
   // WhatsApp State
   const [phoneMode, setPhoneMode] = useState<'customer' | 'custom'>('customer');
   const [customPhone, setCustomPhone] = useState('');
@@ -32,29 +39,24 @@ export const SendBudgetModal: React.FC<SendBudgetModalProps> = ({
 
   if (!isOpen || !budget) return null;
 
-  const effectivePhone = phoneMode === 'customer' ? (budget.telefono || '') : customPhone;
+  const effectivePhone = phoneMode === 'customer' ? budget.telefono || '' : customPhone;
   const cleanPhone = formatWhatsAppPhone(effectivePhone);
   const waText = generateBudgetWhatsAppText(budget);
 
-  const effectiveEmail = emailMode === 'customer' ? (budget.email || '') : customEmail;
+  const effectiveEmail = emailMode === 'customer' ? budget.email || '' : customEmail;
   const emailSubject = generateBudgetEmailSubject(budget);
   const emailBody = generateBudgetEmailBody(budget);
 
   // Handle WhatsApp Send
   const handleSendWhatsApp = () => {
     openWhatsAppForBudget(budget, effectivePhone);
-    addSystemLog(
-      'SYNC',
-      'Presupuestos',
-      `Presupuesto ${budget.numeroPresupuesto} enviado por WhatsApp`,
-      {
-        budgetId: budget.id,
-        cliente: budget.razonSocialNombre,
-        telefonoOrigen: effectivePhone,
-        telefonoLimpio: cleanPhone,
-        monto: budget.importeTotal
-      }
-    );
+    addSystemLog('SYNC', 'Presupuestos', `Presupuesto ${budget.numeroPresupuesto} enviado por WhatsApp`, {
+      budgetId: budget.id,
+      cliente: budget.razonSocialNombre,
+      telefonoOrigen: effectivePhone,
+      telefonoLimpio: cleanPhone,
+      monto: budget.importeTotal,
+    });
   };
 
   // Handle Copy WA message
@@ -67,17 +69,12 @@ export const SendBudgetModal: React.FC<SendBudgetModalProps> = ({
   // Handle Email Send
   const handleSendEmail = () => {
     openEmailForBudget(budget, effectiveEmail);
-    addSystemLog(
-      'SYNC',
-      'Presupuestos',
-      `Presupuesto ${budget.numeroPresupuesto} preparado para envío por Email`,
-      {
-        budgetId: budget.id,
-        cliente: budget.razonSocialNombre,
-        emailDestino: effectiveEmail,
-        monto: budget.importeTotal
-      }
-    );
+    addSystemLog('SYNC', 'Presupuestos', `Presupuesto ${budget.numeroPresupuesto} preparado para envío por Email`, {
+      budgetId: budget.id,
+      cliente: budget.razonSocialNombre,
+      emailDestino: effectiveEmail,
+      monto: budget.importeTotal,
+    });
   };
 
   // Handle Copy Email Body
@@ -91,7 +88,6 @@ export const SendBudgetModal: React.FC<SendBudgetModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-lg rounded-xl shadow-2xl overflow-hidden flex flex-col my-auto">
-        
         {/* Modal Header */}
         <div className="bg-slate-900 dark:bg-slate-950 text-white p-4 flex items-center justify-between border-b border-slate-800">
           <div className="flex items-center gap-3">
@@ -103,7 +99,8 @@ export const SendBudgetModal: React.FC<SendBudgetModalProps> = ({
                 Enviar Presupuesto {budget.numeroPresupuesto}
               </h3>
               <p className="text-xs text-slate-300">
-                Cliente: <strong className="text-white">{budget.razonSocialNombre}</strong> ({formatCurrency(budget.importeTotal)})
+                Cliente: <strong className="text-white">{budget.razonSocialNombre}</strong> (
+                {formatCurrency(budget.importeTotal)})
               </p>
             </div>
           </div>
@@ -145,7 +142,6 @@ export const SendBudgetModal: React.FC<SendBudgetModalProps> = ({
 
         {/* Modal Body */}
         <div className="p-4 space-y-4 text-xs text-slate-800 dark:text-slate-200">
-          
           {/* TAB 1: WhatsApp */}
           {activeTab === 'whatsapp' && (
             <div className="space-y-3">
@@ -165,7 +161,8 @@ export const SendBudgetModal: React.FC<SendBudgetModalProps> = ({
                       className="text-emerald-600 focus:ring-emerald-500"
                     />
                     <span className="text-slate-800 dark:text-slate-200 font-medium">
-                      Teléfono del cliente: <strong className="font-mono">{budget.telefono || 'Sin teléfono guardado'}</strong>
+                      Teléfono del cliente:{' '}
+                      <strong className="font-mono">{budget.telefono || 'Sin teléfono guardado'}</strong>
                     </span>
                   </label>
 
@@ -198,7 +195,9 @@ export const SendBudgetModal: React.FC<SendBudgetModalProps> = ({
                 {cleanPhone ? (
                   <p className="text-[11px] text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 p-1.5 rounded flex items-center gap-1.5">
                     <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                    <span>Número internacional procesado: <strong className="font-mono">+{cleanPhone}</strong></span>
+                    <span>
+                      Número internacional procesado: <strong className="font-mono">+{cleanPhone}</strong>
+                    </span>
                   </p>
                 ) : (
                   <p className="text-[11px] text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 p-1.5 rounded">
@@ -210,12 +209,18 @@ export const SendBudgetModal: React.FC<SendBudgetModalProps> = ({
               {/* Message Text Preview */}
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="font-semibold text-slate-700 dark:text-slate-300">Vista previa del mensaje a enviar:</label>
+                  <label className="font-semibold text-slate-700 dark:text-slate-300">
+                    Vista previa del mensaje a enviar:
+                  </label>
                   <button
                     onClick={handleCopyWA}
                     className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 flex items-center gap-1 px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 cursor-pointer"
                   >
-                    {copiedWA ? <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                    {copiedWA ? (
+                      <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                    ) : (
+                      <Copy className="w-3.5 h-3.5" />
+                    )}
                     <span>{copiedWA ? 'Copiado!' : 'Copiar Texto'}</span>
                   </button>
                 </div>
@@ -315,7 +320,11 @@ export const SendBudgetModal: React.FC<SendBudgetModalProps> = ({
                     onClick={handleCopyEmail}
                     className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 flex items-center gap-1 px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 cursor-pointer"
                   >
-                    {copiedEmail ? <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                    {copiedEmail ? (
+                      <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                    ) : (
+                      <Copy className="w-3.5 h-3.5" />
+                    )}
                     <span>{copiedEmail ? 'Copiado!' : 'Copiar Correo'}</span>
                   </button>
                 </div>
@@ -354,12 +363,9 @@ export const SendBudgetModal: React.FC<SendBudgetModalProps> = ({
                   </button>
                 </div>
               </div>
-
             </div>
           )}
-
         </div>
-
       </div>
     </div>
   );

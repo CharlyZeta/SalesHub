@@ -1,8 +1,15 @@
 import { describe, it, expect, vi } from 'vitest';
-import { buildWooApiUrl, transformWooProduct, transformWooCustomer, fetchWooCommerceProducts, fetchWooCommerceCustomers, WooProductDTO, WooCustomerDTO } from '../utils/wooCommerceApi';
+import {
+  buildWooApiUrl,
+  transformWooProduct,
+  transformWooCustomer,
+  fetchWooCommerceProducts,
+  fetchWooCommerceCustomers,
+  WooProductDTO,
+  WooCustomerDTO,
+} from '../utils/wooCommerceApi';
 
 describe('WooCommerce API Utility', () => {
-
   it('builds valid WooCommerce REST API URLs with consumer credentials', () => {
     const url = buildWooApiUrl('http://mitienda.com', 'products', 'ck_123', 'cs_456');
     expect(url).toBe('http://mitienda.com/wp-json/wc/v3/products?consumer_key=ck_123&consumer_secret=cs_456');
@@ -15,7 +22,7 @@ describe('WooCommerce API Utility', () => {
       sku: 'WOO-99',
       price: '850000',
       stock_quantity: 5,
-      categories: [{ id: 1, name: 'Refrigeración' }]
+      categories: [{ id: 1, name: 'Refrigeración' }],
     };
 
     const transformed = transformWooProduct(dto);
@@ -41,8 +48,8 @@ describe('WooCommerce API Utility', () => {
         address_1: 'San Martin 500',
         city: 'Santa Fe',
         state: 'Santa Fe',
-        phone: '342-4000111'
-      }
+        phone: '342-4000111',
+      },
     };
 
     const transformed = transformWooCustomer(dto);
@@ -75,12 +82,12 @@ describe('WooCommerce API Utility', () => {
       first_name: 'Juan',
       last_name: 'Gomez',
       billing: {
-        phone: ''
+        phone: '',
       },
       meta_data: [
         { key: 'billing_dni', value: '20-38491029-4' },
-        { key: 'billing_phone', value: '11-5491-8821' }
-      ]
+        { key: 'billing_phone', value: '11-5491-8821' },
+      ],
     };
 
     const transformed = transformWooCustomer(dto);
@@ -92,7 +99,7 @@ describe('WooCommerce API Utility', () => {
     const mockProducts: WooProductDTO[] = [{ id: 1, name: 'Prod 1', sku: 'SKU1', price: '100' }];
     const globalFetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
       ok: true,
-      json: async () => mockProducts
+      json: async () => mockProducts,
     } as any);
 
     const result = await fetchWooCommerceProducts({
@@ -100,7 +107,7 @@ describe('WooCommerce API Utility', () => {
       consumerKey: 'ck_1',
       consumerSecret: 'cs_1',
       autoSync: false,
-      conectado: true
+      conectado: true,
     });
 
     expect(result.length).toBe(1);
@@ -123,7 +130,7 @@ describe('WooCommerce API Utility', () => {
         consumerKey: '',
         consumerSecret: '',
         autoSync: false,
-        conectado: false
+        conectado: false,
       })
     ).rejects.toThrow();
 
@@ -139,7 +146,7 @@ describe('WooCommerce API Utility', () => {
         consumerKey: 'ck_test',
         consumerSecret: 'cs_test',
         autoSync: false,
-        conectado: true
+        conectado: true,
       })
     ).rejects.toThrow();
 
@@ -152,7 +159,7 @@ describe('WooCommerce API Utility', () => {
       consumerKey: '',
       consumerSecret: '',
       autoSync: false,
-      conectado: false
+      conectado: false,
     };
 
     await expect(fetchWooCommerceProducts(emptyConfig)).rejects.toThrow('URL de WooCommerce requerida');
@@ -160,13 +167,11 @@ describe('WooCommerce API Utility', () => {
   });
 
   it('handles HTTP successful fetch responses for WooCommerce products', async () => {
-    const mockProducts: WooProductDTO[] = [
-      { id: 1, name: 'Prod 1', sku: 'SKU1', price: '100', stock_quantity: 10 }
-    ];
+    const mockProducts: WooProductDTO[] = [{ id: 1, name: 'Prod 1', sku: 'SKU1', price: '100', stock_quantity: 10 }];
 
     const globalFetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
       ok: true,
-      json: async () => mockProducts
+      json: async () => mockProducts,
     } as any);
 
     const result = await fetchWooCommerceProducts({
@@ -174,7 +179,7 @@ describe('WooCommerce API Utility', () => {
       consumerKey: 'ck_1',
       consumerSecret: 'cs_1',
       autoSync: false,
-      conectado: true
+      conectado: true,
     });
 
     expect(result.length).toBe(1);
@@ -183,13 +188,11 @@ describe('WooCommerce API Utility', () => {
   });
 
   it('handles HTTP successful fetch responses for WooCommerce customers', async () => {
-    const mockCustomers: WooCustomerDTO[] = [
-      { id: 1, email: 'c1@shop.com', first_name: 'Ana', last_name: 'Lopez' }
-    ];
+    const mockCustomers: WooCustomerDTO[] = [{ id: 1, email: 'c1@shop.com', first_name: 'Ana', last_name: 'Lopez' }];
 
     const globalFetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
       ok: true,
-      json: async () => mockCustomers
+      json: async () => mockCustomers,
     } as any);
 
     const result = await fetchWooCommerceCustomers({
@@ -197,12 +200,11 @@ describe('WooCommerce API Utility', () => {
       consumerKey: 'ck_1',
       consumerSecret: 'cs_1',
       autoSync: false,
-      conectado: true
+      conectado: true,
     });
 
     expect(result.length).toBe(1);
     expect(result[0].email).toBe('c1@shop.com');
     globalFetchSpy.mockRestore();
   });
-
 });

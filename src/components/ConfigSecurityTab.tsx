@@ -24,8 +24,7 @@ export const ConfigSecurityTab: React.FC<ConfigSecurityTabProps> = ({
   defaultPinHash,
 }) => {
   const storedPinIsDefault =
-    secConfig.pinAcceso?.trim() === '1234' ||
-    (defaultPinHash && secConfig.pinAcceso === defaultPinHash);
+    secConfig.pinAcceso?.trim() === '1234' || (defaultPinHash && secConfig.pinAcceso === defaultPinHash);
 
   return (
     <div className="space-y-4">
@@ -51,8 +50,9 @@ export const ConfigSecurityTab: React.FC<ConfigSecurityTabProps> = ({
           <div className="flex items-start gap-2 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-lg p-2.5 text-amber-800 dark:text-amber-200 text-[11px]">
             <AlertCircle className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" />
             <span>
-              <strong>PIN predeterminado sin cambiar.</strong> Estás usando «1234». No se permite activar el control de acceso con el PIN
-              predeterminado: ingresá un PIN nuevo en el campo de abajo antes de habilitar la seguridad.
+              <strong>PIN predeterminado sin cambiar.</strong> Estás usando «1234». No se permite activar el control de
+              acceso con el PIN predeterminado: ingresá un PIN nuevo en el campo de abajo antes de habilitar la
+              seguridad.
             </span>
           </div>
         )}
@@ -138,13 +138,27 @@ export const ConfigSecurityTab: React.FC<ConfigSecurityTabProps> = ({
           <span>Opciones Recomendadas para Producción en VPS (Subdominio WooCommerce)</span>
         </div>
         <p className="text-[11px] text-slate-300 leading-relaxed">
-          Para desplegar en <strong className="text-white font-mono">gestion.miempresa.com.ar</strong> en el mismo VPS junto a la tienda WooCommerce:
+          Para desplegar en <strong className="text-white font-mono">gestion.miempresa.com.ar</strong> en el mismo VPS
+          junto a la tienda WooCommerce:
         </p>
 
         <ul className="space-y-1.5 text-[11px] list-disc list-inside text-slate-300 font-sans">
-          <li><strong>Opción 1 (Nginx Basic Auth):</strong> Proteger el subdominio con contraseña HTTP Nginx (<code className="bg-slate-800 text-emerald-300 px-1 py-0.5 rounded font-mono">htpasswd</code>) antes de cargar la app.</li>
-          <li><strong>Opción 2 (Certificado SSL & Headers):</strong> Certbot Let's Encrypt para HTTPS + Headers HSTS, <code className="bg-slate-800 text-emerald-300 px-1 py-0.5 rounded font-mono">X-Frame-Options: SAMEORIGIN</code> y CORS restrictivo.</li>
-          <li><strong>Opción 3 (Filtro por IP):</strong> Limitar el acceso en Nginx a las direcciones IP del local/oficina de la empresa.</li>
+          <li>
+            <strong>Opción 1 (Nginx Basic Auth):</strong> Proteger el subdominio con contraseña HTTP Nginx (
+            <code className="bg-slate-800 text-emerald-300 px-1 py-0.5 rounded font-mono">htpasswd</code>) antes de
+            cargar la app.
+          </li>
+          <li>
+            <strong>Opción 2 (Certificado SSL & Headers):</strong> Certbot Let's Encrypt para HTTPS + Headers HSTS,{' '}
+            <code className="bg-slate-800 text-emerald-300 px-1 py-0.5 rounded font-mono">
+              X-Frame-Options: SAMEORIGIN
+            </code>{' '}
+            y CORS restrictivo.
+          </li>
+          <li>
+            <strong>Opción 3 (Filtro por IP):</strong> Limitar el acceso en Nginx a las direcciones IP del local/oficina
+            de la empresa.
+          </li>
         </ul>
       </div>
     </div>

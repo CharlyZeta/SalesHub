@@ -35,7 +35,9 @@ if (fs.existsSync(GRAPH)) {
 }
 
 if (fs.existsSync(REPORT)) {
-  ok(`Reporte de arquitectura: graphify-out/GRAPH_REPORT.md (${kb(REPORT)}) — es el resumen más barato para entender el sistema`);
+  ok(
+    `Reporte de arquitectura: graphify-out/GRAPH_REPORT.md (${kb(REPORT)}) — es el resumen más barato para entender el sistema`
+  );
 } else {
   warn('Falta graphify-out/GRAPH_REPORT.md (se genera con el análisis de Graphify)');
 }

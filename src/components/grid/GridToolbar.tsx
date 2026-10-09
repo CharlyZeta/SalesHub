@@ -47,7 +47,7 @@ export const GridToolbar: React.FC<GridToolbarProps> = ({
   onQuickAddSale,
   selectedIds,
   setSelectedIds,
-  onDeleteSale
+  onDeleteSale,
 }) => {
   return (
     <>
@@ -163,7 +163,7 @@ export const GridToolbar: React.FC<GridToolbarProps> = ({
                       onChange={(e) =>
                         setVisibleColumns({
                           ...visibleColumns,
-                          [colKey]: e.target.checked
+                          [colKey]: e.target.checked,
                         })
                       }
                       className="rounded border-slate-300 dark:border-slate-600 text-blue-600 focus:ring-0"

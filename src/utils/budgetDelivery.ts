@@ -7,7 +7,7 @@ import { formatCurrency } from './formatters';
  */
 export function formatWhatsAppPhone(phone: string): string {
   if (!phone) return '';
-  
+
   // Remove spaces, parentheses, dashes, plus signs
   let cleaned = phone.replace(/[\s()+-]/g, '');
 
@@ -39,7 +39,7 @@ export function formatWhatsAppPhone(phone: string): string {
  */
 export function generateBudgetWhatsAppText(budget: Budget): string {
   const itemsList = budget.items
-    .map(i => `• ${i.descripcion} (x${i.cantidad}) - ${formatCurrency(i.subtotal)}`)
+    .map((i) => `• ${i.descripcion} (x${i.cantidad}) - ${formatCurrency(i.subtotal)}`)
     .join('\n');
 
   const fechaFormatted = budget.fechaEmision.split('-').reverse().join('/');
@@ -75,7 +75,7 @@ export function generateBudgetEmailSubject(budget: Budget): string {
  */
 export function generateBudgetEmailBody(budget: Budget): string {
   const itemsList = budget.items
-    .map(i => `  - ${i.descripcion} (Cant: ${i.cantidad}) - ${formatCurrency(i.subtotal)}`)
+    .map((i) => `  - ${i.descripcion} (Cant: ${i.cantidad}) - ${formatCurrency(i.subtotal)}`)
     .join('\n');
 
   const fechaFormatted = budget.fechaEmision.split('-').reverse().join('/');
@@ -108,15 +108,16 @@ Atentamente,`;
 /**
  * Builds the wa.me URL and opens WhatsApp web/app
  */
-export function openWhatsAppForBudget(budget: Budget, customPhone?: string): { success: boolean; url: string; cleanPhone: string } {
+export function openWhatsAppForBudget(
+  budget: Budget,
+  customPhone?: string
+): { success: boolean; url: string; cleanPhone: string } {
   const targetPhone = customPhone !== undefined ? customPhone : budget.telefono;
   const cleanPhone = formatWhatsAppPhone(targetPhone);
   const text = generateBudgetWhatsAppText(budget);
-  
+
   const encodedText = encodeURIComponent(text);
-  const url = cleanPhone 
-    ? `https://wa.me/${cleanPhone}?text=${encodedText}`
-    : `https://wa.me/?text=${encodedText}`;
+  const url = cleanPhone ? `https://wa.me/${cleanPhone}?text=${encodedText}` : `https://wa.me/?text=${encodedText}`;
 
   if (typeof window !== 'undefined') {
     window.open(url, '_blank');
@@ -125,15 +126,18 @@ export function openWhatsAppForBudget(budget: Budget, customPhone?: string): { s
   return {
     success: true,
     url,
-    cleanPhone
+    cleanPhone,
   };
 }
 
 /**
  * Builds mailto: link and triggers email client
  */
-export function openEmailForBudget(budget: Budget, customEmail?: string): { success: boolean; mailtoUrl: string; recipientEmail: string } {
-  const recipientEmail = (customEmail !== undefined ? customEmail : (budget.email || '')).trim();
+export function openEmailForBudget(
+  budget: Budget,
+  customEmail?: string
+): { success: boolean; mailtoUrl: string; recipientEmail: string } {
+  const recipientEmail = (customEmail !== undefined ? customEmail : budget.email || '').trim();
   const subject = generateBudgetEmailSubject(budget);
   const body = generateBudgetEmailBody(budget);
 
@@ -146,6 +150,6 @@ export function openEmailForBudget(budget: Budget, customEmail?: string): { succ
   return {
     success: true,
     mailtoUrl,
-    recipientEmail
+    recipientEmail,
   };
 }

@@ -36,7 +36,7 @@ export function useSalesState({
   config,
   setCustomers,
   setBudgets,
-  onAfterOperation
+  onAfterOperation,
 }: UseSalesStateProps): UseSalesStateReturn {
   const [sales, setSales] = useState<Sale[]>(() => {
     const saved = localStorage.getItem('app_sales_v1');
@@ -66,14 +66,14 @@ export function useSalesState({
       setSales(updatedSales);
       addSystemLog('SALE', 'Ventas', `Venta #${saleToSave.id} actualizada`, {
         cliente: saleToSave.clienteNombre,
-        total: saleToSave.montoTotal
+        total: saleToSave.montoTotal,
       });
     } else {
       updatedSales = [saleToSave, ...sales];
       setSales(updatedSales);
       addSystemLog('SALE', 'Ventas', `Nueva venta registrada #${saleToSave.id}`, {
         cliente: saleToSave.clienteNombre,
-        total: saleToSave.montoTotal
+        total: saleToSave.montoTotal,
       });
     }
 
@@ -94,7 +94,7 @@ export function useSalesState({
           provincia: (saleToSave.clienteProvincia || '').trim() || DEFAULT_PROVINCE,
           totalCompras: saleToSave.montoTotal,
           cantidadPedidos: 1,
-          ultimaCompra: saleToSave.fecha
+          ultimaCompra: saleToSave.fecha,
         };
         return [newCust, ...prevCustomers];
       }
@@ -142,7 +142,7 @@ export function useSalesState({
         nombre: i.descripcion,
         cantidad: i.cantidad,
         precioUnitario: i.precioUnitario,
-        subtotal: i.subtotal
+        subtotal: i.subtotal,
       })),
       montoTotal: budget.importeTotal,
       numeroFactura: `FC-B-${budget.puntoVenta}-${budget.comprobanteNumero}`,
@@ -152,7 +152,7 @@ export function useSalesState({
       metodoEnvio: 'Retiro en Local',
       estadoEnvio: 'Entregado',
       notas: `Convertido desde Presupuesto ${budget.numeroPresupuesto}. ${budget.observaciones || ''}`,
-      creadoEn: new Date().toISOString()
+      creadoEn: new Date().toISOString(),
     };
 
     const updatedSales = [newSale, ...sales];
@@ -164,7 +164,7 @@ export function useSalesState({
           return {
             ...b,
             estado: 'Convertido',
-            ventaConvertidaId: newSaleId
+            ventaConvertidaId: newSaleId,
           };
         }
         return b;
@@ -172,7 +172,7 @@ export function useSalesState({
     );
 
     addSystemLog('SALE', 'Ventas', `Presupuesto ${budget.numeroPresupuesto} convertido a Venta #${newSaleId}`, {
-      montoTotal: budget.importeTotal
+      montoTotal: budget.importeTotal,
     });
 
     if (onAfterOperation) {
@@ -201,7 +201,7 @@ export function useSalesState({
                 ...sale,
                 andreaniStatus: info.tracking_status || info.status,
                 andreaniLastCheck: info.updated_at || new Date().toISOString(),
-                estadoEnvio: info.canonical_status
+                estadoEnvio: info.canonical_status,
               };
             }
             return sale;
@@ -235,6 +235,6 @@ export function useSalesState({
     handleUpdateInlineSale,
     handleImportSales,
     handleConvertBudgetToSale,
-    handleSyncAndreaniTrackings
+    handleSyncAndreaniTrackings,
   };
 }

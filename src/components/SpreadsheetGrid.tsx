@@ -43,7 +43,7 @@ export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
     'MercadoPago',
     'Efectivo contra entrega',
     'Cheque / eCheq',
-    'Otro'
+    'Otro',
   ],
   estadosEnvio = [
     'Pendiente',
@@ -53,12 +53,12 @@ export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
     'Entregado',
     'No entregado',
     'Enviado',
-    'No Requiere'
+    'No Requiere',
   ],
   selectedMonth,
   showAllMonths,
   andreaniHash = '',
-  onSyncAndreaniTrackings
+  onSyncAndreaniTrackings,
 }) => {
   // Search & Filters state
   const [searchTerm, setSearchTerm] = useState('');
@@ -80,7 +80,7 @@ export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
     metodoEnvio: true,
     numeroSeguimiento: true,
     estadoEnvio: true,
-    acciones: true
+    acciones: true,
   });
   const [showColumnMenu, setShowColumnMenu] = useState(false);
 
@@ -112,7 +112,7 @@ export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
     searchTerm,
     selectedMonth,
     showAllMonths,
-    showAllRows
+    showAllRows,
   ]);
 
   // Handle Sort
@@ -174,7 +174,7 @@ export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
     sortField,
     sortDirection,
     selectedMonth,
-    showAllMonths
+    showAllMonths,
   ]);
 
   const totalPages = showAllRows ? 1 : Math.ceil(filteredSales.length / recordsPerPage);
@@ -204,7 +204,9 @@ export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
       .map((s) => s.numeroSeguimiento!.trim());
 
     if (trackingNumbers.length === 0) {
-      alert('No hay envíos de Andreani pendientes de entrega en la página actual o que no estén marcados como Entregado.');
+      alert(
+        'No hay envíos de Andreani pendientes de entrega en la página actual o que no estén marcados como Entregado.'
+      );
       return;
     }
 
@@ -439,7 +441,9 @@ export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
                 <td colSpan={13} className="text-center py-12 text-slate-500 dark:text-slate-400 font-sans">
                   <div className="max-w-sm mx-auto flex flex-col items-center gap-2">
                     <Search className="w-8 h-8 text-slate-300 dark:text-slate-600 mb-1" />
-                    <p className="font-medium text-slate-700 dark:text-slate-300">No se encontraron ventas registradas</p>
+                    <p className="font-medium text-slate-700 dark:text-slate-300">
+                      No se encontraron ventas registradas
+                    </p>
                     <p className="text-xs text-slate-400 dark:text-slate-500">
                       Prueba modificando la búsqueda, los filtros de canal o agrega una nueva venta.
                     </p>

@@ -89,7 +89,9 @@ function main() {
   const hasGraphify =
     fs.existsSync(postCommitPath) && fs.readFileSync(postCommitPath, 'utf8').includes('graphify-hook-start');
   if (!hasGraphify) {
-    console.log('ℹ️  Hook post-commit de Graphify ausente: ejecutá `graphify hook install` para reconstruir el grafo en cada commit.');
+    console.log(
+      'ℹ️  Hook post-commit de Graphify ausente: ejecutá `graphify hook install` para reconstruir el grafo en cada commit.'
+    );
   }
 }
 

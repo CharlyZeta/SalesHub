@@ -5,6 +5,7 @@
 **Goal:** Implement geographical locator maps, alternate delivery address forms, and location sharing via WhatsApp in the sales panel.
 
 **Architecture:**
+
 - Extend the `Sale` schema in `src/types.ts` to support alternate delivery addresses and coordinate structures.
 - Install vanilla `leaflet` library (independent of React peer dependencies to support React 19 natively).
 - Integrate collapsible alternate delivery form fields inside `SaleFormModal.tsx`.
@@ -14,6 +15,7 @@
 **Tech Stack:** React 19, Tailwind CSS, Leaflet.js, OpenStreetMap Nominatim.
 
 ## Global Constraints
+
 - Support full dark mode styling.
 - Prevent browser CORS issues by querying public geocoding APIs with appropriate User-Agent/Accept headers.
 - Do not import `@react-google-maps/api` or other Google libraries requiring API keys.
@@ -23,14 +25,17 @@
 ### Task 1: Extender tipos y modelos en types.ts
 
 **Files:**
+
 - Modify: `src/types.ts`
 
 **Interfaces:**
+
 - Consumes: `Sale` interface.
 - Produces: New alternate shipping fields inside `Sale`.
 
 - [ ] **Step 1: Modificar la interfaz Sale**
-  Add the following optional fields to the `Sale` interface in `src/types.ts`:
+      Add the following optional fields to the `Sale` interface in `src/types.ts`:
+
   ```typescript
   export interface Sale {
     // ... campos existentes ...
@@ -46,8 +51,8 @@
   ```
 
 - [ ] **Step 2: Verificar el tipado**
-  Run: `npx tsc --noEmit`
-  Expected: 0 errors.
+      Run: `npx tsc --noEmit`
+      Expected: 0 errors.
 
 - [ ] **Step 3: Commit**
   ```bash
@@ -60,18 +65,20 @@
 ### Task 2: Instalar y Configurar Leaflet
 
 **Files:**
+
 - Modify: `package.json`
 
 **Interfaces:**
+
 - Consumes: None.
 - Produces: `leaflet` and `@types/leaflet` dependencies installed in the project.
 
 - [ ] **Step 1: Instalar dependencias de Leaflet**
-  Run: `npm install leaflet --save` and `npm install @types/leaflet --save-dev`
-  Expected: Installation finishes cleanly.
+      Run: `npm install leaflet --save` and `npm install @types/leaflet --save-dev`
+      Expected: Installation finishes cleanly.
 
 - [ ] **Step 2: Confirmar instalación en package.json**
-  Check that `"leaflet"` is in dependencies and `"@types/leaflet"` is in devDependencies.
+      Check that `"leaflet"` is in dependencies and `"@types/leaflet"` is in devDependencies.
 
 - [ ] **Step 3: Commit**
   ```bash
@@ -84,38 +91,47 @@
 ### Task 3: Campos de Domicilio de Entrega Alternativo Colapsables
 
 **Files:**
+
 - Modify: `src/components/SaleFormModal.tsx`
 
 **Interfaces:**
+
 - Consumes: `Sale` fields from Task 1.
 - Produces: State handles and JSX layout for alternate shipping address in `SaleFormModal`.
 
 - [ ] **Step 1: Agregar variables de estado en el modal**
-  Initialize states inside `SaleFormModal` component (around line 55):
+      Initialize states inside `SaleFormModal` component (around line 55):
+
   ```typescript
-  const [envioDomicilioDiferente, setEnvioDomicilioDiferente] = useState(existingSale?.envioDomicilioDiferente || false);
+  const [envioDomicilioDiferente, setEnvioDomicilioDiferente] = useState(
+    existingSale?.envioDomicilioDiferente || false
+  );
   const [entregaDireccion, setEntregaDireccion] = useState(existingSale?.entregaDireccion || '');
   const [entregaLocalidad, setEntregaLocalidad] = useState(existingSale?.entregaLocalidad || '');
   const [entregaProvincia, setEntregaProvincia] = useState(existingSale?.entregaProvincia || 'Buenos Aires');
-  const [entregaCoordenadas, setEntregaCoordenadas] = useState<{lat: number; lng: number} | undefined>(existingSale?.entregaCoordenadas);
+  const [entregaCoordenadas, setEntregaCoordenadas] = useState<{ lat: number; lng: number } | undefined>(
+    existingSale?.entregaCoordenadas
+  );
   ```
 
 - [ ] **Step 2: Guardar los nuevos campos en handleSubmit**
-  Add the new fields to `candidateSale` in `handleSubmit` (around line 125):
+      Add the new fields to `candidateSale` in `handleSubmit` (around line 125):
+
   ```typescript
-      const candidateSale: Sale = {
-        // ... campos existentes ...
-        envioDomicilioDiferente,
-        entregaDireccion: envioDomicilioDiferente ? entregaDireccion : '',
-        entregaLocalidad: envioDomicilioDiferente ? entregaLocalidad : '',
-        entregaProvincia: envioDomicilioDiferente ? entregaProvincia : '',
-        entregaCoordenadas: envioDomicilioDiferente ? entregaCoordenadas : undefined,
-        // ...
-      };
+  const candidateSale: Sale = {
+    // ... campos existentes ...
+    envioDomicilioDiferente,
+    entregaDireccion: envioDomicilioDiferente ? entregaDireccion : '',
+    entregaLocalidad: envioDomicilioDiferente ? entregaLocalidad : '',
+    entregaProvincia: envioDomicilioDiferente ? entregaProvincia : '',
+    entregaCoordenadas: envioDomicilioDiferente ? entregaCoordenadas : undefined,
+    // ...
+  };
   ```
 
 - [ ] **Step 3: Renderizar la sección colapsable en el formulario**
-  Below the client info inputs (e.g. CUIT, Teléfono), render the checkbox/toggle and alternate address fields:
+      Below the client info inputs (e.g. CUIT, Teléfono), render the checkbox/toggle and alternate address fields:
+
   ```typescript
               {/* Opción de domicilio alternativo */}
               <div className="col-span-12 mt-2 bg-slate-50 dark:bg-slate-950 p-3 rounded-lg border border-slate-200 dark:border-slate-800">
@@ -170,8 +186,8 @@
   ```
 
 - [ ] **Step 4: Verificar y commit**
-  Run: `npx tsc --noEmit`
-  Commit:
+      Run: `npx tsc --noEmit`
+      Commit:
   ```bash
   git add src/components/SaleFormModal.tsx
   git commit -m "feat: agregar inputs colapsables de direccion de entrega alternativa"
@@ -182,15 +198,18 @@
 ### Task 4: Integración del Panel de Mapa Desplegable
 
 **Files:**
+
 - Create: `src/components/SaleLocationMap.tsx`
 - Modify: `src/components/SaleFormModal.tsx`
 
 **Interfaces:**
+
 - Consumes: Delivery addresses and coordinates states.
 - Produces: Sidebar collapsible map layout, Leaflet interactive map with markers, and Nominatim geocoder queries.
 
 - [ ] **Step 1: Crear el componente SaleLocationMap.tsx**
-  Implement Leaflet map instantiation with draggable marker, Nominatim search triggers, and manual coordinate override inputs:
+      Implement Leaflet map instantiation with draggable marker, Nominatim search triggers, and manual coordinate override inputs:
+
   ```typescript
   import React, { useEffect, useRef, useState } from 'react';
   import L from 'leaflet';
@@ -354,18 +373,23 @@
   ```
 
 - [ ] **Step 2: Modificar SaleFormModal.tsx para el layout de dos columnas**
-  Import `SaleLocationMap` inside `SaleFormModal.tsx`.
-  Add a state variable for map expansion toggling:
+      Import `SaleLocationMap` inside `SaleFormModal.tsx`.
+      Add a state variable for map expansion toggling:
+
   ```typescript
   const [showMap, setShowMap] = useState(false);
   ```
+
   Adjust the width of the outer container:
+
   ```typescript
   className={`bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full rounded-xl shadow-2xl overflow-hidden flex flex-col my-auto max-h-[92vh] transition-all duration-300 ${
     showMap ? 'max-w-7xl' : 'max-w-4xl'
   }`}
   ```
+
   Render the toggle button on the right side of the header or form:
+
   ```typescript
             <button
               type="button"
@@ -376,7 +400,9 @@
               <Navigation className={`w-3.5 h-3.5 transform transition-transform ${showMap ? 'rotate-90' : ''}`} />
             </button>
   ```
+
   Render the sidebar containing `SaleLocationMap` inside the modal body:
+
   ```typescript
           <div className="flex-1 overflow-y-auto flex">
             {/* Formulario (Left panel) */}
@@ -400,8 +426,8 @@
   ```
 
 - [ ] **Step 3: Verificar y commit**
-  Run: `npx tsc --noEmit`
-  Commit:
+      Run: `npx tsc --noEmit`
+      Commit:
   ```bash
   git add src/components/SaleLocationMap.tsx src/components/SaleFormModal.tsx
   git commit -m "feat: integrar panel lateral desplegable y mapa de leaflet interactivo"
@@ -412,14 +438,17 @@
 ### Task 5: Compartir por WhatsApp y Verificación
 
 **Files:**
+
 - Modify: `src/components/SaleLocationMap.tsx`
 
 **Interfaces:**
+
 - Consumes: Coordinate states.
 - Produces: WhatsApp sharing trigger inside the map panel.
 
 - [ ] **Step 1: Agregar botón de WhatsApp en el panel del mapa**
-  Add sharing controls below the coordinates layout in `SaleLocationMap.tsx`:
+      Add sharing controls below the coordinates layout in `SaleLocationMap.tsx`:
+
   ```typescript
         <div className="p-3 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex justify-center">
           <a
@@ -437,8 +466,8 @@
   ```
 
 - [ ] **Step 2: Verificar la compilación completa de producción**
-  Run: `npx tsc --noEmit` and `npm run build`
-  Expected: Production bundle builds successfully.
+      Run: `npx tsc --noEmit` and `npm run build`
+      Expected: Production bundle builds successfully.
 
 - [ ] **Step 3: Commit**
   ```bash

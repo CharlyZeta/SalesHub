@@ -9,7 +9,7 @@ import {
   PaymentMethod,
   ShippingMethod,
   ShippingStatus,
-  InvoiceType
+  InvoiceType,
 } from '../types';
 import {
   validateRequiredSaleFields,
@@ -17,7 +17,7 @@ import {
   normalizePersonName,
   DEFAULT_PROVINCE,
   parseCustomerIdentityFromWoo,
-  parseCombinedAddress
+  parseCombinedAddress,
 } from '../utils/formatters';
 import { SaleLocationMap } from './SaleLocationMap';
 import { addSystemLog } from '../utils/logger';
@@ -57,9 +57,35 @@ const SaleFormModalInner: React.FC<SaleFormModalProps> = ({
   customers,
   catalog,
   canales = ['Local', 'MercadoLibre', 'WooCommerce', 'WhatsApp', 'Instagram', 'Venta Telefónica', 'Otro'],
-  metodosPago = ['Efectivo', 'Transferencia', 'Tarjeta de Débito', 'Tarjeta de Crédito', 'MercadoPago', 'Efectivo contra entrega', 'Cheque / eCheq', 'Otro'],
-  metodosEnvio = ['Retiro en Local', 'Correo Argentino', 'Andreani', 'OCA', 'Cadetería / Moto', 'Mercado Envíos', 'Otro'],
-  estadosEnvio = ['Pendiente', 'Pendiente de ingreso', 'En camino', 'Listo para retirar', 'Entregado', 'No entregado', 'Enviado', 'No Requiere'],
+  metodosPago = [
+    'Efectivo',
+    'Transferencia',
+    'Tarjeta de Débito',
+    'Tarjeta de Crédito',
+    'MercadoPago',
+    'Efectivo contra entrega',
+    'Cheque / eCheq',
+    'Otro',
+  ],
+  metodosEnvio = [
+    'Retiro en Local',
+    'Correo Argentino',
+    'Andreani',
+    'OCA',
+    'Cadetería / Moto',
+    'Mercado Envíos',
+    'Otro',
+  ],
+  estadosEnvio = [
+    'Pendiente',
+    'Pendiente de ingreso',
+    'En camino',
+    'Listo para retirar',
+    'Entregado',
+    'No entregado',
+    'Enviado',
+    'No Requiere',
+  ],
   onPrintRemito,
   googleMapsApiKey,
 }) => {
@@ -93,7 +119,9 @@ const SaleFormModalInner: React.FC<SaleFormModalProps> = ({
   const [estadoEnvio, setEstadoEnvio] = useState<ShippingStatus>(existingSale?.estadoEnvio || 'Entregado');
   const [notas, setNotas] = useState(existingSale?.notas || '');
 
-  const [envioDomicilioDiferente, setEnvioDomicilioDiferente] = useState(existingSale?.envioDomicilioDiferente || false);
+  const [envioDomicilioDiferente, setEnvioDomicilioDiferente] = useState(
+    existingSale?.envioDomicilioDiferente || false
+  );
   const [entregaDireccion, setEntregaDireccion] = useState(existingSale?.entregaDireccion || '');
   const [entregaLocalidad, setEntregaLocalidad] = useState(existingSale?.entregaLocalidad || '');
   const [entregaCodigoPostal, setEntregaCodigoPostal] = useState(existingSale?.entregaCodigoPostal || '');
@@ -199,7 +227,7 @@ const SaleFormModalInner: React.FC<SaleFormModalProps> = ({
           entregaLocalidad,
           entregaCodigoPostal,
           entregaProvincia,
-          entregaCoordenadas
+          entregaCoordenadas,
         };
         localStorage.setItem(
           SALE_DRAFT_KEY,
@@ -237,7 +265,7 @@ const SaleFormModalInner: React.FC<SaleFormModalProps> = ({
     entregaCodigoPostal,
     entregaProvincia,
     entregaCoordenadas,
-    draftEditingId
+    draftEditingId,
   ]);
 
   // Aviso del navegador si recargan con la venta a medio cargar
@@ -318,7 +346,7 @@ const SaleFormModalInner: React.FC<SaleFormModalProps> = ({
       sku: catProd.sku,
       precioUnitario: catProd.precio,
       subtotal: updated[index].cantidad * catProd.precio * (1 - desc / 100),
-      imagenUrl: catProd.imagenUrl
+      imagenUrl: catProd.imagenUrl,
     };
     setProductos(updated);
   };
@@ -326,7 +354,7 @@ const SaleFormModalInner: React.FC<SaleFormModalProps> = ({
   const handleAddProductLine = () => {
     setProductos([
       ...productos,
-      { id: String(Date.now()), nombre: '', cantidad: 1, precioUnitario: 0, descuento: 0, subtotal: 0 }
+      { id: String(Date.now()), nombre: '', cantidad: 1, precioUnitario: 0, descuento: 0, subtotal: 0 },
     ]);
   };
 
@@ -390,13 +418,19 @@ const SaleFormModalInner: React.FC<SaleFormModalProps> = ({
         entregaProvincia: envioDomicilioDiferente ? entregaProvincia.trim() || DEFAULT_PROVINCE : '',
         entregaCoordenadas: envioDomicilioDiferente ? entregaCoordenadas : undefined,
         notas,
-        creadoEn: existingSale ? existingSale.creadoEn : new Date().toISOString()
+        creadoEn: existingSale ? existingSale.creadoEn : new Date().toISOString(),
       };
 
       const valResult = validateRequiredSaleFields(candidateSale);
       if (!valResult.isValid) {
-        addSystemLog('WARN', 'Ventas', `Intento de guardar venta incompleta. Faltan: ${valResult.missingFields.join(', ')}`);
-        alert(`⚠️ Faltan requisitos obligatorios para registrar la venta:\n\n• ${valResult.missingFields.join('\n• ')}\n\nPor favor, completa los campos requeridos antes de guardar.`);
+        addSystemLog(
+          'WARN',
+          'Ventas',
+          `Intento de guardar venta incompleta. Faltan: ${valResult.missingFields.join(', ')}`
+        );
+        alert(
+          `⚠️ Faltan requisitos obligatorios para registrar la venta:\n\n• ${valResult.missingFields.join('\n• ')}\n\nPor favor, completa los campos requeridos antes de guardar.`
+        );
         return;
       }
 
@@ -452,7 +486,10 @@ const SaleFormModalInner: React.FC<SaleFormModalProps> = ({
         </div>
 
         {/* Modal Form */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-hidden flex flex-col text-xs text-slate-800 dark:text-slate-200 min-h-0">
+        <form
+          onSubmit={handleSubmit}
+          className="flex-1 overflow-hidden flex flex-col text-xs text-slate-800 dark:text-slate-200 min-h-0"
+        >
           <div className="flex-1 overflow-y-auto flex">
             {/* Formulario (Left panel) */}
             <div className={`p-5 space-y-4 flex-1 ${showMap ? 'max-w-[65%]' : 'w-full'}`}>
@@ -462,7 +499,8 @@ const SaleFormModalInner: React.FC<SaleFormModalProps> = ({
                     <AlertCircle className="w-4 h-4 mt-0.5 shrink-0 text-amber-600 dark:text-amber-400" />
                     <span className="text-[11px] leading-relaxed">
                       <strong>Borrador recuperado.</strong> Se restauró una venta sin guardar del{' '}
-                      {new Date(draftRestoredAt).toLocaleString()}. Guardá la venta para conservarla o descartá el borrador.
+                      {new Date(draftRestoredAt).toLocaleString()}. Guardá la venta para conservarla o descartá el
+                      borrador.
                     </span>
                   </div>
                   <button

@@ -1,6 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { X, Terminal, Trash2, Download, Filter, Search, RefreshCw, AlertCircle, Info, AlertTriangle, Database, ShoppingBag } from 'lucide-react';
-import { LogEntry, LogLevel, getSystemLogs, clearSystemLogs, filterSystemLogs, exportLogsJSON, exportLogsCSV } from '../utils/logger';
+import {
+  X,
+  Terminal,
+  Trash2,
+  Download,
+  Filter,
+  Search,
+  RefreshCw,
+  AlertCircle,
+  Info,
+  AlertTriangle,
+  Database,
+  ShoppingBag,
+} from 'lucide-react';
+import {
+  LogEntry,
+  LogLevel,
+  getSystemLogs,
+  clearSystemLogs,
+  filterSystemLogs,
+  exportLogsJSON,
+  exportLogsCSV,
+} from '../utils/logger';
 
 import { UserRole } from '../types';
 
@@ -45,7 +66,9 @@ export const SystemLogsModal: React.FC<SystemLogsModalProps> = ({ isOpen, onClos
 
   const handleClearRequest = () => {
     if (currentRole !== 'ADMIN') {
-      setRestrictionMsg('🔒 Restricción de Seguridad: Solamente los usuarios con perfil de ADMINISTRADOR pueden purgar los logs de auditoría.');
+      setRestrictionMsg(
+        '🔒 Restricción de Seguridad: Solamente los usuarios con perfil de ADMINISTRADOR pueden purgar los logs de auditoría.'
+      );
       return;
     }
     setRestrictionMsg(null);
@@ -83,30 +106,49 @@ export const SystemLogsModal: React.FC<SystemLogsModalProps> = ({ isOpen, onClos
   const filtered = filterSystemLogs(logs, {
     level: levelFilter,
     category: categoryFilter,
-    search: searchQuery
+    search: searchQuery,
   });
 
   const getLevelBadge = (level: LogLevel) => {
     switch (level) {
       case 'ERROR':
-        return <span className="bg-red-500/20 text-red-400 border border-red-500/30 px-2 py-0.5 rounded text-[10px] font-bold flex items-center gap-1"><AlertCircle className="w-3 h-3" /> ERROR</span>;
+        return (
+          <span className="bg-red-500/20 text-red-400 border border-red-500/30 px-2 py-0.5 rounded text-[10px] font-bold flex items-center gap-1">
+            <AlertCircle className="w-3 h-3" /> ERROR
+          </span>
+        );
       case 'WARN':
-        return <span className="bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded text-[10px] font-bold flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> WARN</span>;
+        return (
+          <span className="bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded text-[10px] font-bold flex items-center gap-1">
+            <AlertTriangle className="w-3 h-3" /> WARN
+          </span>
+        );
       case 'API':
       case 'SYNC':
-        return <span className="bg-purple-500/20 text-purple-300 border border-purple-500/30 px-2 py-0.5 rounded text-[10px] font-bold flex items-center gap-1"><Database className="w-3 h-3" /> {level}</span>;
+        return (
+          <span className="bg-purple-500/20 text-purple-300 border border-purple-500/30 px-2 py-0.5 rounded text-[10px] font-bold flex items-center gap-1">
+            <Database className="w-3 h-3" /> {level}
+          </span>
+        );
       case 'SALE':
       case 'BUDGET':
-        return <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded text-[10px] font-bold flex items-center gap-1"><ShoppingBag className="w-3 h-3" /> {level}</span>;
+        return (
+          <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded text-[10px] font-bold flex items-center gap-1">
+            <ShoppingBag className="w-3 h-3" /> {level}
+          </span>
+        );
       default:
-        return <span className="bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 px-2 py-0.5 rounded text-[10px] font-bold flex items-center gap-1"><Info className="w-3 h-3" /> INFO</span>;
+        return (
+          <span className="bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 px-2 py-0.5 rounded text-[10px] font-bold flex items-center gap-1">
+            <Info className="w-3 h-3" /> INFO
+          </span>
+        );
     }
   };
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-6xl rounded-xl shadow-2xl overflow-hidden flex flex-col my-auto max-h-[92vh]">
-        
         {/* Header */}
         <div className="bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 px-5 py-3.5 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -121,7 +163,8 @@ export const SystemLogsModal: React.FC<SystemLogsModalProps> = ({ isOpen, onClos
                 </span>
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Historial completo de eventos, llamadas API a WooCommerce, registros de ventas, errores y sincronizaciones
+                Historial completo de eventos, llamadas API a WooCommerce, registros de ventas, errores y
+                sincronizaciones
               </p>
             </div>
           </div>
@@ -145,10 +188,8 @@ export const SystemLogsModal: React.FC<SystemLogsModalProps> = ({ isOpen, onClos
 
         {/* Modal Controls Bar */}
         <div className="p-4 bg-slate-50 dark:bg-slate-950/60 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
-          
           {/* Filters */}
           <div className="flex flex-wrap items-center gap-2">
-            
             {/* Level Selector */}
             <div className="flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-2.5 py-1.5 rounded-lg">
               <Filter className="w-3.5 h-3.5 text-slate-400" />
@@ -158,14 +199,30 @@ export const SystemLogsModal: React.FC<SystemLogsModalProps> = ({ isOpen, onClos
                 onChange={(e) => setLevelFilter(e.target.value)}
                 className="bg-transparent text-slate-800 dark:text-slate-200 font-bold focus:outline-none cursor-pointer"
               >
-                <option value="ALL" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">Todos los niveles</option>
-                <option value="INFO" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">INFO</option>
-                <option value="WARN" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">WARN</option>
-                <option value="ERROR" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">ERROR</option>
-                <option value="SYNC" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">SYNC</option>
-                <option value="API" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">API</option>
-                <option value="SALE" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">SALE</option>
-                <option value="BUDGET" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">BUDGET</option>
+                <option value="ALL" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">
+                  Todos los niveles
+                </option>
+                <option value="INFO" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">
+                  INFO
+                </option>
+                <option value="WARN" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">
+                  WARN
+                </option>
+                <option value="ERROR" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">
+                  ERROR
+                </option>
+                <option value="SYNC" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">
+                  SYNC
+                </option>
+                <option value="API" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">
+                  API
+                </option>
+                <option value="SALE" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">
+                  SALE
+                </option>
+                <option value="BUDGET" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">
+                  BUDGET
+                </option>
               </select>
             </div>
 
@@ -180,7 +237,6 @@ export const SystemLogsModal: React.FC<SystemLogsModalProps> = ({ isOpen, onClos
                 className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-lg pl-8 pr-3 py-1.5 focus:outline-none focus:border-cyan-500 w-48 sm:w-64"
               />
             </div>
-
           </div>
 
           {/* Action buttons */}
@@ -209,7 +265,6 @@ export const SystemLogsModal: React.FC<SystemLogsModalProps> = ({ isOpen, onClos
               <span>Vaciar Logs</span>
             </button>
           </div>
-
         </div>
 
         {/* Restriction / Status Message */}
@@ -229,7 +284,6 @@ export const SystemLogsModal: React.FC<SystemLogsModalProps> = ({ isOpen, onClos
 
         {/* Body Content - Split Pane */}
         <div className="grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-slate-200 dark:divide-slate-800 overflow-hidden flex-1">
-          
           {/* Left: Log Entries Table */}
           <div className="lg:col-span-7 overflow-y-auto max-h-[55vh] lg:max-h-[65vh] p-2 space-y-1.5">
             {filtered.length === 0 ? (
@@ -279,13 +333,16 @@ export const SystemLogsModal: React.FC<SystemLogsModalProps> = ({ isOpen, onClos
 
                 <div className="space-y-1.5 text-[11px] text-slate-700 dark:text-slate-300">
                   <div>
-                    <span className="text-slate-500">ID Evento:</span> <span className="text-cyan-600 dark:text-cyan-400 font-bold">{selectedLog.id}</span>
+                    <span className="text-slate-500">ID Evento:</span>{' '}
+                    <span className="text-cyan-600 dark:text-cyan-400 font-bold">{selectedLog.id}</span>
                   </div>
                   <div>
-                    <span className="text-slate-500">Marca Temporal:</span> {new Date(selectedLog.timestamp).toLocaleString('es-AR')}
+                    <span className="text-slate-500">Marca Temporal:</span>{' '}
+                    {new Date(selectedLog.timestamp).toLocaleString('es-AR')}
                   </div>
                   <div>
-                    <span className="text-slate-500">Categoría:</span> <span className="text-purple-600 dark:text-purple-400 font-bold">{selectedLog.category}</span>
+                    <span className="text-slate-500">Categoría:</span>{' '}
+                    <span className="text-purple-600 dark:text-purple-400 font-bold">{selectedLog.category}</span>
                   </div>
                   <div>
                     <span className="text-slate-500">Mensaje:</span>
@@ -309,13 +366,13 @@ export const SystemLogsModal: React.FC<SystemLogsModalProps> = ({ isOpen, onClos
             ) : (
               <div className="h-full flex flex-col items-center justify-center text-slate-400 dark:text-slate-600 p-6 text-center space-y-2 font-sans">
                 <Terminal className="w-10 h-10 text-slate-400 dark:text-slate-700" />
-                <p className="text-xs">Selecciona un registro de la lista para ver los detalles e inspección técnica completas.</p>
+                <p className="text-xs">
+                  Selecciona un registro de la lista para ver los detalles e inspección técnica completas.
+                </p>
               </div>
             )}
           </div>
-
         </div>
-
       </div>
 
       {/* Confirm Clear Dialog */}
@@ -339,8 +396,9 @@ export const SystemLogsModal: React.FC<SystemLogsModalProps> = ({ isOpen, onClos
             </div>
             <div className="p-5 space-y-4">
               <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
-                Se eliminarán de forma permanente <strong>todos los registros de auditoría</strong> almacenados en este dispositivo
-                (<span className="font-mono text-xs">{filtered.length} visibles</span>). Esta operación no se puede deshacer.
+                Se eliminarán de forma permanente <strong>todos los registros de auditoría</strong> almacenados en este
+                dispositivo (<span className="font-mono text-xs">{filtered.length} visibles</span>). Esta operación no
+                se puede deshacer.
               </p>
               <div className="flex items-center justify-end gap-2">
                 <button

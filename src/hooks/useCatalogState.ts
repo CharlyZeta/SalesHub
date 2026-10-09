@@ -33,6 +33,6 @@ export function useCatalogState(): UseCatalogStateReturn {
   return {
     catalog,
     setCatalog,
-    handleAddCatalogProduct
+    handleAddCatalogProduct,
   };
 }

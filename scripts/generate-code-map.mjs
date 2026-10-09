@@ -34,13 +34,17 @@ const DESCRIPTIONS = {
   'src/main.tsx': 'Punto de entrada de React (render del árbol en #root)',
   'src/types.ts': 'Modelo de dominio tipado (Sale, Budget, Customer, CatalogProduct, AppConfig, seguridad)',
   'src/components/Header.tsx': 'Barra superior: marca, KPIs rápidos, accesos a modales, tema y bloqueo de sesión',
-  'src/components/KpiSummary.tsx': 'Banner de KPIs mensuales, filtro por mes/canal y configuración de tarjetas visibles',
-  'src/components/SpreadsheetGrid.tsx': 'Planilla interactiva de ventas: edición inline, filtros, paginación y tracking Andreani',
-  'src/components/SaleFormModal.tsx': 'Alta/edición de ventas: cliente, ítems con descuento, facturación, envío y borrador autoguardado',
+  'src/components/KpiSummary.tsx':
+    'Banner de KPIs mensuales, filtro por mes/canal y configuración de tarjetas visibles',
+  'src/components/SpreadsheetGrid.tsx':
+    'Planilla interactiva de ventas: edición inline, filtros, paginación y tracking Andreani',
+  'src/components/SaleFormModal.tsx':
+    'Alta/edición de ventas: cliente, ítems con descuento, facturación, envío y borrador autoguardado',
   'src/components/BudgetModal.tsx': 'Presupuestos AFIP: ítems, IVA/percepciones, PDF y conversión a venta',
   'src/components/SendBudgetModal.tsx': 'Envío omnicanal de presupuestos por WhatsApp (wa.me) y correo (mailto)',
   'src/components/RemitoModal.tsx': 'Remito de entrega/despacho: datos de empresa, transporte, PDF e impresión',
-  'src/components/CustomerDirectoryModal.tsx': 'Directorio de clientes: búsqueda, historial de compras y alta de clientes',
+  'src/components/CustomerDirectoryModal.tsx':
+    'Directorio de clientes: búsqueda, historial de compras y alta de clientes',
   'src/components/WooCommerceModal.tsx': 'Sincronización WooCommerce: credenciales, catálogo, clientes y programación',
   'src/components/ProductSearchPicker.tsx': 'Buscador autocompletable de productos del catálogo',
   'src/components/SaleLocationMap.tsx': 'Mapa Leaflet/OSM con geocodificación Nominatim y pin arrastrable',
@@ -48,10 +52,13 @@ const DESCRIPTIONS = {
   'src/components/ExportModal.tsx': 'Exportador de ventas a CSV por rango y canal',
   'src/components/AnalyticsModal.tsx': 'Panel de analítica con gráficos Recharts (tendencia y distribución por canal)',
   'src/components/SystemLogsModal.tsx': 'Consola de auditoría: filtros por nivel/categoría/fecha y exportación',
-  'src/components/ConfigModal.tsx': 'Configuración del sistema: shell del modal, estado compartido, guardado y pestañas',
-  'src/components/ConfigGeneralTab.tsx': 'Pestaña General & Ventas: canales, pagos, envíos, Andreani, numeración e importación',
+  'src/components/ConfigModal.tsx':
+    'Configuración del sistema: shell del modal, estado compartido, guardado y pestañas',
+  'src/components/ConfigGeneralTab.tsx':
+    'Pestaña General & Ventas: canales, pagos, envíos, Andreani, numeración e importación',
   'src/components/ConfigEmpresaTab.tsx': 'Pestaña Empresa / Firma: identidad, logo, datos fiscales y puntos de venta',
-  'src/components/ConfigSecurityTab.tsx': 'Pestaña Seguridad & PIN: control de acceso, inactividad y restricciones por rol',
+  'src/components/ConfigSecurityTab.tsx':
+    'Pestaña Seguridad & PIN: control de acceso, inactividad y restricciones por rol',
   'src/components/ConfigBackupsTab.tsx': 'Pestaña Copias de seguridad: backup automático, copia manual y restauración',
   'src/components/AuthModal.tsx': 'Auth Gate: PIN, selección de rol (RBAC) y bloqueo progresivo por intentos',
   'src/utils/formatters.ts': 'Formateo ARS/fechas, validaciones de venta, IDs y sanitización de CSV',

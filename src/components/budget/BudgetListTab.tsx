@@ -20,7 +20,7 @@ export const BudgetListTab: React.FC<BudgetListTabProps> = ({
   onPreviewBudget,
   onEditBudget,
   onConvert,
-  onDeleteBudget
+  onDeleteBudget,
 }) => {
   return (
     <div className="space-y-4">
@@ -72,8 +72,8 @@ export const BudgetListTab: React.FC<BudgetListTabProps> = ({
                         b.estado === 'Convertido'
                           ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
                           : b.estado === 'Aprobado'
-                          ? 'bg-blue-100 dark:bg-blue-950/80 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800'
-                          : 'bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800'
+                            ? 'bg-blue-100 dark:bg-blue-950/80 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800'
+                            : 'bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800'
                       }`}
                     >
                       {b.estado}

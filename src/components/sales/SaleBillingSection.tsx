@@ -41,7 +41,7 @@ export const SaleBillingSection: React.FC<SaleBillingSectionProps> = ({
   estadosEnvio,
   notas,
   setNotas,
-  generateDefaultInvoiceNumber
+  generateDefaultInvoiceNumber,
 }) => {
   return (
     <div className="bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-lg p-4 space-y-3">

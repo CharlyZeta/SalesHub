@@ -30,7 +30,7 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({
   config,
   onSaveBudget,
   onDeleteBudget,
-  onConvertToSale
+  onConvertToSale,
 }) => {
   const [activeTab, setActiveTab] = useState<'create' | 'list' | 'preview'>('create');
 
@@ -45,7 +45,7 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({
     cuit: '',
     iibb: '',
     condicionIva: '',
-    inicioActividades: ''
+    inicioActividades: '',
   };
 
   // Currently active budget for viewing / editing / previewing
@@ -85,7 +85,7 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({
 
   // Items State
   const [items, setItems] = useState<BudgetItem[]>([
-    { id: '1', descripcion: '', cantidad: 1, precioUnitario: 0, descuentoPorcentaje: 0, subtotal: 0 }
+    { id: '1', descripcion: '', cantidad: 1, precioUnitario: 0, descuentoPorcentaje: 0, subtotal: 0 },
   ]);
   const [percepciones, setPercepciones] = useState<number>(0);
   const [observaciones, setObservaciones] = useState<string>('');
@@ -140,9 +140,7 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({
     setCodigoPostal('');
     setCondicionFiscal('CONSUMIDOR FINAL');
     setCondicionVenta('CONTADO');
-    setItems([
-      { id: '1', descripcion: '', cantidad: 1, precioUnitario: 0, descuentoPorcentaje: 0, subtotal: 0 }
-    ]);
+    setItems([{ id: '1', descripcion: '', cantidad: 1, precioUnitario: 0, descuentoPorcentaje: 0, subtotal: 0 }]);
     setPercepciones(0);
     setObservaciones('');
     setActiveTab('create');
@@ -193,7 +191,14 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({
   const handleAddItemRow = () => {
     setItems([
       ...items,
-      { id: Date.now().toString(), descripcion: '', cantidad: 1, precioUnitario: 0, descuentoPorcentaje: 0, subtotal: 0 }
+      {
+        id: Date.now().toString(),
+        descripcion: '',
+        cantidad: 1,
+        precioUnitario: 0,
+        descuentoPorcentaje: 0,
+        subtotal: 0,
+      },
     ]);
   };
 
@@ -235,7 +240,7 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({
       precioUnitario: pu,
       descuentoPorcentaje: desc,
       subtotal: calculateBudgetItemSubtotal(cant, pu, desc),
-      imagenUrl: catalogItem.imagenUrl
+      imagenUrl: catalogItem.imagenUrl,
     };
     setItems(updated);
   };
@@ -287,7 +292,7 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({
       importeTotal: calculations.importeTotalCalculado,
       observaciones,
       estado: selectedBudget ? selectedBudget.estado : 'Pendiente',
-      creadoEn: selectedBudget ? selectedBudget.creadoEn : new Date().toISOString()
+      creadoEn: selectedBudget ? selectedBudget.creadoEn : new Date().toISOString(),
     };
 
     onSaveBudget(budgetToSave);
@@ -310,7 +315,7 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({
     if (selectedBudget?.id === b.id) {
       setSelectedBudget({
         ...selectedBudget,
-        estado: 'Convertido'
+        estado: 'Convertido',
       });
     }
 
@@ -336,7 +341,8 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({
       const { jsPDF } = await import('jspdf');
 
       const numero = selectedBudget.numeroPresupuesto || 'S/N';
-      const clienteRaw = `${selectedBudget.razonSocialNombre || ''} ${selectedBudget.apellido || ''}`.trim() || 'SIN_CLIENTE';
+      const clienteRaw =
+        `${selectedBudget.razonSocialNombre || ''} ${selectedBudget.apellido || ''}`.trim() || 'SIN_CLIENTE';
       const cliente = clienteRaw.replace(/\s+/g, '_').replace(/[^\w\-áéíóúÁÉÍÓÚñÑ]/g, '');
       const fecha = (selectedBudget.fechaEmision || new Date().toISOString().split('T')[0]).replace(/-/g, '');
       const filename = `Presupuesto_${numero}_${cliente}_${fecha}.pdf`;
@@ -356,7 +362,7 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({
           cacheBust: true,
           backgroundColor: '#ffffff',
           pixelRatio: 2,
-          width: 794
+          width: 794,
         });
       } finally {
         printArea.innerHTML = '';
@@ -384,10 +390,16 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({
       pdf.addImage(dataUrl, 'PNG', x, y, w, h);
       pdf.save(filename);
       setSuccessMessage(`¡Documento PDF "${filename}" generado y descargado con éxito!`);
-      addSystemLog('INFO', 'Presupuestos', `Presupuesto ${selectedBudget.numeroPresupuesto} exportado a PDF (${filename})`);
+      addSystemLog(
+        'INFO',
+        'Presupuestos',
+        `Presupuesto ${selectedBudget.numeroPresupuesto} exportado a PDF (${filename})`
+      );
     } catch (err: any) {
       console.error('Error al generar PDF:', err);
-      setFormError('No se pudo generar el PDF automáticamente. Usá el botón "Imprimir" y en el diálogo elegí "Guardar como PDF".');
+      setFormError(
+        'No se pudo generar el PDF automáticamente. Usá el botón "Imprimir" y en el diálogo elegí "Guardar como PDF".'
+      );
       addSystemLog('ERROR', 'Presupuestos', `Error al generar PDF de presupuesto: ${err?.message || err}`);
     } finally {
       setIsGeneratingPdf(false);
@@ -422,7 +434,11 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({
     window.addEventListener('afterprint', cleanup);
     try {
       window.print();
-      addSystemLog('INFO', 'Presupuestos', `Presupuesto ${selectedBudget?.numeroPresupuesto || 'N/A'} enviado a impresión`);
+      addSystemLog(
+        'INFO',
+        'Presupuestos',
+        `Presupuesto ${selectedBudget?.numeroPresupuesto || 'N/A'} enviado a impresión`
+      );
     } catch (err: any) {
       console.error('Error al abrir el diálogo de impresión:', err);
       addSystemLog('ERROR', 'Presupuestos', `Error al imprimir presupuesto: ${err?.message || err}`);
@@ -434,7 +450,6 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 overflow-y-auto print:p-0 print:static print:bg-white">
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-5xl rounded-xl shadow-2xl overflow-hidden flex flex-col my-auto max-h-[95vh] print:max-h-none print:shadow-none print:border-none print:rounded-none">
-        
         {/* Header - Screen only */}
         <div className="bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 px-5 py-3 flex items-center justify-between print:hidden">
           <div className="flex items-center gap-3">
@@ -643,16 +658,28 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({
               </div>
               <div>
                 <h3 className="font-bold text-slate-900 dark:text-slate-100 text-base">Convertir a Venta Real</h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Presupuesto {budgetToConvert.numeroPresupuesto}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Presupuesto {budgetToConvert.numeroPresupuesto}
+                </p>
               </div>
             </div>
 
             <div className="bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-xs space-y-1.5 text-slate-700 dark:text-slate-300">
-              <p><span className="font-semibold text-slate-900 dark:text-slate-100">Cliente:</span> {budgetToConvert.razonSocialNombre} {budgetToConvert.apellido || ''}</p>
-              <p><span className="font-semibold text-slate-900 dark:text-slate-100">Importe Total:</span> {formatCurrency(budgetToConvert.importeTotal)}</p>
-              <p><span className="font-semibold text-slate-900 dark:text-slate-100">Cantidad de productos:</span> {budgetToConvert.items.length} ítem(s)</p>
+              <p>
+                <span className="font-semibold text-slate-900 dark:text-slate-100">Cliente:</span>{' '}
+                {budgetToConvert.razonSocialNombre} {budgetToConvert.apellido || ''}
+              </p>
+              <p>
+                <span className="font-semibold text-slate-900 dark:text-slate-100">Importe Total:</span>{' '}
+                {formatCurrency(budgetToConvert.importeTotal)}
+              </p>
+              <p>
+                <span className="font-semibold text-slate-900 dark:text-slate-100">Cantidad de productos:</span>{' '}
+                {budgetToConvert.items.length} ítem(s)
+              </p>
               <p className="text-[11px] text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/80 p-2.5 rounded border border-emerald-200 dark:border-emerald-800 mt-2 font-medium">
-                Al confirmar, se registrará inmediatamente como una Venta Real en la planilla principal y el presupuesto cambiará su estado a "Convertido".
+                Al confirmar, se registrará inmediatamente como una Venta Real en la planilla principal y el presupuesto
+                cambiará su estado a "Convertido".
               </p>
             </div>
 

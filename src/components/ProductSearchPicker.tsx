@@ -22,7 +22,7 @@ export const ProductSearchPicker: React.FC<ProductSearchPickerProps> = ({
   onChangeValue,
   onSelectProduct,
   placeholder = 'Buscar o ingresar producto...',
-  selectedImageUrl
+  selectedImageUrl,
 }) => {
   const effectiveValue = value ?? currentValue ?? '';
   const [isOpen, setIsOpen] = useState(false);
@@ -82,9 +82,9 @@ export const ProductSearchPicker: React.FC<ProductSearchPickerProps> = ({
         {/* Product Image Preview if available */}
         {selectedImageUrl ? (
           <div className="absolute left-1.5 w-6 h-6 rounded overflow-hidden border border-slate-200 bg-slate-100 shrink-0 z-10">
-            <img 
-              src={selectedImageUrl} 
-              alt="Producto" 
+            <img
+              src={selectedImageUrl}
+              alt="Producto"
               className="w-full h-full object-cover"
               onError={(e) => {
                 (e.target as HTMLElement).style.display = 'none';
@@ -183,7 +183,8 @@ export const ProductSearchPicker: React.FC<ProductSearchPickerProps> = ({
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                         onError={(e) => {
                           // Fallback on image load error
-                          e.currentTarget.src = 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=100&auto=format&fit=crop&q=80';
+                          e.currentTarget.src =
+                            'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=100&auto=format&fit=crop&q=80';
                         }}
                       />
                     ) : (
@@ -207,11 +208,7 @@ export const ProductSearchPicker: React.FC<ProductSearchPickerProps> = ({
                         SKU: {prod.sku}
                       </span>
 
-                      {prod.categoria && (
-                        <span className="truncate text-slate-400">
-                          • {prod.categoria}
-                        </span>
-                      )}
+                      {prod.categoria && <span className="truncate text-slate-400">• {prod.categoria}</span>}
 
                       {/* Stock / Status Badges */}
                       {isOutStock ? (
@@ -219,9 +216,7 @@ export const ProductSearchPicker: React.FC<ProductSearchPickerProps> = ({
                           <AlertCircle className="w-2.5 h-2.5" /> Sin Stock ({prod.stock})
                         </span>
                       ) : (
-                        <span className="text-slate-400 font-mono">
-                          (Stock: {prod.stock})
-                        </span>
+                        <span className="text-slate-400 font-mono">(Stock: {prod.stock})</span>
                       )}
 
                       {isHidden && (

@@ -25,7 +25,7 @@ describe('numberToWordsSpanish Utility', () => {
 
   it('converts millions and complex amounts with decimals', () => {
     expect(numberToWordsSpanish(1000000)).toBe('un millón con 00/100.-');
-    expect(numberToWordsSpanish(2450800.50)).toBe('dos millones cuatrocientos cincuenta mil ochocientos con 50/100.-');
+    expect(numberToWordsSpanish(2450800.5)).toBe('dos millones cuatrocientos cincuenta mil ochocientos con 50/100.-');
   });
 
   it('handles negative or NaN inputs', () => {

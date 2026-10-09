@@ -22,7 +22,7 @@ export function calculateBudgetItemSubtotal(
   const pu = Number(precioUnitario) || 0;
   const desc = Number(descuentoPorcentaje) || 0;
   const base = cant * pu;
-  return base - (base * (desc / 100));
+  return base - base * (desc / 100);
 }
 
 /**
@@ -30,13 +30,13 @@ export function calculateBudgetItemSubtotal(
  */
 export function calculateBudgetTotals(items: BudgetItem[], percepciones: number = 0): BudgetCalculationResult {
   const rawSubtotal = items.reduce(
-    (acc, item) => acc + (Number(item.cantidad || 0) * Number(item.precioUnitario || 0)),
+    (acc, item) => acc + Number(item.cantidad || 0) * Number(item.precioUnitario || 0),
     0
   );
 
   const descuentoTotal = items.reduce((acc, item) => {
     const base = Number(item.cantidad || 0) * Number(item.precioUnitario || 0);
-    return acc + (base * (Number(item.descuentoPorcentaje || 0) / 100));
+    return acc + base * (Number(item.descuentoPorcentaje || 0) / 100);
   }, 0);
 
   const subtotalNeto = items.reduce((acc, item) => acc + (Number(item.subtotal) || 0), 0);
@@ -48,7 +48,7 @@ export function calculateBudgetTotals(items: BudgetItem[], percepciones: number 
     descuentoTotal,
     subtotalNeto,
     importeTotalCalculado,
-    totalEnLetras
+    totalEnLetras,
   };
 }
 

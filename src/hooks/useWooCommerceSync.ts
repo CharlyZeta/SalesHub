@@ -62,7 +62,7 @@ export function useWooCommerceSync({
   catalog,
   setCatalog,
   customers,
-  setCustomers
+  setCustomers,
 }: UseWooCommerceSyncProps): UseWooCommerceSyncReturn {
   const [wooConfig, setWooConfig] = useState<WooCommerceConfig>(() => {
     const saved = localStorage.getItem('app_woo_config_v1');
@@ -101,65 +101,71 @@ export function useWooCommerceSync({
   /**
    * Aplica el catálogo recibido (de la tienda) combinándolo con el local (Fix D / W5)
    */
-  const handleSyncCatalog = useCallback((syncedProducts: CatalogProduct[]) => {
-    setCatalog((prevCatalog) => {
-      const merged = prevCatalog.map((p) => ({ ...p }));
-      const bySku = new Map<string, CatalogProduct>();
-      const byName = new Map<string, CatalogProduct>();
-      merged.forEach((p) => {
-        if (p.sku) bySku.set(p.sku.trim().toLowerCase(), p);
-        if (p.nombre) byName.set(p.nombre.trim().toLowerCase(), p);
-      });
+  const handleSyncCatalog = useCallback(
+    (syncedProducts: CatalogProduct[]) => {
+      setCatalog((prevCatalog) => {
+        const merged = prevCatalog.map((p) => ({ ...p }));
+        const bySku = new Map<string, CatalogProduct>();
+        const byName = new Map<string, CatalogProduct>();
+        merged.forEach((p) => {
+          if (p.sku) bySku.set(p.sku.trim().toLowerCase(), p);
+          if (p.nombre) byName.set(p.nombre.trim().toLowerCase(), p);
+        });
 
-      let added = 0;
-      for (const incoming of syncedProducts) {
-        const key = incoming.sku?.trim().toLowerCase();
-        const nameKey = incoming.nombre?.trim().toLowerCase();
-        const existing = (key && bySku.get(key)) || (nameKey && byName.get(nameKey));
-        if (existing) {
-          existing.precio = incoming.precio;
-          existing.stock = incoming.stock;
-          existing.nombre = incoming.nombre || existing.nombre;
-          if (incoming.categoria) existing.categoria = incoming.categoria;
-          if (incoming.imagenUrl) existing.imagenUrl = incoming.imagenUrl;
-          existing.estadoWoo = incoming.estadoWoo || existing.estadoWoo;
-        } else {
-          const product = { ...incoming };
-          merged.push(product);
-          if (product.sku) bySku.set(product.sku.trim().toLowerCase(), product);
-          if (product.nombre) byName.set(product.nombre.trim().toLowerCase(), product);
-          added++;
+        let added = 0;
+        for (const incoming of syncedProducts) {
+          const key = incoming.sku?.trim().toLowerCase();
+          const nameKey = incoming.nombre?.trim().toLowerCase();
+          const existing = (key && bySku.get(key)) || (nameKey && byName.get(nameKey));
+          if (existing) {
+            existing.precio = incoming.precio;
+            existing.stock = incoming.stock;
+            existing.nombre = incoming.nombre || existing.nombre;
+            if (incoming.categoria) existing.categoria = incoming.categoria;
+            if (incoming.imagenUrl) existing.imagenUrl = incoming.imagenUrl;
+            existing.estadoWoo = incoming.estadoWoo || existing.estadoWoo;
+          } else {
+            const product = { ...incoming };
+            merged.push(product);
+            if (product.sku) bySku.set(product.sku.trim().toLowerCase(), product);
+            if (product.nombre) byName.set(product.nombre.trim().toLowerCase(), product);
+            added++;
+          }
         }
-      }
 
-      addSystemLog(
-        'SYNC',
-        'WooCommerce',
-        `Catálogo combinado: ${syncedProducts.length} de la tienda, ${added} nuevos, ${prevCatalog.length} locales conservados (sin borrados).`
-      );
-      return merged;
-    });
-  }, [setCatalog]);
+        addSystemLog(
+          'SYNC',
+          'WooCommerce',
+          `Catálogo combinado: ${syncedProducts.length} de la tienda, ${added} nuevos, ${prevCatalog.length} locales conservados (sin borrados).`
+        );
+        return merged;
+      });
+    },
+    [setCatalog]
+  );
 
   /**
    * Sincroniza clientes evitando duplicados
    */
-  const handleSyncCustomers = useCallback((syncedCustomers: Customer[]) => {
-    setCustomers((prevCustomers) => {
-      const existingIds = new Set(prevCustomers.map((c) => c.clienteId?.toLowerCase().trim()).filter(Boolean));
-      const existingEmails = new Set(prevCustomers.map((c) => c.email?.toLowerCase().trim()).filter(Boolean));
+  const handleSyncCustomers = useCallback(
+    (syncedCustomers: Customer[]) => {
+      setCustomers((prevCustomers) => {
+        const existingIds = new Set(prevCustomers.map((c) => c.clienteId?.toLowerCase().trim()).filter(Boolean));
+        const existingEmails = new Set(prevCustomers.map((c) => c.email?.toLowerCase().trim()).filter(Boolean));
 
-      const newOnly = syncedCustomers.filter((c) => {
-        const cId = c.clienteId?.toLowerCase().trim();
-        const email = c.email?.toLowerCase().trim();
-        if (cId && existingIds.has(cId)) return false;
-        if (email && email !== '' && !email.includes('@tienda.com') && existingEmails.has(email)) return false;
-        return true;
+        const newOnly = syncedCustomers.filter((c) => {
+          const cId = c.clienteId?.toLowerCase().trim();
+          const email = c.email?.toLowerCase().trim();
+          if (cId && existingIds.has(cId)) return false;
+          if (email && email !== '' && !email.includes('@tienda.com') && existingEmails.has(email)) return false;
+          return true;
+        });
+
+        return [...prevCustomers, ...newOnly];
       });
-
-      return [...prevCustomers, ...newOnly];
-    });
-  }, [setCustomers]);
+    },
+    [setCustomers]
+  );
 
   const localMergePayload = () => ({
     products: catalog.map((p) => ({
@@ -170,7 +176,7 @@ export function useWooCommerceSync({
       stock: p.stock,
       categoria: p.categoria,
       origen: p.origen,
-      imagenUrl: p.imagenUrl
+      imagenUrl: p.imagenUrl,
     })),
     customers: customers.map((c) => ({
       clienteId: c.clienteId,
@@ -188,8 +194,8 @@ export function useWooCommerceSync({
       cantidadPedidos: c.cantidadPedidos,
       ultimaCompra: c.ultimaCompra,
       canalHabitual: c.canalHabitual,
-      origen: c.origen
-    }))
+      origen: c.origen,
+    })),
   });
 
   // Polling del estado de sincronización del servidor
@@ -209,7 +215,7 @@ export function useWooCommerceSync({
           autoSync: Boolean(status.autoSync),
           lastSync: status.lastSync ?? null,
           lastError: status.lastError ?? null,
-          nextRunAt: status.nextRunAt ?? null
+          nextRunAt: status.nextRunAt ?? null,
         }));
 
         if (!status.autoSync || !status.hasSnapshot) return;
@@ -271,7 +277,11 @@ export function useWooCommerceSync({
       if (now - lastSyncTime < intervalMs) return;
 
       try {
-        addSystemLog('SYNC', 'WooCommerce', `Iniciando sincronización automática programada (cada ${intervalHours} hora/s)...`);
+        addSystemLog(
+          'SYNC',
+          'WooCommerce',
+          `Iniciando sincronización automática programada (cada ${intervalHours} hora/s)...`
+        );
         const fetchedProds = await fetchWooCommerceProducts(wooConfig);
         handleSyncCatalog(fetchedProds);
 
@@ -281,7 +291,7 @@ export function useWooCommerceSync({
         const nowIso = new Date().toISOString();
         setWooConfig((prev) => ({
           ...prev,
-          ultimoSync: nowIso
+          ultimoSync: nowIso,
         }));
 
         wooSyncBackoffRef.current = 0;
@@ -303,7 +313,7 @@ export function useWooCommerceSync({
           ...prev,
           failureCount: failures,
           lastError: message,
-          nextAttemptAt: new Date(wooSyncNextAttemptRef.current).toISOString()
+          nextAttemptAt: new Date(wooSyncNextAttemptRef.current).toISOString(),
         }));
         addSystemLog(
           'ERROR',
@@ -329,6 +339,6 @@ export function useWooCommerceSync({
     wooSyncNextAttemptRef,
     handleSyncCatalog,
     handleSyncCustomers,
-    localMergePayload
+    localMergePayload,
   };
 }

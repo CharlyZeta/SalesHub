@@ -80,7 +80,9 @@ export const ConfigBackupsTab: React.FC<ConfigBackupsTabProps> = ({
         <div className="pt-3 flex flex-wrap items-center justify-between border-t border-slate-200 dark:border-slate-800 gap-2">
           <span className="text-[11px] text-slate-500 dark:text-slate-400">
             {lastBackupDate ? (
-              <>Último backup: <strong>{new Date(lastBackupDate).toLocaleString()}</strong> ({lastBackupFilename})</>
+              <>
+                Último backup: <strong>{new Date(lastBackupDate).toLocaleString()}</strong> ({lastBackupFilename})
+              </>
             ) : (
               'Aún no se han realizado copias de seguridad.'
             )}
@@ -97,12 +99,18 @@ export const ConfigBackupsTab: React.FC<ConfigBackupsTabProps> = ({
         </div>
 
         {backupStatus && (
-          <div className={`p-2.5 rounded-lg text-xs font-medium flex items-center gap-2 ${
-            backupStatus.type === 'error'
-              ? 'bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300'
-              : 'bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-950 dark:text-emerald-200'
-          }`}>
-            {backupStatus.type === 'error' ? <AlertCircle className="w-4 h-4 shrink-0 text-red-500" /> : <Check className="w-4 h-4 shrink-0 text-emerald-500" />}
+          <div
+            className={`p-2.5 rounded-lg text-xs font-medium flex items-center gap-2 ${
+              backupStatus.type === 'error'
+                ? 'bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300'
+                : 'bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-950 dark:text-emerald-200'
+            }`}
+          >
+            {backupStatus.type === 'error' ? (
+              <AlertCircle className="w-4 h-4 shrink-0 text-red-500" />
+            ) : (
+              <Check className="w-4 h-4 shrink-0 text-emerald-500" />
+            )}
             <span>{backupStatus.message}</span>
           </div>
         )}
@@ -112,9 +120,17 @@ export const ConfigBackupsTab: React.FC<ConfigBackupsTabProps> = ({
       <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 rounded-lg flex gap-2.5 text-[11px] text-slate-500 dark:text-slate-400">
         <Cloud className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
         <div>
-          <span className="font-semibold text-slate-800 dark:text-slate-200">Sincronización en la Nube (Google Drive / OneDrive):</span>
+          <span className="font-semibold text-slate-800 dark:text-slate-200">
+            Sincronización en la Nube (Google Drive / OneDrive):
+          </span>
           <p className="mt-0.5 leading-relaxed">
-            Las copias marcadas como 💻 Disco se guardan en la carpeta <code className="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded font-mono font-bold text-blue-600 dark:text-blue-400">./backups</code> de este proyecto. Si instalas la aplicación oficial de Google Drive en tu computadora y configuras la sincronización de esta carpeta, tus backups locales se subirán a la nube de manera 100% transparente y segura.
+            Las copias marcadas como 💻 Disco se guardan en la carpeta{' '}
+            <code className="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded font-mono font-bold text-blue-600 dark:text-blue-400">
+              ./backups
+            </code>{' '}
+            de este proyecto. Si instalas la aplicación oficial de Google Drive en tu computadora y configuras la
+            sincronización de esta carpeta, tus backups locales se subirán a la nube de manera 100% transparente y
+            segura.
           </p>
         </div>
       </div>
@@ -122,7 +138,9 @@ export const ConfigBackupsTab: React.FC<ConfigBackupsTabProps> = ({
       {/* Backups List Table */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <span className="font-bold text-xs text-slate-800 dark:text-slate-200">Copias de Seguridad Disponibles ({backups.length})</span>
+          <span className="font-bold text-xs text-slate-800 dark:text-slate-200">
+            Copias de Seguridad Disponibles ({backups.length})
+          </span>
           <button
             type="button"
             onClick={onLoadBackups}
@@ -149,28 +167,40 @@ export const ConfigBackupsTab: React.FC<ConfigBackupsTabProps> = ({
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-mono">
                 {isLoadingBackups ? (
                   <tr>
-                    <td colSpan={5} className="text-center py-6 text-slate-400 font-sans">Cargando listado...</td>
+                    <td colSpan={5} className="text-center py-6 text-slate-400 font-sans">
+                      Cargando listado...
+                    </td>
                   </tr>
                 ) : backups.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="text-center py-6 text-slate-400 font-sans">No se encontraron copias de seguridad. Genera una copia manual o activa el guardado automático.</td>
+                    <td colSpan={5} className="text-center py-6 text-slate-400 font-sans">
+                      No se encontraron copias de seguridad. Genera una copia manual o activa el guardado automático.
+                    </td>
                   </tr>
                 ) : (
                   backups.map((item) => (
-                    <tr key={`${item.source}-${item.filename}`} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                    <tr
+                      key={`${item.source}-${item.filename}`}
+                      className="hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                    >
                       <td className="p-2 text-slate-600 dark:text-slate-400 font-sans">
                         {new Date(item.date).toLocaleString()}
                       </td>
                       <td className="p-2 font-sans select-none">
-                        <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                          item.source === 'server'
-                            ? 'bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 font-sans border border-blue-200 dark:border-blue-900'
-                            : 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-sans border border-emerald-200 dark:border-emerald-900'
-                        }`}>
+                        <span
+                          className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                            item.source === 'server'
+                              ? 'bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 font-sans border border-blue-200 dark:border-blue-900'
+                              : 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-sans border border-emerald-200 dark:border-emerald-900'
+                          }`}
+                        >
                           {item.source === 'server' ? '💻 Disco' : '🌐 Navegador'}
                         </span>
                       </td>
-                      <td className="p-2 text-slate-700 dark:text-slate-300 font-medium truncate max-w-[160px]" title={item.filename}>
+                      <td
+                        className="p-2 text-slate-700 dark:text-slate-300 font-medium truncate max-w-[160px]"
+                        title={item.filename}
+                      >
                         {item.filename}
                       </td>
                       <td className="p-2 text-right text-slate-500 dark:text-slate-400 font-medium">

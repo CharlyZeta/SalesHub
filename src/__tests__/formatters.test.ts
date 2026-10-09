@@ -1,5 +1,15 @@
 import { describe, it, expect, vi } from 'vitest';
-import { formatCurrency, formatDate, parseDateToISO, parseAmountString, generateSaleId, getCurrentMonthISO, getMonthYearLabel, exportSalesToCSV, validateRequiredSaleFields } from '../utils/formatters';
+import {
+  formatCurrency,
+  formatDate,
+  parseDateToISO,
+  parseAmountString,
+  generateSaleId,
+  getCurrentMonthISO,
+  getMonthYearLabel,
+  exportSalesToCSV,
+  validateRequiredSaleFields,
+} from '../utils/formatters';
 import { Sale } from '../types';
 
 describe('Formatters Utilities', () => {
@@ -10,7 +20,7 @@ describe('Formatters Utilities', () => {
         clienteId: 'CLI-500',
         productos: [{ id: 'p1', nombre: 'Cocina Industrial', cantidad: 1, precioUnitario: 500000, subtotal: 500000 }],
         montoTotal: 500000,
-        metodoPago: 'Efectivo'
+        metodoPago: 'Efectivo',
       };
 
       const result = validateRequiredSaleFields(validSale);
@@ -24,7 +34,7 @@ describe('Formatters Utilities', () => {
         clienteId: '',
         productos: [],
         montoTotal: 0,
-        metodoPago: ''
+        metodoPago: '',
       };
 
       const result = validateRequiredSaleFields(incompleteSale);
@@ -162,8 +172,8 @@ describe('Formatters Utilities', () => {
           numeroSeguimiento: 'TRK-1',
           estadoEnvio: 'Entregado',
           notas: 'Test note',
-          creadoEn: '2026-07-27T10:00:00Z'
-        }
+          creadoEn: '2026-07-27T10:00:00Z',
+        },
       ];
 
       const clickSpy = vi.fn();
@@ -174,8 +184,8 @@ describe('Formatters Utilities', () => {
         createElement: vi.fn().mockReturnValue(mockElement),
         body: {
           appendChild: vi.fn(),
-          removeChild: vi.fn()
-        }
+          removeChild: vi.fn(),
+        },
       };
 
       exportSalesToCSV(mockSales, 'test.csv');

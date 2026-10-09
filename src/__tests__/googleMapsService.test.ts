@@ -36,16 +36,16 @@ describe('googleMapsService - testGoogleMapsApiKey', () => {
           geometry: {
             location: {
               lat: -34.6037389,
-              lng: -58.3815704
-            }
-          }
-        }
-      ]
+              lng: -58.3815704,
+            },
+          },
+        },
+      ],
     };
 
     global.fetch = vi.fn().mockResolvedValue({
       status: 200,
-      json: async () => mockResponse
+      json: async () => mockResponse,
     } as Response);
 
     const result = await testGoogleMapsApiKey('AIzaSyValidApiKeyTest123');
@@ -61,12 +61,12 @@ describe('googleMapsService - testGoogleMapsApiKey', () => {
   it('retorna REQUEST_DENIED con mensaje explicativo cuando Google rechaza la clave o la API no está habilitada', async () => {
     const mockResponse = {
       status: 'REQUEST_DENIED',
-      error_message: 'The provided API key is invalid or Geocoding API is not enabled on this project.'
+      error_message: 'The provided API key is invalid or Geocoding API is not enabled on this project.',
     };
 
     global.fetch = vi.fn().mockResolvedValue({
       status: 200,
-      json: async () => mockResponse
+      json: async () => mockResponse,
     } as Response);
 
     const result = await testGoogleMapsApiKey('AIzaSyInvalidKey');
@@ -80,7 +80,7 @@ describe('googleMapsService - testGoogleMapsApiKey', () => {
   it('retorna OVER_QUERY_LIMIT cuando la respuesta HTTP es 429', async () => {
     global.fetch = vi.fn().mockResolvedValue({
       status: 429,
-      json: async () => ({})
+      json: async () => ({}),
     } as Response);
 
     const result = await testGoogleMapsApiKey('AIzaSyOverQuotaKey');
@@ -93,12 +93,12 @@ describe('googleMapsService - testGoogleMapsApiKey', () => {
   it('retorna OVER_QUERY_LIMIT cuando data.status es OVER_QUERY_LIMIT', async () => {
     const mockResponse = {
       status: 'OVER_QUERY_LIMIT',
-      error_message: 'You have exceeded your daily request quota for this API.'
+      error_message: 'You have exceeded your daily request quota for this API.',
     };
 
     global.fetch = vi.fn().mockResolvedValue({
       status: 200,
-      json: async () => mockResponse
+      json: async () => mockResponse,
     } as Response);
 
     const result = await testGoogleMapsApiKey('AIzaSyOverQuotaKey');
@@ -110,12 +110,12 @@ describe('googleMapsService - testGoogleMapsApiKey', () => {
   it('retorna ZERO_RESULTS con success true cuando la clave es válida pero la búsqueda no tiene resultados', async () => {
     const mockResponse = {
       status: 'ZERO_RESULTS',
-      results: []
+      results: [],
     };
 
     global.fetch = vi.fn().mockResolvedValue({
       status: 200,
-      json: async () => mockResponse
+      json: async () => mockResponse,
     } as Response);
 
     const result = await testGoogleMapsApiKey('AIzaSyValidKey');

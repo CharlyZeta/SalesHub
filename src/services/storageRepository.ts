@@ -6,7 +6,7 @@ import {
   INITIAL_DEMO_CUSTOMERS,
   INITIAL_CONFIG,
   INITIAL_WOO_CONFIG,
-  DEMO_SEED_ENABLED
+  DEMO_SEED_ENABLED,
 } from '../data/initialData';
 
 /**
@@ -118,7 +118,7 @@ export class LocalStorageRepository implements IStorageRepository {
           ...INITIAL_CONFIG,
           ...parsed,
           metodosEnvio: parsed.metodosEnvio || INITIAL_CONFIG.metodosEnvio,
-          estadosEnvio: parsed.estadosEnvio || INITIAL_CONFIG.estadosEnvio
+          estadosEnvio: parsed.estadosEnvio || INITIAL_CONFIG.estadosEnvio,
         };
       }
     } catch (e) {

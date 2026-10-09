@@ -1,8 +1,8 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
-import {defineConfig, type Plugin} from 'vite';
-import {handleApiRequest} from './api-handlers.js';
+import { defineConfig, type Plugin } from 'vite';
+import { handleApiRequest } from './api-handlers.js';
 
 /**
  * Middleware de desarrollo: expone la misma superficie de API que el servidor

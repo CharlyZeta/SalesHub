@@ -12,7 +12,16 @@ const DEMO_DATA_ENABLED: boolean = import.meta.env?.VITE_WOO_DEMO === 'true';
 
 /** Productos ficticios para demos offline (requiere VITE_WOO_DEMO=true). */
 function getDemoCatalog(): CatalogProduct[] {
-  const base = (id: string, sku: string, nombre: string, precio: number, stock: number, categoria: string, imagenUrl: string, estadoWoo = 'publish'): CatalogProduct => ({
+  const base = (
+    id: string,
+    sku: string,
+    nombre: string,
+    precio: number,
+    stock: number,
+    categoria: string,
+    imagenUrl: string,
+    estadoWoo = 'publish'
+  ): CatalogProduct => ({
     id,
     sku,
     nombre: `${nombre} (demo)`,
@@ -25,11 +34,52 @@ function getDemoCatalog(): CatalogProduct[] {
   });
 
   return [
-    base('woo-prod-demo-1', 'WOO-DEMO-1', 'Heladera Comercial Doble Puerta Inox', 1850000, 4, 'Comercial', 'https://images.unsplash.com/photo-1584992236310-6edddc08acff?w=150&auto=format&fit=crop&q=80'),
-    base('woo-prod-demo-2', 'WOO-DEMO-2', 'Freezer Horizontal 500L', 920000, 0, 'Comercial', 'https://images.unsplash.com/photo-1571175443880-49e1d25b2bc5?w=150&auto=format&fit=crop&q=80'),
-    base('woo-prod-demo-3', 'WOO-DEMO-3', 'Cocina Industrial 6 Hornallas + Horno', 1450000, 3, 'Equipamiento', 'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?w=150&auto=format&fit=crop&q=80'),
-    base('woo-prod-demo-4', 'WOO-DEMO-4', 'Balanza Electrónica Digital 30kg', 280000, 12, 'Accesorios', 'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=150&auto=format&fit=crop&q=80'),
-    base('woo-prod-demo-5', 'WOO-DEMO-5', 'Cortadora de Fiambre Hoja 300mm', 680000, 2, 'Maquinaria', 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=150&auto=format&fit=crop&q=80', 'draft'),
+    base(
+      'woo-prod-demo-1',
+      'WOO-DEMO-1',
+      'Heladera Comercial Doble Puerta Inox',
+      1850000,
+      4,
+      'Comercial',
+      'https://images.unsplash.com/photo-1584992236310-6edddc08acff?w=150&auto=format&fit=crop&q=80'
+    ),
+    base(
+      'woo-prod-demo-2',
+      'WOO-DEMO-2',
+      'Freezer Horizontal 500L',
+      920000,
+      0,
+      'Comercial',
+      'https://images.unsplash.com/photo-1571175443880-49e1d25b2bc5?w=150&auto=format&fit=crop&q=80'
+    ),
+    base(
+      'woo-prod-demo-3',
+      'WOO-DEMO-3',
+      'Cocina Industrial 6 Hornallas + Horno',
+      1450000,
+      3,
+      'Equipamiento',
+      'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?w=150&auto=format&fit=crop&q=80'
+    ),
+    base(
+      'woo-prod-demo-4',
+      'WOO-DEMO-4',
+      'Balanza Electrónica Digital 30kg',
+      280000,
+      12,
+      'Accesorios',
+      'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=150&auto=format&fit=crop&q=80'
+    ),
+    base(
+      'woo-prod-demo-5',
+      'WOO-DEMO-5',
+      'Cortadora de Fiambre Hoja 300mm',
+      680000,
+      2,
+      'Maquinaria',
+      'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=150&auto=format&fit=crop&q=80',
+      'draft'
+    ),
   ];
 }
 
@@ -133,7 +183,7 @@ export const transformWooProduct = (item: WooProductDTO): CatalogProduct => {
     categoria: item.categories && item.categories.length > 0 ? item.categories[0].name : 'E-commerce',
     origen: 'WooCommerce',
     imagenUrl: imageUrl,
-    estadoWoo: item.status || 'publish'
+    estadoWoo: item.status || 'publish',
   };
 };
 
@@ -151,23 +201,38 @@ export const transformWooCustomer = (item: WooCustomerDTO): Customer => {
   // Extract DNI/CUIT from WooCommerce meta_data fields if present
   let dniCuit = '';
   const dniKeys = [
-    'billing_dni', '_billing_dni',
-    'billing_cuit', '_billing_cuit',
-    'billing_cuit_dni', '_billing_cuit_dni',
-    'billing_cuit_cuil', '_billing_cuit_cuil',
-    'dni', 'cuit', 'cuil',
-    'billing_doc', '_billing_doc', 'doc',
-    'documento', '_documento', 'billing_documento', '_billing_documento',
-    'billing_cedula', 'cedula',
-    'billing_identification_number', '_billing_identification_number',
-    'identification_number', 'numero_documento', 'nro_documento', 'num_documento',
-    'billing_nro_doc', '_billing_nro_doc'
+    'billing_dni',
+    '_billing_dni',
+    'billing_cuit',
+    '_billing_cuit',
+    'billing_cuit_dni',
+    '_billing_cuit_dni',
+    'billing_cuit_cuil',
+    '_billing_cuit_cuil',
+    'dni',
+    'cuit',
+    'cuil',
+    'billing_doc',
+    '_billing_doc',
+    'doc',
+    'documento',
+    '_documento',
+    'billing_documento',
+    '_billing_documento',
+    'billing_cedula',
+    'cedula',
+    'billing_identification_number',
+    '_billing_identification_number',
+    'identification_number',
+    'numero_documento',
+    'nro_documento',
+    'num_documento',
+    'billing_nro_doc',
+    '_billing_nro_doc',
   ];
 
   if (item.meta_data && Array.isArray(item.meta_data)) {
-    const docMeta = item.meta_data.find(m => 
-      m && m.key && dniKeys.includes(String(m.key).trim().toLowerCase())
-    );
+    const docMeta = item.meta_data.find((m) => m && m.key && dniKeys.includes(String(m.key).trim().toLowerCase()));
     if (docMeta && docMeta.value) {
       dniCuit = String(docMeta.value).trim();
     }
@@ -181,15 +246,21 @@ export const transformWooCustomer = (item: WooCustomerDTO): Customer => {
     }
   }
 
-  const razonSocial = billing.company && billing.company.trim() !== dniCuit
-    ? billing.company.trim()
-    : `${identity.nombre} ${identity.apellido}`.trim();
+  const razonSocial =
+    billing.company && billing.company.trim() !== dniCuit
+      ? billing.company.trim()
+      : `${identity.nombre} ${identity.apellido}`.trim();
 
   // Extract phone number from WooCommerce meta_data fields if billing.phone is empty
   let telefono = billing.phone || '';
   if (!telefono && item.meta_data && Array.isArray(item.meta_data)) {
-    const phoneMeta = item.meta_data.find(m => 
-      m && m.key && ['billing_phone', 'phone', 'telefono', 'celular', 'billing_cellphone'].includes(String(m.key).trim().toLowerCase())
+    const phoneMeta = item.meta_data.find(
+      (m) =>
+        m &&
+        m.key &&
+        ['billing_phone', 'phone', 'telefono', 'celular', 'billing_cellphone'].includes(
+          String(m.key).trim().toLowerCase()
+        )
     );
     if (phoneMeta && phoneMeta.value) {
       telefono = String(phoneMeta.value).trim();
@@ -210,7 +281,7 @@ export const transformWooCustomer = (item: WooCustomerDTO): Customer => {
     provincia: address.provincia,
     codigoPostal: billing.postcode ? String(billing.postcode).trim() : '',
     canalHabitual: 'WooCommerce',
-    origen: 'WooCommerce'
+    origen: 'WooCommerce',
   };
 };
 
@@ -226,7 +297,11 @@ export const fetchWithCorsProxy = async (targetUrl: string): Promise<Response> =
     // If response was received but not OK (e.g., 401, 403, 404), return it so caller can read status
     if (response.status >= 400 && response.status < 500) return response;
   } catch (_err) {
-    addSystemLog('WARN', 'WooCommerce', 'Bloqueo de red/CORS en fetch directo. Configura un proxy reverso same-origin (Nginx) para sincronizar desde el navegador.');
+    addSystemLog(
+      'WARN',
+      'WooCommerce',
+      'Bloqueo de red/CORS en fetch directo. Configura un proxy reverso same-origin (Nginx) para sincronizar desde el navegador.'
+    );
   }
 
   // Final fallback: attempt direct fetch to return/throw exact error
@@ -235,7 +310,7 @@ export const fetchWithCorsProxy = async (targetUrl: string): Promise<Response> =
 
 export const fetchWooCommerceProducts = async (config: WooCommerceConfig): Promise<CatalogProduct[]> => {
   addSystemLog('API', 'WooCommerce', `Iniciando consulta paginada TOTAL de productos desde ${config.url}`);
-  
+
   if (!config.url || config.url.trim() === '') {
     addSystemLog('WARN', 'WooCommerce', 'Consulta cancelada: URL de WooCommerce vacía');
     throw new Error('URL de WooCommerce requerida');
@@ -248,18 +323,23 @@ export const fetchWooCommerceProducts = async (config: WooCommerceConfig): Promi
   let useStatusAny = true; // Try with status=any first
 
   try {
-    while (hasMore && page <= 50) { // Limit to 50 pages (5000 products) max safety
-      let endpoint = useStatusAny 
+    while (hasMore && page <= 50) {
+      // Limit to 50 pages (5000 products) max safety
+      let endpoint = useStatusAny
         ? `products?status=any&per_page=${perPage}&page=${page}`
         : `products?per_page=${perPage}&page=${page}`;
-      
+
       let endpointUrl = buildWooApiUrl(config.url, endpoint, config.consumerKey, config.consumerSecret);
       let response = await fetchWithCorsProxy(endpointUrl);
 
       // If HTTP 400/403 occurs on page 1, retry with cleaner query params
       if (!response.ok && page === 1 && (response.status === 400 || response.status === 403)) {
         if (useStatusAny) {
-          addSystemLog('WARN', 'WooCommerce', `Respuesta HTTP ${response.status} con 'status=any'. Reintentando sin filtro de status...`);
+          addSystemLog(
+            'WARN',
+            'WooCommerce',
+            `Respuesta HTTP ${response.status} con 'status=any'. Reintentando sin filtro de status...`
+          );
           useStatusAny = false;
           endpoint = `products?per_page=${perPage}&page=${page}`;
           endpointUrl = buildWooApiUrl(config.url, endpoint, config.consumerKey, config.consumerSecret);
@@ -289,7 +369,9 @@ export const fetchWooCommerceProducts = async (config: WooCommerceConfig): Promi
           }
 
           if (response.status === 401) {
-            throw new Error(`Error HTTP 401: Claves API (Consumer Key / Consumer Secret) no autorizadas. (${errorDetail})`);
+            throw new Error(
+              `Error HTTP 401: Claves API (Consumer Key / Consumer Secret) no autorizadas. (${errorDetail})`
+            );
           } else if (response.status === 404) {
             throw new Error('Error HTTP 404: Ruta de WooCommerce no encontrada. Verifica la URL de tu tienda');
           } else if (response.status === 400) {
@@ -312,9 +394,10 @@ export const fetchWooCommerceProducts = async (config: WooCommerceConfig): Promi
       const transformed = data.map(transformWooProduct);
       allProducts = [...allProducts, ...transformed];
 
-      const totalPagesHeader = (response.headers && typeof response.headers.get === 'function')
-        ? (response.headers.get('x-wp-totalpages') || response.headers.get('X-WP-TotalPages'))
-        : null;
+      const totalPagesHeader =
+        response.headers && typeof response.headers.get === 'function'
+          ? response.headers.get('x-wp-totalpages') || response.headers.get('X-WP-TotalPages')
+          : null;
       if (totalPagesHeader) {
         const totalPages = parseInt(totalPagesHeader, 10);
         if (page >= totalPages) {
@@ -329,7 +412,12 @@ export const fetchWooCommerceProducts = async (config: WooCommerceConfig): Promi
       page++;
     }
 
-    addSystemLog('SYNC', 'WooCommerce', `Sincronizados ${allProducts.length} productos en total (${page - 1} páginas de catálogo) desde WooCommerce`, { count: allProducts.length });
+    addSystemLog(
+      'SYNC',
+      'WooCommerce',
+      `Sincronizados ${allProducts.length} productos en total (${page - 1} páginas de catálogo) desde WooCommerce`,
+      { count: allProducts.length }
+    );
     return allProducts;
   } catch (error: any) {
     addSystemLog('ERROR', 'WooCommerce', `Fallo en consulta de productos reales: ${error.message}`);
@@ -373,7 +461,11 @@ export const fetchWooCommerceCustomers = async (config: WooCommerceConfig): Prom
 
       // Retry with per_page=50 if 400 on page 1
       if (!response.ok && page === 1 && response.status === 400) {
-        addSystemLog('WARN', 'WooCommerce', `Respuesta HTTP 400 en clientes con per_page=100. Reintentando con per_page=50...`);
+        addSystemLog(
+          'WARN',
+          'WooCommerce',
+          `Respuesta HTTP 400 en clientes con per_page=100. Reintentando con per_page=50...`
+        );
         perPage = 50;
         endpoint = `customers?per_page=${perPage}&page=${page}`;
         endpointUrl = buildWooApiUrl(config.url, endpoint, config.consumerKey, config.consumerSecret);
@@ -393,7 +485,9 @@ export const fetchWooCommerceCustomers = async (config: WooCommerceConfig): Prom
           }
 
           if (response.status === 401) {
-            throw new Error(`Error HTTP 401: Claves API (Consumer Key / Consumer Secret) no autorizadas. (${errorDetail})`);
+            throw new Error(
+              `Error HTTP 401: Claves API (Consumer Key / Consumer Secret) no autorizadas. (${errorDetail})`
+            );
           } else if (response.status === 404) {
             throw new Error('Error HTTP 404: Ruta de WooCommerce no encontrada. Verifica la URL de tu tienda');
           } else if (response.status === 400) {
@@ -415,9 +509,10 @@ export const fetchWooCommerceCustomers = async (config: WooCommerceConfig): Prom
       const transformed = data.map(transformWooCustomer);
       allCustomers = [...allCustomers, ...transformed];
 
-      const totalPagesHeader = (response.headers && typeof response.headers.get === 'function')
-        ? (response.headers.get('x-wp-totalpages') || response.headers.get('X-WP-TotalPages'))
-        : null;
+      const totalPagesHeader =
+        response.headers && typeof response.headers.get === 'function'
+          ? response.headers.get('x-wp-totalpages') || response.headers.get('X-WP-TotalPages')
+          : null;
       if (totalPagesHeader) {
         const totalPages = parseInt(totalPagesHeader, 10);
         if (page >= totalPages) {
@@ -432,7 +527,12 @@ export const fetchWooCommerceCustomers = async (config: WooCommerceConfig): Prom
       page++;
     }
 
-    addSystemLog('SYNC', 'WooCommerce', `Sincronizados ${allCustomers.length} clientes en total desde la API de WooCommerce`, { count: allCustomers.length });
+    addSystemLog(
+      'SYNC',
+      'WooCommerce',
+      `Sincronizados ${allCustomers.length} clientes en total desde la API de WooCommerce`,
+      { count: allCustomers.length }
+    );
     return allCustomers;
   } catch (error: any) {
     addSystemLog('ERROR', 'WooCommerce', `Fallo en consulta de clientes reales: ${error.message}`);

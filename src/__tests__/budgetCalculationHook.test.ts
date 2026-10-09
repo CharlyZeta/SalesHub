@@ -18,7 +18,14 @@ describe('useBudgetCalculation & calculateBudgetItemSubtotal', () => {
 
   it('calcula totales acumulados de items y percepciones', () => {
     const items = [
-      { id: '1', descripcion: 'Producto A', cantidad: 2, precioUnitario: 1000, descuentoPorcentaje: 10, subtotal: 1800 },
+      {
+        id: '1',
+        descripcion: 'Producto A',
+        cantidad: 2,
+        precioUnitario: 1000,
+        descuentoPorcentaje: 10,
+        subtotal: 1800,
+      },
       { id: '2', descripcion: 'Producto B', cantidad: 1, precioUnitario: 500, descuentoPorcentaje: 0, subtotal: 500 },
     ];
 

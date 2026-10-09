@@ -17,19 +17,19 @@ describe('LocalStorageRepository', () => {
       },
       clear: () => {
         mockStore = {};
-      }
+      },
     };
     Object.defineProperty(globalThis, 'localStorage', {
       value: mockLocalStorage,
       writable: true,
-      configurable: true
+      configurable: true,
     });
     repo = new LocalStorageRepository();
   });
 
   it('guarda y recupera ventas en el almacenamiento', async () => {
     const mockSales: any[] = [
-      { id: 'V-001', clienteNombre: 'Test Cliente', montoTotal: 1500, fecha: '2026-09-24', productos: [] }
+      { id: 'V-001', clienteNombre: 'Test Cliente', montoTotal: 1500, fecha: '2026-09-24', productos: [] },
     ];
 
     await repo.saveSales(mockSales);
@@ -44,8 +44,8 @@ describe('LocalStorageRepository', () => {
     const mockConfig: any = {
       empresa: {
         nombre: 'Firma Modelo S.A.',
-        cuit: '30-11223344-5'
-      }
+        cuit: '30-11223344-5',
+      },
     };
 
     await repo.saveConfig(mockConfig);

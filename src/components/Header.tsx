@@ -1,5 +1,20 @@
 import React from 'react';
-import { PlusCircle, BarChart3, Users, ShoppingBag, Download, Store, Settings, FileText, Terminal, Lock, ShieldCheck, UserCheck, Sun, Moon } from 'lucide-react';
+import {
+  PlusCircle,
+  BarChart3,
+  Users,
+  ShoppingBag,
+  Download,
+  Store,
+  Settings,
+  FileText,
+  Terminal,
+  Lock,
+  ShieldCheck,
+  UserCheck,
+  Sun,
+  Moon,
+} from 'lucide-react';
 import { getMonthYearLabel } from '../utils/formatters';
 import { UserRole } from '../types';
 
@@ -37,7 +52,7 @@ export const Header: React.FC<HeaderProps> = ({
   currentRole = 'OPERADOR',
   wooConnected,
   theme = 'light',
-  onToggleTheme
+  onToggleTheme,
 }) => {
   return (
     <header className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-30 shadow-xs transition-colors duration-200">
@@ -161,9 +176,7 @@ export const Header: React.FC<HeaderProps> = ({
               ) : (
                 <UserCheck className="w-4 h-4 text-blue-600 dark:text-blue-400" />
               )}
-              <span className="hidden sm:inline font-bold text-[11px]">
-                {currentRole}
-              </span>
+              <span className="hidden sm:inline font-bold text-[11px]">{currentRole}</span>
               <Lock className="w-3.5 h-3.5 text-slate-400 ml-0.5" />
             </button>
           )}
@@ -215,4 +228,3 @@ export const Header: React.FC<HeaderProps> = ({
     </header>
   );
 };
-

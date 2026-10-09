@@ -29,9 +29,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const PORT = Number(process.env.PORT) || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
-const DIST_DIR = process.env.DIST_DIR
-  ? path.resolve(__dirname, process.env.DIST_DIR)
-  : path.join(__dirname, 'dist');
+const DIST_DIR = process.env.DIST_DIR ? path.resolve(__dirname, process.env.DIST_DIR) : path.join(__dirname, 'dist');
 
 const BACKUPS_DIR = path.join(__dirname, 'backups');
 const ANDREANI_LOG_FILE = path.join(__dirname, 'andreani_error.log');
@@ -128,8 +126,8 @@ function serveStatic(req, res) {
   const cacheControl = isHtml
     ? 'no-cache, no-store, must-revalidate'
     : isHashedAsset
-    ? 'public, max-age=31536000, immutable'
-    : 'no-cache';
+      ? 'public, max-age=31536000, immutable'
+      : 'no-cache';
 
   res.writeHead(200, {
     'Content-Type': contentType,

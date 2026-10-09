@@ -60,7 +60,7 @@ export function getGoogleMapsUsageInfo(config?: Partial<AppConfig>): GoogleMapsU
     remaining,
     percentageUsed,
     isLimitExceeded,
-    lastRequestTimestamp
+    lastRequestTimestamp,
   };
 }
 
@@ -78,13 +78,13 @@ export function checkGoogleMapsQuota(config?: Partial<AppConfig>): {
     return {
       allowed: false,
       reason: `Se ha alcanzado el límite mensual de ${usage.limit.toLocaleString()} solicitudes configuradas para Google Maps (${usage.count}/${usage.limit}).`,
-      usage
+      usage,
     };
   }
 
   return {
     allowed: true,
-    usage
+    usage,
   };
 }
 
@@ -97,18 +97,18 @@ export function recordGoogleMapsRequest(config: AppConfig): {
 } {
   const currentMonth = getCurrentMonthKey();
   const isSameMonth = config.googleMapsUsage?.month === currentMonth;
-  const currentCount = isSameMonth ? (config.googleMapsUsage?.count || 0) : 0;
+  const currentCount = isSameMonth ? config.googleMapsUsage?.count || 0 : 0;
   const newCount = currentCount + 1;
 
   const updatedUsage: GoogleMapsUsage = {
     month: currentMonth,
     count: newCount,
-    lastRequestTimestamp: new Date().toISOString()
+    lastRequestTimestamp: new Date().toISOString(),
   };
 
   const updatedConfig: AppConfig = {
     ...config,
-    googleMapsUsage: updatedUsage
+    googleMapsUsage: updatedUsage,
   };
 
   const usage = getGoogleMapsUsageInfo(updatedConfig);
@@ -125,8 +125,8 @@ export function resetGoogleMapsUsage(config: AppConfig): AppConfig {
     googleMapsUsage: {
       month: currentMonth,
       count: 0,
-      lastRequestTimestamp: undefined
-    }
+      lastRequestTimestamp: undefined,
+    },
   };
 }
 
@@ -163,18 +163,18 @@ export function incrementStoredGoogleMapsUsage(): GoogleMapsUsageInfo {
   const cfg = getStoredAppConfig();
   const currentMonth = getCurrentMonthKey();
   const isSameMonth = cfg.googleMapsUsage?.month === currentMonth;
-  const currentCount = isSameMonth ? (cfg.googleMapsUsage?.count || 0) : 0;
+  const currentCount = isSameMonth ? cfg.googleMapsUsage?.count || 0 : 0;
   const newCount = currentCount + 1;
 
   const updatedUsage: GoogleMapsUsage = {
     month: currentMonth,
     count: newCount,
-    lastRequestTimestamp: new Date().toISOString()
+    lastRequestTimestamp: new Date().toISOString(),
   };
 
   const updatedConfig: Partial<AppConfig> = {
     ...cfg,
-    googleMapsUsage: updatedUsage
+    googleMapsUsage: updatedUsage,
   };
 
   saveStoredAppConfig(updatedConfig);
@@ -197,17 +197,14 @@ export function checkStoredGoogleMapsQuota(): {
  * Prueba en vivo la validez de una clave de API de Google Maps realizando una geocodificación
  * de prueba para una dirección canónica fija.
  */
-export async function testGoogleMapsApiKey(
-  apiKey: string,
-  onRecordUsage?: () => void
-): Promise<GoogleMapsTestResult> {
+export async function testGoogleMapsApiKey(apiKey: string, onRecordUsage?: () => void): Promise<GoogleMapsTestResult> {
   const trimmedKey = (apiKey || '').trim();
 
   if (!trimmedKey) {
     return {
       success: false,
       status: 'EMPTY_KEY',
-      message: 'Por favor, ingresa una clave de API antes de realizar la prueba.'
+      message: 'Por favor, ingresa una clave de API antes de realizar la prueba.',
     };
   }
 
@@ -225,7 +222,7 @@ export async function testGoogleMapsApiKey(
       return {
         success: false,
         status: 'OVER_QUERY_LIMIT',
-        message: 'Límite de cuota alcanzado: Verifica que tengas una cuenta de facturación vinculada en Google Cloud.'
+        message: 'Límite de cuota alcanzado: Verifica que tengas una cuenta de facturación vinculada en Google Cloud.',
       };
     }
 
@@ -240,7 +237,7 @@ export async function testGoogleMapsApiKey(
       addSystemLog('INFO', 'Maps', 'Prueba de clave API de Google Maps exitosa (Geocoding API OK)', {
         lat,
         lng,
-        formattedAddress
+        formattedAddress,
       });
 
       return {
@@ -250,8 +247,8 @@ export async function testGoogleMapsApiKey(
         details: {
           formattedAddress,
           lat,
-          lng
-        }
+          lng,
+        },
       };
     }
 
@@ -259,8 +256,13 @@ export async function testGoogleMapsApiKey(
       const errMsg = data.error_message || 'Acceso denegado por Google Maps Platform.';
       addSystemLog('ERROR', 'Maps', `Prueba de clave API rechazada: ${errMsg}`);
 
-      let guidance = 'Verifica que la clave sea correcta y que la API "Geocoding API" esté habilitada en Google Cloud Console.';
-      if (errMsg.toLowerCase().includes('ip') || errMsg.toLowerCase().includes('referer') || errMsg.toLowerCase().includes('restriction')) {
+      let guidance =
+        'Verifica que la clave sea correcta y que la API "Geocoding API" esté habilitada en Google Cloud Console.';
+      if (
+        errMsg.toLowerCase().includes('ip') ||
+        errMsg.toLowerCase().includes('referer') ||
+        errMsg.toLowerCase().includes('restriction')
+      ) {
         guidance += ' Además, comprueba las restricciones de aplicación (referenciadores HTTP / IP).';
       }
 
@@ -269,8 +271,8 @@ export async function testGoogleMapsApiKey(
         status: 'REQUEST_DENIED',
         message: guidance,
         details: {
-          googleErrorMessage: errMsg
-        }
+          googleErrorMessage: errMsg,
+        },
       };
     }
 
@@ -279,7 +281,7 @@ export async function testGoogleMapsApiKey(
       return {
         success: false,
         status: 'OVER_QUERY_LIMIT',
-        message: 'Límite de cuota alcanzado: Verifica que el proyecto de Google Cloud tenga facturación habilitada.'
+        message: 'Límite de cuota alcanzado: Verifica que el proyecto de Google Cloud tenga facturación habilitada.',
       };
     }
 
@@ -288,7 +290,7 @@ export async function testGoogleMapsApiKey(
       return {
         success: true,
         status: 'ZERO_RESULTS',
-        message: 'La clave es válida y se conectó a Google, aunque la dirección de prueba no arrojó resultados.'
+        message: 'La clave es válida y se conectó a Google, aunque la dirección de prueba no arrojó resultados.',
       };
     }
 
@@ -300,8 +302,8 @@ export async function testGoogleMapsApiKey(
       status: data.status || 'ERROR',
       message: rawError,
       details: {
-        googleErrorMessage: data.error_message
-      }
+        googleErrorMessage: data.error_message,
+      },
     };
   } catch (err: any) {
     const errorMsg = err?.message || String(err);
@@ -310,7 +312,7 @@ export async function testGoogleMapsApiKey(
     return {
       success: false,
       status: 'ERROR',
-      message: `Error de red al conectar con Google Maps (${errorMsg}). Verifique su conexión a Internet o bloqueos de red.`
+      message: `Error de red al conectar con Google Maps (${errorMsg}). Verifique su conexión a Internet o bloqueos de red.`,
     };
   }
 }

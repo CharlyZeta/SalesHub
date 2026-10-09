@@ -5,16 +5,26 @@ import { SpreadsheetGrid } from './components/SpreadsheetGrid';
 import { AuthModal } from './components/AuthModal';
 
 // Modales diferidos (Code-Splitting on-demand)
-const SaleFormModal = React.lazy(() => import('./components/SaleFormModal').then(m => ({ default: m.SaleFormModal })));
-const ImportModal = React.lazy(() => import('./components/ImportModal').then(m => ({ default: m.ImportModal })));
-const AnalyticsModal = React.lazy(() => import('./components/AnalyticsModal').then(m => ({ default: m.AnalyticsModal })));
-const CustomerDirectoryModal = React.lazy(() => import('./components/CustomerDirectoryModal').then(m => ({ default: m.CustomerDirectoryModal })));
-const WooCommerceModal = React.lazy(() => import('./components/WooCommerceModal').then(m => ({ default: m.WooCommerceModal })));
-const ExportModal = React.lazy(() => import('./components/ExportModal').then(m => ({ default: m.ExportModal })));
-const ConfigModal = React.lazy(() => import('./components/ConfigModal').then(m => ({ default: m.ConfigModal })));
-const BudgetModal = React.lazy(() => import('./components/BudgetModal').then(m => ({ default: m.BudgetModal })));
-const RemitoModal = React.lazy(() => import('./components/RemitoModal').then(m => ({ default: m.RemitoModal })));
-const SystemLogsModal = React.lazy(() => import('./components/SystemLogsModal').then(m => ({ default: m.SystemLogsModal })));
+const SaleFormModal = React.lazy(() =>
+  import('./components/SaleFormModal').then((m) => ({ default: m.SaleFormModal }))
+);
+const ImportModal = React.lazy(() => import('./components/ImportModal').then((m) => ({ default: m.ImportModal })));
+const AnalyticsModal = React.lazy(() =>
+  import('./components/AnalyticsModal').then((m) => ({ default: m.AnalyticsModal }))
+);
+const CustomerDirectoryModal = React.lazy(() =>
+  import('./components/CustomerDirectoryModal').then((m) => ({ default: m.CustomerDirectoryModal }))
+);
+const WooCommerceModal = React.lazy(() =>
+  import('./components/WooCommerceModal').then((m) => ({ default: m.WooCommerceModal }))
+);
+const ExportModal = React.lazy(() => import('./components/ExportModal').then((m) => ({ default: m.ExportModal })));
+const ConfigModal = React.lazy(() => import('./components/ConfigModal').then((m) => ({ default: m.ConfigModal })));
+const BudgetModal = React.lazy(() => import('./components/BudgetModal').then((m) => ({ default: m.BudgetModal })));
+const RemitoModal = React.lazy(() => import('./components/RemitoModal').then((m) => ({ default: m.RemitoModal })));
+const SystemLogsModal = React.lazy(() =>
+  import('./components/SystemLogsModal').then((m) => ({ default: m.SystemLogsModal }))
+);
 
 const ModalFallback: React.FC = () => (
   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs">
@@ -26,7 +36,13 @@ const ModalFallback: React.FC = () => (
 );
 
 import { Sale, Customer, AppConfig, Budget } from './types';
-import { INITIAL_CONFIG, INITIAL_BUDGETS, DEMO_SEED_ENABLED, INITIAL_DEMO_CUSTOMERS, INITIAL_WOO_CONFIG } from './data/initialData';
+import {
+  INITIAL_CONFIG,
+  INITIAL_BUDGETS,
+  DEMO_SEED_ENABLED,
+  INITIAL_DEMO_CUSTOMERS,
+  INITIAL_WOO_CONFIG,
+} from './data/initialData';
 import { addSystemLog } from './utils/logger';
 import { BackupItem, listAllBackups, restoreBackup, runBackup, checkAndTriggerAutoBackup } from './utils/backupService';
 import { useCatalogState } from './hooks/useCatalogState';
@@ -46,7 +62,7 @@ export default function App() {
             ...INITIAL_CONFIG,
             ...parsed,
             metodosEnvio: parsed.metodosEnvio || INITIAL_CONFIG.metodosEnvio,
-            estadosEnvio: parsed.estadosEnvio || INITIAL_CONFIG.estadosEnvio
+            estadosEnvio: parsed.estadosEnvio || INITIAL_CONFIG.estadosEnvio,
           };
         }
         return parsed;
@@ -65,7 +81,11 @@ export default function App() {
   const [budgets, setBudgets] = useState<Budget[]>(() => {
     const saved = localStorage.getItem('app_budgets_v1');
     if (saved) {
-      try { return JSON.parse(saved); } catch (e) { console.error(e); }
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error(e);
+      }
     }
     return DEMO_SEED_ENABLED ? INITIAL_BUDGETS : [];
   });
@@ -77,7 +97,11 @@ export default function App() {
   const [customers, setCustomers] = useState<Customer[]>(() => {
     const saved = localStorage.getItem('app_customers_v1');
     if (saved) {
-      try { return JSON.parse(saved); } catch (e) { console.error(e); }
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error(e);
+      }
     }
     return DEMO_SEED_ENABLED ? INITIAL_DEMO_CUSTOMERS : [];
   });
@@ -100,12 +124,12 @@ export default function App() {
     wooSyncNextAttemptRef,
     handleSyncCatalog,
     handleSyncCustomers,
-    localMergePayload
+    localMergePayload,
   } = useWooCommerceSync({
     catalog,
     setCatalog,
     customers,
-    setCustomers
+    setCustomers,
   });
 
   // Backup & Recovery States
@@ -123,7 +147,7 @@ export default function App() {
       budgets,
       customers,
       config,
-      wooConfig
+      wooConfig,
     };
 
     const res = await checkAndTriggerAutoBackup(newOpsCount, config, fullState);
@@ -133,8 +157,8 @@ export default function App() {
         backup: {
           ...config.backup!,
           lastBackupDate: new Date().toISOString(),
-          lastBackupFilename: res.filename
-        }
+          lastBackupFilename: res.filename,
+        },
       };
       setConfig(updatedConfig);
       localStorage.setItem('app_config_v1', JSON.stringify(updatedConfig));
@@ -158,12 +182,12 @@ export default function App() {
     handleUpdateInlineSale,
     handleImportSales,
     handleConvertBudgetToSale,
-    handleSyncAndreaniTrackings
+    handleSyncAndreaniTrackings,
   } = useSalesState({
     config,
     setCustomers,
     setBudgets,
-    onAfterOperation: checkAutoBackupAfterOp
+    onAfterOperation: checkAutoBackupAfterOp,
   });
 
   // Modals visibility state
@@ -196,7 +220,7 @@ export default function App() {
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
+    setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
   };
 
   // Verificación de backups al inicio
@@ -232,7 +256,7 @@ export default function App() {
               budgets: currentBudgets,
               customers: currentCustomers,
               config: parsedConfig,
-              wooConfig: currentWoo
+              wooConfig: currentWoo,
             };
 
             const res = await runBackup(fullState);
@@ -242,8 +266,8 @@ export default function App() {
                 backup: {
                   ...parsedConfig.backup,
                   lastBackupDate: new Date().toISOString(),
-                  lastBackupFilename: res.filename
-                }
+                  lastBackupFilename: res.filename,
+                },
               };
               setConfig(updatedConfig);
               localStorage.setItem('app_config_v1', JSON.stringify(updatedConfig));
@@ -299,28 +323,33 @@ export default function App() {
   const handleSaveBudget = (budgetToSave: Budget) => {
     const exists = budgets.some((b) => b.id === budgetToSave.id);
     if (exists) {
-      setBudgets(prev => prev.map((b) => (b.id === budgetToSave.id ? budgetToSave : b)));
-      addSystemLog('BUDGET', 'Presupuestos', `Presupuesto modificado: ${budgetToSave.numeroPresupuesto}`, { total: budgetToSave.importeTotal });
+      setBudgets((prev) => prev.map((b) => (b.id === budgetToSave.id ? budgetToSave : b)));
+      addSystemLog('BUDGET', 'Presupuestos', `Presupuesto modificado: ${budgetToSave.numeroPresupuesto}`, {
+        total: budgetToSave.importeTotal,
+      });
     } else {
-      setBudgets(prev => [budgetToSave, ...prev]);
-      addSystemLog('BUDGET', 'Presupuestos', `Nuevo presupuesto emitido: ${budgetToSave.numeroPresupuesto}`, { cliente: budgetToSave.razonSocialNombre, total: budgetToSave.importeTotal });
+      setBudgets((prev) => [budgetToSave, ...prev]);
+      addSystemLog('BUDGET', 'Presupuestos', `Nuevo presupuesto emitido: ${budgetToSave.numeroPresupuesto}`, {
+        cliente: budgetToSave.razonSocialNombre,
+        total: budgetToSave.importeTotal,
+      });
       const numVal = parseInt(budgetToSave.comprobanteNumero) || config.ultimoNumeroPresupuesto;
       if (numVal > config.ultimoNumeroPresupuesto) {
         setConfig((prev) => ({
           ...prev,
-          ultimoNumeroPresupuesto: numVal
+          ultimoNumeroPresupuesto: numVal,
         }));
       }
     }
   };
 
   const handleDeleteBudget = (budgetId: string) => {
-    setBudgets(prev => prev.filter((b) => b.id !== budgetId));
+    setBudgets((prev) => prev.filter((b) => b.id !== budgetId));
     addSystemLog('WARN', 'Presupuestos', `Presupuesto eliminado ID: ${budgetId}`);
   };
 
   const handleAddCustomer = (newCust: Customer) => {
-    setCustomers(prev => [newCust, ...prev]);
+    setCustomers((prev) => [newCust, ...prev]);
   };
 
   const handleQuickAddSale = () => {
@@ -333,7 +362,9 @@ export default function App() {
       {/* 1. Header Toolbar */}
       <Header
         currentMonthIso={selectedMonth}
-        totalMonthSales={sales.filter((s) => s.fecha.startsWith(selectedMonth)).reduce((acc, s) => acc + s.montoTotal, 0)}
+        totalMonthSales={sales
+          .filter((s) => s.fecha.startsWith(selectedMonth))
+          .reduce((acc, s) => acc + s.montoTotal, 0)}
         monthSalesCount={sales.filter((s) => s.fecha.startsWith(selectedMonth)).length}
         onOpenNewSale={() => {
           setEditingSale(null);
@@ -392,15 +423,27 @@ export default function App() {
                   <strong>Sincronización automática (servidor) fallando.</strong> Último error:{' '}
                   <span className="font-mono">{serverSync.lastError}</span>.
                   {serverSync.nextRunAt ? (
-                    <> Próximo intento: <strong>{new Date(serverSync.nextRunAt).toLocaleTimeString()}</strong>.</>
+                    <>
+                      {' '}
+                      Próximo intento: <strong>{new Date(serverSync.nextRunAt).toLocaleTimeString()}</strong>.
+                    </>
                   ) : null}
                 </>
               ) : (
                 <>
-                  <strong>Sincronización automática con WooCommerce fallando</strong> (intento {wooSyncStatus.failureCount}).
-                  {wooSyncStatus.lastError ? <> Último error: <span className="font-mono">{wooSyncStatus.lastError}</span>.</> : null}
+                  <strong>Sincronización automática con WooCommerce fallando</strong> (intento{' '}
+                  {wooSyncStatus.failureCount}).
+                  {wooSyncStatus.lastError ? (
+                    <>
+                      {' '}
+                      Último error: <span className="font-mono">{wooSyncStatus.lastError}</span>.
+                    </>
+                  ) : null}
                   {wooSyncStatus.nextAttemptAt ? (
-                    <> Próximo reintento: <strong>{new Date(wooSyncStatus.nextAttemptAt).toLocaleTimeString()}</strong>.</>
+                    <>
+                      {' '}
+                      Próximo reintento: <strong>{new Date(wooSyncStatus.nextAttemptAt).toLocaleTimeString()}</strong>.
+                    </>
                   ) : null}
                 </>
               )}
@@ -418,7 +461,7 @@ export default function App() {
                 wooSyncBackoffRef.current = 0;
                 wooSyncNextAttemptRef.current = 0;
                 setWooSyncStatus({ failureCount: 0 });
-                setServerSync(prev => ({ ...prev, lastError: null }));
+                setServerSync((prev) => ({ ...prev, lastError: null }));
               }}
               className="font-bold px-2 py-1 opacity-80 hover:opacity-100 cursor-pointer"
             >
@@ -475,7 +518,7 @@ export default function App() {
             }}
             onSave={handleSaveSale}
             existingSale={editingSale}
-            existingSaleIds={sales.map(s => s.id)}
+            existingSaleIds={sales.map((s) => s.id)}
             customers={customers}
             catalog={catalog}
             canales={config.canales}
@@ -493,21 +536,13 @@ export default function App() {
 
       {isImportOpen && (
         <React.Suspense fallback={<ModalFallback />}>
-          <ImportModal
-            isOpen={isImportOpen}
-            onClose={() => setIsImportOpen(false)}
-            onImportSales={handleImportSales}
-          />
+          <ImportModal isOpen={isImportOpen} onClose={() => setIsImportOpen(false)} onImportSales={handleImportSales} />
         </React.Suspense>
       )}
 
       {isAnalyticsOpen && (
         <React.Suspense fallback={<ModalFallback />}>
-          <AnalyticsModal
-            isOpen={isAnalyticsOpen}
-            onClose={() => setIsAnalyticsOpen(false)}
-            sales={sales}
-          />
+          <AnalyticsModal isOpen={isAnalyticsOpen} onClose={() => setIsAnalyticsOpen(false)} sales={sales} />
         </React.Suspense>
       )}
 
@@ -568,7 +603,7 @@ export default function App() {
               budgets,
               customers,
               config,
-              wooConfig
+              wooConfig,
             }}
           />
         </React.Suspense>
@@ -607,25 +642,23 @@ export default function App() {
 
       {isLogsOpen && (
         <React.Suspense fallback={<ModalFallback />}>
-          <SystemLogsModal
-            isOpen={isLogsOpen}
-            onClose={() => setIsLogsOpen(false)}
-            currentRole={currentRole}
-          />
+          <SystemLogsModal isOpen={isLogsOpen} onClose={() => setIsLogsOpen(false)} currentRole={currentRole} />
         </React.Suspense>
       )}
 
       <AuthModal
         isOpen={isAuthLocked}
         onUnlock={handleUnlockRole}
-        securityConfig={config.seguridad || {
-          seguridadHabilitada: true,
-          pinAcceso: '1234',
-          tiempoInactividadMinutos: 15,
-          modoProduccionVPS: true,
-          bloquearSincronizacionWooCommerce: true,
-          bloquearBorradoLogs: true
-        }}
+        securityConfig={
+          config.seguridad || {
+            seguridadHabilitada: true,
+            pinAcceso: '1234',
+            tiempoInactividadMinutos: 15,
+            modoProduccionVPS: true,
+            bloquearSincronizacionWooCommerce: true,
+            bloquearBorradoLogs: true,
+          }
+        }
       />
     </div>
   );

@@ -37,7 +37,7 @@ export const addSystemLog = (
     level,
     category,
     message,
-    details
+    details,
   };
 
   try {
@@ -84,7 +84,11 @@ export const filterSystemLogs = (logs: LogEntry[], options: LogFilterOptions): L
     if (options.level && options.level !== 'ALL' && log.level !== options.level) {
       return false;
     }
-    if (options.category && options.category !== 'ALL' && log.category.toLowerCase() !== options.category.toLowerCase()) {
+    if (
+      options.category &&
+      options.category !== 'ALL' &&
+      log.category.toLowerCase() !== options.category.toLowerCase()
+    ) {
       return false;
     }
     if (options.search) {
@@ -118,7 +122,7 @@ export const exportLogsCSV = (logs: LogEntry[]): string => {
     `"${log.level}"`,
     `"${log.category.replace(/"/g, '""')}"`,
     `"${log.message.replace(/"/g, '""')}"`,
-    `"${(log.details ? JSON.stringify(log.details) : '').replace(/"/g, '""')}"`
+    `"${(log.details ? JSON.stringify(log.details) : '').replace(/"/g, '""')}"`,
   ]);
   return [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
 };

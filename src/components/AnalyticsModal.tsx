@@ -16,15 +16,16 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = (props) => {
 };
 
 const AnalyticsModalInner: React.FC<AnalyticsModalProps> = ({ onClose, sales }) => {
-
-  const [dateRange, setDateRange] = useState<'este_mes' | 'mes_anterior' | 'ultimos_30' | 'este_ano' | 'todos'>('este_mes');
+  const [dateRange, setDateRange] = useState<'este_mes' | 'mes_anterior' | 'ultimos_30' | 'este_ano' | 'todos'>(
+    'este_mes'
+  );
 
   // Filter sales according to preset
   const filteredSales = useMemo(() => {
     const now = new Date();
     const currentYear = now.getFullYear();
     const currentMonth = String(now.getMonth() + 1).padStart(2, '0');
-    
+
     // Prev month
     const prevMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const prevMonthIso = `${prevMonthDate.getFullYear()}-${String(prevMonthDate.getMonth() + 1).padStart(2, '0')}`;
@@ -59,7 +60,7 @@ const AnalyticsModalInner: React.FC<AnalyticsModalProps> = ({ onClose, sales }) 
       Local: 0,
       MercadoLibre: 0,
       WooCommerce: 0,
-      Otro: 0
+      Otro: 0,
     };
     filteredSales.forEach((s) => {
       const c = s.canal || 'Local';
@@ -70,7 +71,7 @@ const AnalyticsModalInner: React.FC<AnalyticsModalProps> = ({ onClose, sales }) 
       { name: 'Local Físico', value: channels.Local, color: '#3b82f6' },
       { name: 'MercadoLibre', value: channels.MercadoLibre, color: '#f59e0b' },
       { name: 'WooCommerce / Web', value: channels.WooCommerce, color: '#a855f7' },
-      { name: 'Otro Canal', value: channels.Otro, color: '#64748b' }
+      { name: 'Otro Canal', value: channels.Otro, color: '#64748b' },
     ].filter((item) => item.value > 0);
   }, [filteredSales]);
 
@@ -82,10 +83,12 @@ const AnalyticsModalInner: React.FC<AnalyticsModalProps> = ({ onClose, sales }) 
       methods[m] = (methods[m] || 0) + s.montoTotal;
     });
 
-    return Object.keys(methods).map((m) => ({
-      name: m,
-      monto: methods[m]
-    })).sort((a, b) => b.monto - a.monto);
+    return Object.keys(methods)
+      .map((m) => ({
+        name: m,
+        monto: methods[m],
+      }))
+      .sort((a, b) => b.monto - a.monto);
   }, [filteredSales]);
 
   // Top Products Sold
@@ -110,7 +113,6 @@ const AnalyticsModalInner: React.FC<AnalyticsModalProps> = ({ onClose, sales }) 
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-5xl rounded-xl shadow-2xl overflow-hidden flex flex-col my-auto max-h-[92vh]">
-        
         {/* Header */}
         <div className="bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 px-5 py-3.5 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -136,15 +138,28 @@ const AnalyticsModalInner: React.FC<AnalyticsModalProps> = ({ onClose, sales }) 
                 onChange={(e) => setDateRange(e.target.value as any)}
                 className="bg-transparent text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer font-medium"
               >
-                <option value="este_mes" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">Este Mes Actual</option>
-                <option value="mes_anterior" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">Mes Anterior</option>
-                <option value="ultimos_30" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">Últimos 30 días</option>
-                <option value="este_ano" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">Año en curso</option>
-                <option value="todos" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">Todo el Historial</option>
+                <option value="este_mes" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">
+                  Este Mes Actual
+                </option>
+                <option value="mes_anterior" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">
+                  Mes Anterior
+                </option>
+                <option value="ultimos_30" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">
+                  Últimos 30 días
+                </option>
+                <option value="este_ano" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">
+                  Año en curso
+                </option>
+                <option value="todos" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">
+                  Todo el Historial
+                </option>
               </select>
             </div>
 
-            <button onClick={onClose} className="text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 p-1 rounded-md hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors cursor-pointer">
+            <button
+              onClick={onClose}
+              className="text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 p-1 rounded-md hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            >
               <X className="w-5 h-5" />
             </button>
           </div>
@@ -152,11 +167,12 @@ const AnalyticsModalInner: React.FC<AnalyticsModalProps> = ({ onClose, sales }) 
 
         {/* Modal Content */}
         <div className="p-5 overflow-y-auto space-y-5 text-xs text-slate-800 dark:text-slate-200">
-          
           {/* Top KPI Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-3.5">
-              <span className="text-slate-500 dark:text-slate-400 text-[11px] font-medium uppercase">Ingresos Totales Período</span>
+              <span className="text-slate-500 dark:text-slate-400 text-[11px] font-medium uppercase">
+                Ingresos Totales Período
+              </span>
               <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">
                 {formatCurrency(totalAmount, false)}
               </div>
@@ -164,7 +180,9 @@ const AnalyticsModalInner: React.FC<AnalyticsModalProps> = ({ onClose, sales }) 
             </div>
 
             <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-3.5">
-              <span className="text-slate-500 dark:text-slate-400 text-[11px] font-medium uppercase">Ticket Promedio por Venta</span>
+              <span className="text-slate-500 dark:text-slate-400 text-[11px] font-medium uppercase">
+                Ticket Promedio por Venta
+              </span>
               <div className="text-2xl font-black text-cyan-600 dark:text-cyan-400 mt-1">
                 {formatCurrency(ticketPromedio, false)}
               </div>
@@ -172,12 +190,12 @@ const AnalyticsModalInner: React.FC<AnalyticsModalProps> = ({ onClose, sales }) 
             </div>
 
             <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-3.5">
-              <span className="text-slate-500 dark:text-slate-400 text-[11px] font-medium uppercase">Canal Principal</span>
+              <span className="text-slate-500 dark:text-slate-400 text-[11px] font-medium uppercase">
+                Canal Principal
+              </span>
               <div className="text-lg font-bold text-slate-900 dark:text-slate-100 mt-1 flex items-center gap-1.5">
                 <Store className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                <span>
-                  {channelData.length > 0 ? channelData.sort((a,b) => b.value - a.value)[0].name : 'N/A'}
-                </span>
+                <span>{channelData.length > 0 ? channelData.sort((a, b) => b.value - a.value)[0].name : 'N/A'}</span>
               </div>
               <span className="text-[10px] text-slate-500 mt-0.5 block">Mayor concentración de facturación</span>
             </div>
@@ -185,14 +203,13 @@ const AnalyticsModalInner: React.FC<AnalyticsModalProps> = ({ onClose, sales }) 
 
           {/* Charts Row */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            
             {/* Chart 1: Distribution by Channel */}
             <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-4 flex flex-col justify-between">
               <h3 className="font-bold text-slate-800 dark:text-slate-200 text-xs mb-3 flex items-center gap-1.5">
                 <PieIcon className="w-4 h-4 text-amber-500 dark:text-amber-400" />
                 Ventas por Canal de Origen
               </h3>
-              
+
               <div className="h-56 w-full">
                 {channelData.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
@@ -210,9 +227,14 @@ const AnalyticsModalInner: React.FC<AnalyticsModalProps> = ({ onClose, sales }) 
                           <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
                       </Pie>
-                      <Tooltip 
-                        formatter={(value: any) => [formatCurrency(Number(value)), 'Monto']} 
-                        contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '8px', color: '#f8fafc' }}
+                      <Tooltip
+                        formatter={(value: any) => [formatCurrency(Number(value)), 'Monto']}
+                        contentStyle={{
+                          backgroundColor: '#0f172a',
+                          borderColor: '#334155',
+                          borderRadius: '8px',
+                          color: '#f8fafc',
+                        }}
                       />
                       <Legend />
                     </PieChart>
@@ -238,9 +260,14 @@ const AnalyticsModalInner: React.FC<AnalyticsModalProps> = ({ onClose, sales }) 
                     <BarChart data={paymentData} layout="vertical" margin={{ left: 10, right: 20 }}>
                       <XAxis type="number" hide />
                       <YAxis dataKey="name" type="category" width={110} tick={{ fill: '#64748b', fontSize: 11 }} />
-                      <Tooltip 
+                      <Tooltip
                         formatter={(value: any) => [formatCurrency(Number(value)), 'Total ($)']}
-                        contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '8px', color: '#f8fafc' }}
+                        contentStyle={{
+                          backgroundColor: '#0f172a',
+                          borderColor: '#334155',
+                          borderRadius: '8px',
+                          color: '#f8fafc',
+                        }}
                       />
                       <Bar dataKey="monto" fill="#10b981" radius={[0, 4, 4, 0]} />
                     </BarChart>
@@ -252,7 +279,6 @@ const AnalyticsModalInner: React.FC<AnalyticsModalProps> = ({ onClose, sales }) 
                 )}
               </div>
             </div>
-
           </div>
 
           {/* Top Products Table */}
@@ -276,16 +302,16 @@ const AnalyticsModalInner: React.FC<AnalyticsModalProps> = ({ onClose, sales }) 
                     <tr key={idx} className="hover:bg-slate-100 dark:hover:bg-slate-900/50">
                       <td className="py-2.5 font-sans font-medium text-slate-800 dark:text-slate-200">{p.name}</td>
                       <td className="py-2.5 text-center text-cyan-600 dark:text-cyan-300 font-bold">{p.qty} u.</td>
-                      <td className="py-2.5 text-right font-bold text-emerald-600 dark:text-emerald-400">{formatCurrency(p.revenue)}</td>
+                      <td className="py-2.5 text-right font-bold text-emerald-600 dark:text-emerald-400">
+                        {formatCurrency(p.revenue)}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
           </div>
-
         </div>
-
       </div>
     </div>
   );

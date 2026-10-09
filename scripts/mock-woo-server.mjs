@@ -6,13 +6,41 @@
 import http from 'node:http';
 
 const products = [
-  { id: 10, sku: 'SKU-10', name: 'Producto de tienda', price: '2500', stock_quantity: 7, status: 'publish', categories: [{ name: 'Comercial' }] },
-  { id: 11, sku: 'SKU-11', name: 'Producto nuevo', price: '500', stock_quantity: 1, status: 'publish', categories: [{ name: 'Accesorios' }] },
+  {
+    id: 10,
+    sku: 'SKU-10',
+    name: 'Producto de tienda',
+    price: '2500',
+    stock_quantity: 7,
+    status: 'publish',
+    categories: [{ name: 'Comercial' }],
+  },
+  {
+    id: 11,
+    sku: 'SKU-11',
+    name: 'Producto nuevo',
+    price: '500',
+    stock_quantity: 1,
+    status: 'publish',
+    categories: [{ name: 'Accesorios' }],
+  },
 ];
 
 const customers = [
-  { id: 5, email: 'ana@x.com', first_name: 'Ana', last_name: 'Pérez', billing: { first_name: 'Ana', last_name: 'Pérez', city: 'Santa Fe', phone: '3425551234' } },
-  { id: 6, email: 'luis@x.com', first_name: 'Luis', last_name: 'Gómez', billing: { first_name: 'Luis', last_name: 'Gómez' } },
+  {
+    id: 5,
+    email: 'ana@x.com',
+    first_name: 'Ana',
+    last_name: 'Pérez',
+    billing: { first_name: 'Ana', last_name: 'Pérez', city: 'Santa Fe', phone: '3425551234' },
+  },
+  {
+    id: 6,
+    email: 'luis@x.com',
+    first_name: 'Luis',
+    last_name: 'Gómez',
+    billing: { first_name: 'Luis', last_name: 'Gómez' },
+  },
 ];
 
 const server = http.createServer((req, res) => {

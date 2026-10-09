@@ -17,7 +17,7 @@ Plataforma de alta velocidad para la gestión comercial omnicanal como herramien
 ---
 
 ![Dashboard Preview](./src/assets/images/app_dashboard_preview_1785184210800.jpg)
-*Vista de la interfaz del sistema: Panel de analítica, planilla interactiva de ventas y gestor omnicanal de presupuestos y entregas.*
+_Vista de la interfaz del sistema: Panel de analítica, planilla interactiva de ventas y gestor omnicanal de presupuestos y entregas._
 
 ---
 
@@ -31,18 +31,19 @@ El propósito principal del sistema es dotar al equipo comercial de la empresa d
 
 Este sistema **no reemplaza al ERP** de la empresa: actúa como su **herramienta comercial complementaria de captura y operación en el punto de venta**, cubriendo la fricción operativa diaria que el ERP central no resuelve:
 
-| Proceso | Complemento comercial (este sistema) | ERP central |
-| :--- | :--- | :--- |
-| **Captura de venta** | Registro inmediato en salón con edición inline, canales múltiples y ticket promedio | Contabilidad y liquidación fiscal |
-| **Presupuestos** | Cotización AFIP (IVA 21%, IIBB), conversión a venta en 1 clic y envío omnicanal | No es su foco operativo |
-| **Remitos** | Generación de Remito X (no válido como factura) al momento del despacho | Emisión de facturación oficial |
-| **Omnicanalidad** | Sincronización WooCommerce/MercadoLibre, WhatsApp (`wa.me`) y correo | Backend de tienda online |
-| **Auditoría operativa** | Logs de trazabilidad de altas, modificaciones y conversiones | Auditoría contable/financiera |
-| **Analítica comercial** | KPIs diarios, ticket promedio y canales en tiempo real | Reportes contables y de stock |
+| Proceso                 | Complemento comercial (este sistema)                                                | ERP central                       |
+| :---------------------- | :---------------------------------------------------------------------------------- | :-------------------------------- |
+| **Captura de venta**    | Registro inmediato en salón con edición inline, canales múltiples y ticket promedio | Contabilidad y liquidación fiscal |
+| **Presupuestos**        | Cotización AFIP (IVA 21%, IIBB), conversión a venta en 1 clic y envío omnicanal     | No es su foco operativo           |
+| **Remitos**             | Generación de Remito X (no válido como factura) al momento del despacho             | Emisión de facturación oficial    |
+| **Omnicanalidad**       | Sincronización WooCommerce/MercadoLibre, WhatsApp (`wa.me`) y correo                | Backend de tienda online          |
+| **Auditoría operativa** | Logs de trazabilidad de altas, modificaciones y conversiones                        | Auditoría contable/financiera     |
+| **Analítica comercial** | KPIs diarios, ticket promedio y canales en tiempo real                              | Reportes contables y de stock     |
 
 **Modelo de integración propuesto:** este sistema actúa como capa de front-office que alimenta al ERP mediante sus exportadores de datos (**CSV / JSON**), la **API de WooCommerce** (sincronización de catálogo y clientes) y la **API de WhatsApp / correo** para la distribución inmediata. Los datos transaccionales (ventas, presupuestos, remitos) pueden ser importados al ERP en lotes vía los archivos exportados o mediante la extensión de la capa de servicios.
 
 ### Flujo operativo front-office → ERP
+
 ```
 Salón / Tienda online (venta, presupuesto, remito)
         │
@@ -59,19 +60,20 @@ ERP CENTRAL (facturación, contabilidad, stock)
 
 Entidades tipadas en `src/types.ts` (Strict Typing Layer) que modelan el dominio comercial:
 
-| Entidad | Descripción | Relaciones clave |
-| :--- | :--- | :--- |
-| `Sale` | Operación de venta con productos, descuentos, montos, canal, facturación condicional, datos de geolocalización y envío | 1..n `items`; 1 `Customer` |
-| `Budget` | Presupuesto oficial AFIP convertible a venta | 1..n `items`; 1 `Customer`; → `Sale` (1:1) |
-| `Customer` | Cliente del directorio con CUIT/DNI, teléfono, dirección por defecto (calle, localidad, provincia) e historial de compras | 1..n `Sale` / `Budget` |
-| `CatalogProduct` | Producto del catálogo (local o WooCommerce) | 1..n ventas/presupuestos |
-| `LogEntry` | Entrada de auditoría del sistema | eventos de todos los módulos |
-| `ShippingStatus` | Estado de envío (Pendiente/En tránsito/Entregado) | 1 `Sale` |
-| `UserRole` | Perfil RBAC (OPERADOR / ADMINISTRADOR) | control de acceso |
+| Entidad          | Descripción                                                                                                               | Relaciones clave                           |
+| :--------------- | :------------------------------------------------------------------------------------------------------------------------ | :----------------------------------------- |
+| `Sale`           | Operación de venta con productos, descuentos, montos, canal, facturación condicional, datos de geolocalización y envío    | 1..n `items`; 1 `Customer`                 |
+| `Budget`         | Presupuesto oficial AFIP convertible a venta                                                                              | 1..n `items`; 1 `Customer`; → `Sale` (1:1) |
+| `Customer`       | Cliente del directorio con CUIT/DNI, teléfono, dirección por defecto (calle, localidad, provincia) e historial de compras | 1..n `Sale` / `Budget`                     |
+| `CatalogProduct` | Producto del catálogo (local o WooCommerce)                                                                               | 1..n ventas/presupuestos                   |
+| `LogEntry`       | Entrada de auditoría del sistema                                                                                          | eventos de todos los módulos               |
+| `ShippingStatus` | Estado de envío (Pendiente/En tránsito/Entregado)                                                                         | 1 `Sale`                                   |
+| `UserRole`       | Perfil RBAC (OPERADOR / ADMINISTRADOR)                                                                                    | control de acceso                          |
 
 **Persistencia:** `localStorage` (claves `app_sales_v1`, `app_catalog_v1`, `app_budgets_v1`, `app_customers_v1`, `app_config_v1`, `app_woo_config_v1`, `app_theme`) con caché en el navegador — cero dependencia de servidor en operación. Las copias de seguridad se guardan en **IndexedDB** y en disco (`./backups` vía `server.js`), con **retención automática**: se conservan las 30 copias más recientes y nunca se eliminan las de menos de 7 días (`BACKUP_MAX_FILES` / `BACKUP_MIN_AGE_DAYS`, ver `.env.example`).
 
 ### Principales Problemas Resueltos:
+
 1. **Desfragmentación de Canales**: Agrupa en una sola planilla interactiva las operaciones del local físico, transferencias bancarias, pedidos e-commerce de WooCommerce y ventas de MercadoLibre con badges visuales de color e íconos dinámicos.
 2. **Ciclo de Cotización Ágil**: Permite confeccionar presupuestos profesionales con cálculo AFIP de IVA (21%), percepciones de Ingresos Brutos y bonificaciones, con la capacidad de convertirlos en una **Venta Real en 1 Clic** sin reingreso de datos.
 3. **Distribución Omnicanal Inmediata**: Integración directa con la **API de WhatsApp (`wa.me`)** adaptada a la numeración argentina (`+54 9`) y cliente de correo electrónico para compartir presupuestos y ubicaciones geográficas de entrega con detalle de cliente y productos.
@@ -84,7 +86,7 @@ Entidades tipadas en `src/types.ts` (Strict Typing Layer) que modelan el dominio
 
 ## 🏗️ Arquitectura de Software y Decisiones de Diseño
 
-El sistema ha sido estructurado siguiendo los principios **SOLID** y una arquitectura por capas desacoplada (*Modular Clean Architecture*), garantizando mantenibilidad, escalabilidad y una alta cobertura de pruebas automatizadas.
+El sistema ha sido estructurado siguiendo los principios **SOLID** y una arquitectura por capas desacoplada (_Modular Clean Architecture_), garantizando mantenibilidad, escalabilidad y una alta cobertura de pruebas automatizadas.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -107,6 +109,7 @@ El sistema ha sido estructurado siguiendo los principios **SOLID** y una arquite
 ```
 
 ### Principales Patrones Implementados:
+
 - **Single Responsibility Principle (SRP)**: Cada componente modal (`BudgetModal`, `RemitoModal`, `SendBudgetModal`, `WooCommerceModal`, `SaleLocationMap`) y módulo de utilidad (`formatters.ts`, `budgetDelivery.ts`, `logger.ts`) posee una responsabilidad única y delimitada.
 - **Fail-Safe & Graceful Degradation**: La API de WooCommerce implementa detección de fallos de red con simulador integrado para mantener la operatividad continua aun sin conexión a la tienda e-commerce.
 - **Strict Typing Layer (`src/types.ts`)**: Tipado exhaustivo con interfaces explícitas para `Sale`, `Budget`, `Customer`, `CatalogProduct`, `LogEntry` y `ShippingStatus`.
@@ -117,25 +120,29 @@ El sistema ha sido estructurado siguiendo los principios **SOLID** y una arquite
 ## 🌟 Módulos y Funcionalidades del Sistema
 
 ### 1. 📊 Planilla Interactiva de Ventas (`SpreadsheetGrid`)
+
 - Tabla de alta densidad inspirada en hojas de cálculo profesionales.
 - Badges visuales con colores e íconos específicos por canal de comercialización (Local, WhatsApp, WooCommerce, MercadoLibre, Instagram, etc.) y método de pago (Efectivo, Transferencia, Débito, Crédito, MercadoPago, etc.).
-- Edición *inline* en tiempo real para métodos de pago, canales de venta y estado del envío.
+- Edición _inline_ en tiempo real para métodos de pago, canales de venta y estado del envío.
 - Filtros dinámicos por mes de emisión y canal de comercialización.
 - Acceso instantáneo a emisión de remitos y modificación de operaciones.
 
 ### 2. 📝 Registro Rápido de Ventas (`SaleFormModal`)
+
 - Descuento individual (%) por línea de producto con recálculo dinámico en tiempo real del subtotal y total de venta.
 - Facturación condicional: bloqueo automático para comprobantes "Sin Factura" y sugerencia de numeración correlativa (`A-0003-00000xxx` y `B-0003-0000xxxx`).
 - Buscador interactivo de clientes existentes con despliegue al hacer foco y autocompletado de nombre, apellido, DNI/CUIT, teléfono y domicilio por defecto.
 - Opción colapsable para envíos a domicilios alternativos y panel desplegable de mapa.
 
 ### 3. 🗺️ Localizador Geográfico y Mapas Interactivos (`SaleLocationMap`)
+
 - Integración nativa de **Leaflet + OpenStreetMap** (100% gratuita, sin APIs de pago ni tarjetas de crédito).
 - Geocodificación inteligente con **Nominatim** a partir del domicilio, localidad y provincia.
 - **Pin Arrastrable (Draggable Marker)**: Permite ajustar y precisar con el puntero las coordenadas exactas de entrega en el mapa.
 - **Compartir por WhatsApp**: Botón directo para enviar la ubicación en formato Google Maps (`https://www.google.com/maps?q=lat,lng`) junto con el nombre del cliente, domicilio, teléfono y lista de productos de la venta.
 
 ### 4. 💼 Gestor de Presupuestos & Cotizaciones (`BudgetModal`)
+
 - Creación de presupuestos A/B con numeración correlativa (`PRES-0001-XXXXXX`).
 - Buscador autocompletable de productos del catálogo y clientes agendados.
 - Desglose oficial con IVA (21%), percepciones y descuentos globales.
@@ -143,15 +150,18 @@ El sistema ha sido estructurado siguiendo los principios **SOLID** y una arquite
 - Vista previa e impresión en formato oficial PDF / A4.
 
 ### 5. 📱 Envíos Directos por WhatsApp & Correo Electrónico (`SendBudgetModal` & `budgetDelivery.ts`)
+
 - **Procesamiento de Números Argentinos**: Normaliza automáticamente celulares locales (ej. `0342 154883135` → `5493424883135`) cumpliendo los estándares de la API internacional de WhatsApp (`wa.me`).
 - Generación de mensajes enriquecidos con emojis, detalle ítem por ítem, importes y datos de la empresa configurada.
 - Plantilla de Correo Electrónico lista con asunto oficial y cuerpo estructurado para envío vía `mailto:`.
 
 ### 6. 🚚 Remitos de Transporte & Despacho (`RemitoModal`)
+
 - Generación e impresión de **Remito X - Documento No Válido como Factura**.
 - Incluye datos del transporte/flete, dirección de entrega, desglose de bultos y espacio para firma de conformidad del receptor.
 
 ### 7. 🛒 Sincronizador WooCommerce (`WooCommerceModal` & `wooCommerceApi.ts`)
+
 - Configuración de credenciales de API (Consumer Key / Consumer Secret).
 - Sincronización bidireccional del catálogo de productos (precios, stock y SKUs).
 - Importación automática de clientes de la tienda online al directorio local con extracción proactiva de CUIT/DNI y teléfonos secundarios desde `meta_data`.
@@ -163,6 +173,7 @@ El sistema ha sido estructurado siguiendo los principios **SOLID** y una arquite
   sincronización exitosa.
 
 #### Sincronización automática programada
+
 - **Frecuencia configurable** (1, 2, 4, 6, 12 o 24 h) desde el modal de WooCommerce;
   se persiste con **"Guardar Ajustes"** (el indicador del modal muestra si está
   `Activa cada N h` o `Inactiva`).
@@ -173,17 +184,19 @@ El sistema ha sido estructurado siguiendo los principios **SOLID** y una arquite
 - **Si no hay servidor** (build estático servido de otra forma), la app mantiene su propio
   programador en el navegador como respaldo.
 - **Depende solo de la configuración de WooCommerce** (`autoSync` + URL + credenciales).
-  El interruptor *"Bloquear edición de API Keys a Operadores"* restringe únicamente la
+  El interruptor _"Bloquear edición de API Keys a Operadores"_ restringe únicamente la
   edición de las claves (perfil Operador); **no** desactiva la automatización.
 - **Backoff ante fallos** (navegador y servidor): reintentos a 1, 2, 4, 8, 16 y hasta 30
   minutos, con el motivo registrado en el log de auditoría y un **banner en pantalla** con
   el error y la hora del próximo intento.
 
 ### 8. 📈 Panel de Analítica Comercial (`AnalyticsModal` & `KpiSummary`)
+
 - Métricas clave en tiempo real: Facturación mensual total, ticket promedio, total de ventas y canales destacados.
 - Gráficos interactivos construidos con **Recharts**: Tendencia de ventas acumuladas y distribución porcentual por canal.
 
 ### 9. 📋 Auditoría y Registros de Sistema (`SystemLogsModal` & `logger.ts`)
+
 - Registro cronológico de todos los eventos del sistema (`INFO`, `WARN`, `ERROR`, `SYNC`, `API`, `SALE`, `BUDGET`).
 - Filtrado dinámico por nivel de log, categoría, fechas y cuadro de búsqueda en tiempo real.
 - Exportación de auditoría en formato JSON y CSV.
@@ -195,18 +208,19 @@ El sistema ha sido estructurado siguiendo los principios **SOLID** y una arquite
 El proyecto cuenta con una suite completa de pruebas unitarias implementada con **Vitest** y **V8 Coverage Engine**.
 
 ### Resumen de Cobertura de Pruebas (reporte `npm run test:coverage`):
-| Módulo | Cobertura de Sentencias | Cobertura de Líneas | Estado |
-| :--- | :---: | :---: | :---: |
-| `src/utils/numberToWords.ts` | **100%** | **100%** | PASSED |
-| `src/utils/budgetDelivery.ts` | **97.2%** | **97.1%** | PASSED |
-| `src/utils/security.ts` | **95.5%** | **94.6%** | PASSED |
-| `src/utils/andreaniStatusMapper.ts` | **89.3%** | **88.9%** | PASSED |
-| `src/utils/formatters.ts` | **88.5%** | **88.4%** | PASSED |
-| `src/utils/logger.ts` | **88.5%** | **90.9%** | PASSED |
-| `api-handlers.js` (capa de API) | **61.1%** | **61.2%** | PASSED |
-| `src/utils/wooCommerceApi.ts` | **60.4%** | **60.5%** | PASSED |
-| **TOTAL (módulos utils)** | **82.4%** | **82.1%** | **12/12 TEST SUITES PASSED (111/111 TESTS)** |
-| **TOTAL global (incluye API)** | **76.8%** | **76.2%** | — |
+
+| Módulo                              | Cobertura de Sentencias | Cobertura de Líneas |                    Estado                    |
+| :---------------------------------- | :---------------------: | :-----------------: | :------------------------------------------: |
+| `src/utils/numberToWords.ts`        |        **100%**         |      **100%**       |                    PASSED                    |
+| `src/utils/budgetDelivery.ts`       |        **97.2%**        |      **97.1%**      |                    PASSED                    |
+| `src/utils/security.ts`             |        **95.5%**        |      **94.6%**      |                    PASSED                    |
+| `src/utils/andreaniStatusMapper.ts` |        **89.3%**        |      **88.9%**      |                    PASSED                    |
+| `src/utils/formatters.ts`           |        **88.5%**        |      **88.4%**      |                    PASSED                    |
+| `src/utils/logger.ts`               |        **88.5%**        |      **90.9%**      |                    PASSED                    |
+| `api-handlers.js` (capa de API)     |        **61.1%**        |      **61.2%**      |                    PASSED                    |
+| `src/utils/wooCommerceApi.ts`       |        **60.4%**        |      **60.5%**      |                    PASSED                    |
+| **TOTAL (módulos utils)**           |        **82.4%**        |      **82.1%**      | **12/12 TEST SUITES PASSED (111/111 TESTS)** |
+| **TOTAL global (incluye API)**      |        **76.8%**        |      **76.2%**      |                      —                       |
 
 > Nota: la cobertura mide la lógica pura (`src/utils`) y la capa de API
 > (`api-handlers.js`) ejercitadas por los tests; los componentes de UI
@@ -214,6 +228,7 @@ El proyecto cuenta con una suite completa de pruebas unitarias implementada con 
 > líneas no cubiertas (rutas de fallback/simulación ante fallos de red).
 
 ### Ejecución de Pruebas:
+
 ```bash
 # Ejecutar pruebas unitarias
 npm run test
@@ -227,12 +242,14 @@ npm run test:coverage
 ## 🚀 Guía de Instalación y Ejecución Local
 
 ### Prerrequisitos:
+
 - **Node.js**: v20.0.0 o superior (LTS recomendado)
 - **npm**: v10.0.0 o superior
 
 ### Pasos de Instalación:
 
 1. **Clonar el repositorio e instalar dependencias**:
+
    ```bash
    git clone https://github.com/CharlyZeta/SalesHub.git
    cd SalesHub
@@ -240,15 +257,18 @@ npm run test:coverage
    ```
 
 2. **Iniciar el Servidor de Desarrollo**:
+
    ```bash
    npm run dev
    ```
+
    La aplicación se ejecutará automáticamente en `http://localhost:3000`.
 
    > **Modos de ejecución y recargas:** el dev server de Vite recarga la página cuando
    > detecta que se cortó su WebSocket (pestaña en segundo plano, suspensión de la PC o
    > reinicio del server) y también al aplicar cambios en archivos. Para carga de datos
    > real sin recargas:
+   >
    > - `npm run dev:stable` → levanta el dev server sin HMR ni watcher (menos recargas,
    >   pero el cliente de Vite sigue conectado),
    > - `npm run stable` → **compila y sirve el build de producción** (`server.js`), sin
@@ -262,11 +282,13 @@ npm run test:coverage
    > (ver `.env.example`).
 
 3. **Verificar Calidad de Código (TypeScript Linter)**:
+
    ```bash
    npm run lint
    ```
 
 4. **Compilar para Producción**:
+
    ```bash
    npm run build
    ```
@@ -372,14 +394,14 @@ El proyecto incluye infraestructura para que **trabajar con agentes de IA cueste
 en lugar de explorar el repositorio leyendo archivos completos, el agente lee índices
 compactos y consulta el grafo de conocimiento.
 
-| Mecanismo | Qué aporta | Comando |
-|:--|:--|:--|
-| **`AGENTS.md`** | Protocolo que el agente lee automáticamente al iniciar: orden de lectura, límites y reglas de economía de tokens | — (automático) |
-| **Mapa del código** | Índice con 1 fila por archivo (responsabilidad + exports): ~5 KB en lugar de abrir decenas de archivos | `npm run map` · `npm run map:check` |
-| **Grafo de conocimiento** (Graphify) | Grafo del código y reporte de arquitectura; permite preguntar por relaciones sin leer archivos | `npm run graph:doctor` |
-| **Hooks de git** | `pre-commit` regenera y agrega el mapa; `post-commit` (Graphify) reconstruye el grafo en segundo plano | se instalan solos en `npm install` |
-| **Chequeos en CI sin costo de IA** | Verifica que el mapa esté al día y que no haya dependencias circulares | `npm run map:check` · `npm run deps:circular` |
-| **Compactación de sesión** | El harness resume el historial para no reenviarlo en cada pedido | `/compact` |
+| Mecanismo                            | Qué aporta                                                                                                       | Comando                                       |
+| :----------------------------------- | :--------------------------------------------------------------------------------------------------------------- | :-------------------------------------------- |
+| **`AGENTS.md`**                      | Protocolo que el agente lee automáticamente al iniciar: orden de lectura, límites y reglas de economía de tokens | — (automático)                                |
+| **Mapa del código**                  | Índice con 1 fila por archivo (responsabilidad + exports): ~5 KB en lugar de abrir decenas de archivos           | `npm run map` · `npm run map:check`           |
+| **Grafo de conocimiento** (Graphify) | Grafo del código y reporte de arquitectura; permite preguntar por relaciones sin leer archivos                   | `npm run graph:doctor`                        |
+| **Hooks de git**                     | `pre-commit` regenera y agrega el mapa; `post-commit` (Graphify) reconstruye el grafo en segundo plano           | se instalan solos en `npm install`            |
+| **Chequeos en CI sin costo de IA**   | Verifica que el mapa esté al día y que no haya dependencias circulares                                           | `npm run map:check` · `npm run deps:circular` |
+| **Compactación de sesión**           | El harness resume el historial para no reenviarlo en cada pedido                                                 | `/compact`                                    |
 
 **Reglas de oro** (detalladas en `AGENTS.md`): localizar con `grep`/grafo antes de leer,
 leer solo el tramo necesario, editar de forma quirúrgica, no volcar logs completos en el
@@ -392,7 +414,9 @@ chat y cerrar cada milestone con `/compact` + actualización de `docs/ESTADO-DEL
 Para poner este sistema en producción en el subdominio **`gestion.miempresa.com.ar`** en el mismo VPS donde reside la tienda principal **`miempresa.com.ar`** (WooCommerce / WordPress), se presentan **4 niveles de seguridad integrados**:
 
 ### 1. 🛡️ Capa de Aplicación: PIN de Bloqueo y Control de Roles (RBAC)
+
 El sistema incluye un gestor de seguridad integrado en el cliente React:
+
 - **Pantalla de Bloqueo (Auth Gate)**: Exige el PIN configurado para desbloquear la aplicación. Al habilitar la seguridad por primera vez se debe fijar un PIN propio (el PIN predeterminado `1234` de fábrica no es admitido).
 - **Perfiles de Acceso (RBAC)**:
   - **Operador**: Registro de ventas, confección de presupuestos, remitos e historial de clientes.
@@ -405,6 +429,7 @@ El sistema incluye un gestor de seguridad integrado en el cliente React:
 ---
 
 ### 2. 🔑 Capa Nginx VPS: Autenticación HTTP Basic Auth
+
 Para impedir que usuarios no autorizados descarguen el paquete de la aplicación antes de autenticarse:
 
 ```nginx
@@ -419,11 +444,13 @@ server {
     }
 }
 ```
-*Para crear las credenciales en el VPS:* `sudo htpasswd -c /etc/nginx/.htpasswd admin`
+
+_Para crear las credenciales en el VPS:_ `sudo htpasswd -c /etc/nginx/.htpasswd admin`
 
 ---
 
 ### 3. 🌐 Capa SSL/TLS & Encabezados de Seguridad (Certbot + HSTS)
+
 Asegura la comunicación cifrada con la tienda WooCommerce en el mismo servidor:
 
 ```nginx
@@ -446,6 +473,7 @@ server {
 ---
 
 ### 4. 🎯 Capa de Red: Restricción por Dirección IP en Nginx
+
 Permite limitar el acceso al subdominio únicamente desde las IPs estáticas del local u oficinas de la empresa:
 
 ```nginx

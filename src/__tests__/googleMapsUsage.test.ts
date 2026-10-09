@@ -6,7 +6,7 @@ import {
   recordGoogleMapsRequest,
   resetGoogleMapsUsage,
   checkStoredGoogleMapsQuota,
-  incrementStoredGoogleMapsUsage
+  incrementStoredGoogleMapsUsage,
 } from '../utils/googleMapsService';
 import { AppConfig } from '../types';
 
@@ -26,12 +26,12 @@ describe('Google Maps Monthly Request Limiter & Usage (FEAT-GEO-003)', () => {
       },
       clear: () => {
         mockStore = {};
-      }
+      },
     };
     Object.defineProperty(globalThis, 'localStorage', {
       value: mockLocalStorage,
       writable: true,
-      configurable: true
+      configurable: true,
     });
     vi.restoreAllMocks();
   });
@@ -62,7 +62,7 @@ describe('Google Maps Monthly Request Limiter & Usage (FEAT-GEO-003)', () => {
     it('reconoce el modo ilimitado cuando el límite es 0', () => {
       const info = getGoogleMapsUsageInfo({
         googleMapsMonthlyLimit: 0,
-        googleMapsUsage: { month: currentMonth, count: 540 }
+        googleMapsUsage: { month: currentMonth, count: 540 },
       });
       expect(info.limit).toBe(0);
       expect(info.isUnlimited).toBe(true);
@@ -74,7 +74,7 @@ describe('Google Maps Monthly Request Limiter & Usage (FEAT-GEO-003)', () => {
     it('calcula métricas de consumo y porcentaje correctamente', () => {
       const info = getGoogleMapsUsageInfo({
         googleMapsMonthlyLimit: 1000,
-        googleMapsUsage: { month: currentMonth, count: 750 }
+        googleMapsUsage: { month: currentMonth, count: 750 },
       });
       expect(info.count).toBe(750);
       expect(info.limit).toBe(1000);
@@ -86,7 +86,7 @@ describe('Google Maps Monthly Request Limiter & Usage (FEAT-GEO-003)', () => {
     it('detecta cuando el límite mensual ha sido alcanzado o superado', () => {
       const infoExact = getGoogleMapsUsageInfo({
         googleMapsMonthlyLimit: 500,
-        googleMapsUsage: { month: currentMonth, count: 500 }
+        googleMapsUsage: { month: currentMonth, count: 500 },
       });
       expect(infoExact.isLimitExceeded).toBe(true);
       expect(infoExact.remaining).toBe(0);
@@ -94,7 +94,7 @@ describe('Google Maps Monthly Request Limiter & Usage (FEAT-GEO-003)', () => {
 
       const infoExceeded = getGoogleMapsUsageInfo({
         googleMapsMonthlyLimit: 500,
-        googleMapsUsage: { month: currentMonth, count: 520 }
+        googleMapsUsage: { month: currentMonth, count: 520 },
       });
       expect(infoExceeded.isLimitExceeded).toBe(true);
       expect(infoExceeded.remaining).toBe(0);
@@ -103,7 +103,7 @@ describe('Google Maps Monthly Request Limiter & Usage (FEAT-GEO-003)', () => {
     it('reinicia el conteo si el registro de uso corresponde a un mes anterior (cambio de mes automático)', () => {
       const info = getGoogleMapsUsageInfo({
         googleMapsMonthlyLimit: 2500,
-        googleMapsUsage: { month: '2025-01', count: 2490 }
+        googleMapsUsage: { month: '2025-01', count: 2490 },
       });
       expect(info.currentMonth).toBe(currentMonth);
       expect(info.count).toBe(0);
@@ -116,7 +116,7 @@ describe('Google Maps Monthly Request Limiter & Usage (FEAT-GEO-003)', () => {
     it('permite solicitudes cuando el conteo es menor al límite', () => {
       const res = checkGoogleMapsQuota({
         googleMapsMonthlyLimit: 100,
-        googleMapsUsage: { month: currentMonth, count: 40 }
+        googleMapsUsage: { month: currentMonth, count: 40 },
       });
       expect(res.allowed).toBe(true);
       expect(res.reason).toBeUndefined();
@@ -125,7 +125,7 @@ describe('Google Maps Monthly Request Limiter & Usage (FEAT-GEO-003)', () => {
     it('bloquea solicitudes cuando el límite ha sido alcanzado', () => {
       const res = checkGoogleMapsQuota({
         googleMapsMonthlyLimit: 100,
-        googleMapsUsage: { month: currentMonth, count: 100 }
+        googleMapsUsage: { month: currentMonth, count: 100 },
       });
       expect(res.allowed).toBe(false);
       expect(res.reason).toContain('límite mensual');
@@ -134,7 +134,7 @@ describe('Google Maps Monthly Request Limiter & Usage (FEAT-GEO-003)', () => {
     it('siempre permite solicitudes en modo ilimitado (límite = 0)', () => {
       const res = checkGoogleMapsQuota({
         googleMapsMonthlyLimit: 0,
-        googleMapsUsage: { month: currentMonth, count: 999999 }
+        googleMapsUsage: { month: currentMonth, count: 999999 },
       });
       expect(res.allowed).toBe(true);
     });
@@ -148,7 +148,7 @@ describe('Google Maps Monthly Request Limiter & Usage (FEAT-GEO-003)', () => {
         ultimoNumeroPresupuesto: 1,
         puntoVentaPresupuesto: '0001',
         googleMapsMonthlyLimit: 500,
-        googleMapsUsage: { month: currentMonth, count: 10 }
+        googleMapsUsage: { month: currentMonth, count: 10 },
       };
 
       const { updatedConfig, usage } = recordGoogleMapsRequest(initialConfig);
@@ -166,7 +166,7 @@ describe('Google Maps Monthly Request Limiter & Usage (FEAT-GEO-003)', () => {
         ultimoNumeroPresupuesto: 1,
         puntoVentaPresupuesto: '0001',
         googleMapsMonthlyLimit: 500,
-        googleMapsUsage: { month: '2024-05', count: 450 }
+        googleMapsUsage: { month: '2024-05', count: 450 },
       };
 
       const { updatedConfig, usage } = recordGoogleMapsRequest(initialConfig);
@@ -182,7 +182,7 @@ describe('Google Maps Monthly Request Limiter & Usage (FEAT-GEO-003)', () => {
         ultimoNumeroPresupuesto: 1,
         puntoVentaPresupuesto: '0001',
         googleMapsMonthlyLimit: 500,
-        googleMapsUsage: { month: currentMonth, count: 490 }
+        googleMapsUsage: { month: currentMonth, count: 490 },
       };
 
       const resetConfig = resetGoogleMapsUsage(config);
@@ -194,10 +194,13 @@ describe('Google Maps Monthly Request Limiter & Usage (FEAT-GEO-003)', () => {
 
   describe('Persistencia y Helpers con localStorage', () => {
     it('checkStoredGoogleMapsQuota e incrementStoredGoogleMapsUsage interactúan correctamente con localStorage', () => {
-      localStorage.setItem('app_config_v1', JSON.stringify({
-        googleMapsMonthlyLimit: 3,
-        googleMapsUsage: { month: currentMonth, count: 1 }
-      }));
+      localStorage.setItem(
+        'app_config_v1',
+        JSON.stringify({
+          googleMapsMonthlyLimit: 3,
+          googleMapsUsage: { month: currentMonth, count: 1 },
+        })
+      );
 
       const check1 = checkStoredGoogleMapsQuota();
       expect(check1.allowed).toBe(true);

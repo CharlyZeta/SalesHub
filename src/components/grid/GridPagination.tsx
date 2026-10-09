@@ -17,7 +17,7 @@ export const GridPagination: React.FC<GridPaginationProps> = ({
   setShowAllRows,
   currentPage,
   setCurrentPage,
-  totalPages
+  totalPages,
 }) => {
   return (
     <div className="bg-slate-50 dark:bg-slate-800/80 border-t border-slate-200 dark:border-slate-700 px-4 py-2 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-600 dark:text-slate-400 select-none">

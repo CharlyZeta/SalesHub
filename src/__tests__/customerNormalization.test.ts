@@ -5,7 +5,7 @@ import {
   DEFAULT_PROVINCE,
   parseCustomerIdentityFromWoo,
   parseCombinedAddress,
-  resolveArgentineProvince
+  resolveArgentineProvince,
 } from '../utils/formatters';
 import { transformWooCustomer } from '../utils/wooCommerceApi';
 
@@ -62,11 +62,9 @@ describe('Extracción de DNI, CP y Normalización en WooCommerce API (FEAT-CUST-
         city: 'Santa Fe',
         state: 'Santa Fe',
         postcode: '3000',
-        phone: '3424112233'
+        phone: '3424112233',
       },
-      meta_data: [
-        { key: 'billing_dni', value: '32123456' }
-      ]
+      meta_data: [{ key: 'billing_dni', value: '32123456' }],
     };
 
     const customer = transformWooCustomer(rawWooItem);
@@ -85,9 +83,7 @@ describe('Extracción de DNI, CP y Normalización en WooCommerce API (FEAT-CUST-
         last_name: 'lópez',
         postcode: 'S3000',
       },
-      meta_data: [
-        { key: '_billing_cuit', value: '27-35987654-4' }
-      ]
+      meta_data: [{ key: '_billing_cuit', value: '27-35987654-4' }],
     };
 
     const customer = transformWooCustomer(rawWooItem);
@@ -104,9 +100,9 @@ describe('Extracción de DNI, CP y Normalización en WooCommerce API (FEAT-CUST-
         first_name: 'esteban',
         last_name: 'quaranta',
         company: '38.456.789',
-        postcode: '2000'
+        postcode: '2000',
       },
-      meta_data: []
+      meta_data: [],
     };
 
     const customer = transformWooCustomer(rawWooItem);
@@ -204,8 +200,8 @@ describe('Parseo Inteligente de Clientes WooCommerce y Dirección Combinada (FEA
         address_1: 'TTE. LOZA 6900, SANTA FE, S',
         city: '',
         state: '',
-        postcode: '3000'
-      }
+        postcode: '3000',
+      },
     };
 
     const customer = transformWooCustomer(rawWooItem);

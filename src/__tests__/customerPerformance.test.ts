@@ -3,7 +3,6 @@ import { buildSalesCustomerIndex, filterCustomers } from '../utils/customerIndex
 import { Sale, Customer } from '../types';
 
 describe('FIX-C001: Optimización de Rendimiento del Directorio de Clientes', () => {
-
   const mockCustomers: Customer[] = [
     {
       clienteId: 'CLI-1001',

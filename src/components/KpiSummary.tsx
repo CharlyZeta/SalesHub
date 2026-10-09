@@ -20,7 +20,7 @@ export const KpiSummary: React.FC<KpiSummaryProps> = ({
   selectedChannelFilter,
   onChannelFilterChange,
   showAllMonths,
-  onShowAllMonthsChange
+  onShowAllMonthsChange,
 }) => {
   const [showSettings, setShowSettings] = useState(false);
   const [visibleKpis, setVisibleKpis] = useState(() => {
@@ -38,23 +38,21 @@ export const KpiSummary: React.FC<KpiSummaryProps> = ({
       localFisico: true,
       mercadoLibre: true,
       wooCommerce: true,
-      enviosPendientes: true
+      enviosPendientes: true,
     };
   });
 
   const toggleKpi = (key: string) => {
     const updated = {
       ...visibleKpis,
-      [key]: !((visibleKpis as any)[key])
+      [key]: !(visibleKpis as any)[key],
     };
     setVisibleKpis(updated);
     localStorage.setItem('saleshub_visible_kpis', JSON.stringify(updated));
   };
 
   // Filter sales: either all or only for the selected month
-  const monthSales = showAllMonths 
-    ? sales 
-    : sales.filter((s) => s.fecha.startsWith(selectedMonth));
+  const monthSales = showAllMonths ? sales : sales.filter((s) => s.fecha.startsWith(selectedMonth));
 
   // Cumulative Totals
   const totalAmount = monthSales.reduce((sum, s) => sum + s.montoTotal, 0);
@@ -75,7 +73,9 @@ export const KpiSummary: React.FC<KpiSummaryProps> = ({
   const wooPercent = totalAmount > 0 ? Math.round((wooTotal / totalAmount) * 100) : 0;
 
   // Pending Shipments count
-  const pendingShipments = monthSales.filter((s) => s.estadoEnvio === 'Pendiente' || s.estadoEnvio === 'Enviado').length;
+  const pendingShipments = monthSales.filter(
+    (s) => s.estadoEnvio === 'Pendiente' || s.estadoEnvio === 'Enviado'
+  ).length;
 
   const visibleCardsCount = [
     visibleKpis.acumuladoMensual,
@@ -83,27 +83,29 @@ export const KpiSummary: React.FC<KpiSummaryProps> = ({
     visibleKpis.localFisico,
     visibleKpis.mercadoLibre,
     visibleKpis.wooCommerce,
-    true // Month selector is always visible
+    true, // Month selector is always visible
   ].filter(Boolean).length;
 
-  const gridColsClass = 
-    visibleCardsCount === 1 ? 'lg:grid-cols-1' :
-    visibleCardsCount === 2 ? 'lg:grid-cols-2' :
-    visibleCardsCount === 3 ? 'lg:grid-cols-3' :
-    visibleCardsCount === 4 ? 'lg:grid-cols-4' :
-    visibleCardsCount === 5 ? 'lg:grid-cols-5' :
-    'lg:grid-cols-6';
+  const gridColsClass =
+    visibleCardsCount === 1
+      ? 'lg:grid-cols-1'
+      : visibleCardsCount === 2
+        ? 'lg:grid-cols-2'
+        : visibleCardsCount === 3
+          ? 'lg:grid-cols-3'
+          : visibleCardsCount === 4
+            ? 'lg:grid-cols-4'
+            : visibleCardsCount === 5
+              ? 'lg:grid-cols-5'
+              : 'lg:grid-cols-6';
 
   const smGridColsClass =
-    visibleCardsCount === 1 ? 'sm:grid-cols-1' :
-    visibleCardsCount === 2 ? 'sm:grid-cols-2' :
-    'sm:grid-cols-3';
+    visibleCardsCount === 1 ? 'sm:grid-cols-1' : visibleCardsCount === 2 ? 'sm:grid-cols-2' : 'sm:grid-cols-3';
 
   return (
     <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100 py-3 px-4 transition-colors duration-200">
       <div className="max-w-[1920px] mx-auto">
         <div className={`grid grid-cols-2 ${smGridColsClass} ${gridColsClass} gap-3 items-stretch`}>
-          
           {/* Metric 1: Total Acumulado Mensual/Total */}
           {visibleKpis.acumuladoMensual && (
             <div className="bg-white dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700/80 rounded-lg p-3 shadow-xs flex items-center justify-between">
@@ -132,7 +134,9 @@ export const KpiSummary: React.FC<KpiSummaryProps> = ({
                   Ventas / Ticket Prom.
                 </div>
                 <div className="text-lg md:text-xl font-bold font-mono text-slate-900 dark:text-slate-100 tracking-tight mt-0.5 flex items-baseline gap-1.5">
-                  <span>{totalCount} <span className="text-xs text-slate-400 dark:text-slate-500 font-normal">ops</span></span>
+                  <span>
+                    {totalCount} <span className="text-xs text-slate-400 dark:text-slate-500 font-normal">ops</span>
+                  </span>
                 </div>
                 <div className="text-[10px] text-blue-600 dark:text-blue-400 font-mono mt-0.5 font-medium">
                   Prom: {formatCurrency(averageTicket, false)}
@@ -244,8 +248,8 @@ export const KpiSummary: React.FC<KpiSummaryProps> = ({
                   <button
                     onClick={() => setShowSettings(!showSettings)}
                     className={`p-1.5 rounded transition-colors cursor-pointer border ${
-                      showSettings 
-                        ? 'bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400' 
+                      showSettings
+                        ? 'bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400'
                         : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200'
                     }`}
                     title="Configurar indicadores visibles"
@@ -256,7 +260,7 @@ export const KpiSummary: React.FC<KpiSummaryProps> = ({
                     <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl z-50 p-2 text-[11px] space-y-1 font-sans">
                       <div className="font-semibold text-slate-700 dark:text-slate-200 pb-1 border-b border-slate-100 dark:border-slate-700 mb-1 px-1 flex items-center justify-between">
                         <span>Mostrar Indicadores</span>
-                        <button 
+                        <button
                           onClick={() => setShowSettings(false)}
                           className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
                         >
@@ -271,7 +275,10 @@ export const KpiSummary: React.FC<KpiSummaryProps> = ({
                         { key: 'wooCommerce', label: 'Woo / Web' },
                         { key: 'enviosPendientes', label: 'Envíos Pendientes' },
                       ].map((item) => (
-                        <label key={item.key} className="flex items-center justify-between gap-2 hover:bg-slate-50 dark:hover:bg-slate-700 p-1 rounded cursor-pointer text-slate-700 dark:text-slate-200">
+                        <label
+                          key={item.key}
+                          className="flex items-center justify-between gap-2 hover:bg-slate-50 dark:hover:bg-slate-700 p-1 rounded cursor-pointer text-slate-700 dark:text-slate-200"
+                        >
                           <span>{item.label}</span>
                           <input
                             type="checkbox"
@@ -286,7 +293,7 @@ export const KpiSummary: React.FC<KpiSummaryProps> = ({
                 </div>
               </div>
             </div>
-            
+
             <div className="flex items-center justify-between mt-1 text-xs border-t border-slate-100 dark:border-slate-800/80 pt-1.5">
               <label className="flex items-center gap-1 cursor-pointer text-slate-500 dark:text-slate-400 font-medium">
                 <input
@@ -303,14 +310,15 @@ export const KpiSummary: React.FC<KpiSummaryProps> = ({
                     <Truck className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                     Env:
                   </span>
-                  <span className={`font-bold px-1.5 py-0.2 rounded text-[11px] ${pendingShipments > 0 ? 'bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300' : 'text-slate-400 dark:text-slate-500'}`}>
+                  <span
+                    className={`font-bold px-1.5 py-0.2 rounded text-[11px] ${pendingShipments > 0 ? 'bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300' : 'text-slate-400 dark:text-slate-500'}`}
+                  >
                     {pendingShipments}
                   </span>
                 </div>
               )}
             </div>
           </div>
-
         </div>
       </div>
     </div>

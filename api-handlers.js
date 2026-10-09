@@ -92,7 +92,7 @@ async function getAndreaniToken(hash) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': hash,
+      Authorization: hash,
     },
   });
 
@@ -151,10 +151,7 @@ function normalizeAndreaniBulk(data) {
 
 function logAndreaniError(logFile, err) {
   try {
-    fs.appendFileSync(
-      logFile,
-      `${new Date().toISOString()} - [ERROR] ${err.message}\n${err.stack || ''}\n\n`
-    );
+    fs.appendFileSync(logFile, `${new Date().toISOString()} - [ERROR] ${err.message}\n${err.stack || ''}\n\n`);
   } catch (writeErr) {
     console.error('Failed to write to Andreani error log', writeErr);
   }

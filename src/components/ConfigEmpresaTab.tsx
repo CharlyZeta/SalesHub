@@ -1,13 +1,5 @@
 import React, { type Dispatch, type SetStateAction } from 'react';
-import {
-  Building2,
-  Trash2,
-  Upload,
-  Globe,
-  FileText,
-  FileCode,
-  Image as ImageIcon,
-} from 'lucide-react';
+import { Building2, Trash2, Upload, Globe, FileText, FileCode, Image as ImageIcon } from 'lucide-react';
 
 export interface ConfigEmpresaTabProps {
   nombreEmpresa: string;
@@ -141,11 +133,7 @@ export const ConfigEmpresaTab: React.FC<ConfigEmpresaTabProps> = ({
         <div className="border border-dashed border-slate-300 dark:border-slate-700 rounded-lg p-3.5 bg-white dark:bg-slate-900/60 flex flex-col sm:flex-row items-center gap-4">
           <div className="w-36 h-20 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md flex items-center justify-center overflow-hidden shrink-0 relative">
             {logoUrl ? (
-              <img
-                src={logoUrl}
-                alt="Logo Empresa"
-                className="max-h-full max-w-full object-contain p-1"
-              />
+              <img src={logoUrl} alt="Logo Empresa" className="max-h-full max-w-full object-contain p-1" />
             ) : (
               <div className="flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px]">
                 <ImageIcon className="w-6 h-6 mb-1 opacity-50" />
@@ -168,12 +156,7 @@ export const ConfigEmpresaTab: React.FC<ConfigEmpresaTabProps> = ({
               <label className="bg-slate-900 dark:bg-blue-600 hover:bg-slate-800 dark:hover:bg-blue-500 text-white font-medium px-3 py-1.5 rounded-md flex items-center gap-1.5 transition-colors cursor-pointer text-xs shadow-2xs">
                 <Upload className="w-3.5 h-3.5" />
                 <span>{logoUrl ? 'Cambiar Imagen' : 'Subir Logotipo'}</span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleLogoUpload}
-                  className="hidden"
-                />
+                <input type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
               </label>
 
               {logoUrl && (
@@ -214,9 +197,7 @@ export const ConfigEmpresaTab: React.FC<ConfigEmpresaTabProps> = ({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="block text-slate-600 dark:text-slate-400 font-medium mb-1">
-              C.U.I.T. de la Empresa
-            </label>
+            <label className="block text-slate-600 dark:text-slate-400 font-medium mb-1">C.U.I.T. de la Empresa</label>
             <input
               type="text"
               value={cuitEmpresa}
@@ -227,9 +208,7 @@ export const ConfigEmpresaTab: React.FC<ConfigEmpresaTabProps> = ({
           </div>
 
           <div>
-            <label className="block text-slate-600 dark:text-slate-400 font-medium mb-1">
-              Ingresos Brutos (IIBB)
-            </label>
+            <label className="block text-slate-600 dark:text-slate-400 font-medium mb-1">Ingresos Brutos (IIBB)</label>
             <input
               type="text"
               value={iibbEmpresa}
@@ -291,9 +270,7 @@ export const ConfigEmpresaTab: React.FC<ConfigEmpresaTabProps> = ({
           </div>
 
           <div className="sm:col-span-1">
-            <label className="block text-slate-600 dark:text-slate-400 font-medium mb-1">
-              Teléfono de Contacto
-            </label>
+            <label className="block text-slate-600 dark:text-slate-400 font-medium mb-1">Teléfono de Contacto</label>
             <input
               type="text"
               value={telefonoEmpresa}
@@ -304,9 +281,7 @@ export const ConfigEmpresaTab: React.FC<ConfigEmpresaTabProps> = ({
           </div>
 
           <div className="sm:col-span-2">
-            <label className="block text-slate-600 dark:text-slate-400 font-medium mb-1">
-              Email Comercial
-            </label>
+            <label className="block text-slate-600 dark:text-slate-400 font-medium mb-1">Email Comercial</label>
             <input
               type="email"
               value={emailEmpresa}
@@ -341,7 +316,8 @@ export const ConfigEmpresaTab: React.FC<ConfigEmpresaTabProps> = ({
               className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-3 py-1.5 text-xs font-mono font-bold text-slate-900 dark:text-slate-100 focus:outline-none focus:border-amber-500 shadow-2xs"
             />
             <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
-              Utilizado como punto de venta por defecto en comprobantes fiscales (ej. FC-B-<strong>{pvVenta.padStart(4, '0')}</strong>-...).
+              Utilizado como punto de venta por defecto en comprobantes fiscales (ej. FC-B-
+              <strong>{pvVenta.padStart(4, '0')}</strong>-...).
             </p>
           </div>
 
@@ -361,7 +337,8 @@ export const ConfigEmpresaTab: React.FC<ConfigEmpresaTabProps> = ({
               className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-3 py-1.5 text-xs font-mono font-bold text-slate-900 dark:text-slate-100 focus:outline-none focus:border-amber-500 shadow-2xs"
             />
             <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
-              Prefijo impreso en cotizaciones y presupuestos (ej. P<strong>{pvPresupuesto.padStart(4, '0')}</strong>-...).
+              Prefijo impreso en cotizaciones y presupuestos (ej. P<strong>{pvPresupuesto.padStart(4, '0')}</strong>
+              -...).
             </p>
           </div>
         </div>

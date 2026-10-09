@@ -91,6 +91,6 @@ export function useSecurityRole(securityConfig?: SecurityConfig): UseSecurityRol
     isAuthLocked,
     handleUnlockRole,
     handleLockApp,
-    setIsAuthLocked
+    setIsAuthLocked,
   };
 }

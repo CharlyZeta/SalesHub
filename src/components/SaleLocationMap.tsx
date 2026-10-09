@@ -58,41 +58,44 @@ export const SaleLocationMap: React.FC<SaleLocationMapProps> = ({
   const initialCoordsRef = useRef({ lat: currentLat, lng: currentLng });
 
   // Geolocate address using Google Geocoding API
-  const geocodeAddress = useCallback(async (addrStr: string) => {
-    if (!addrStr.trim()) return;
-    const apiKey = googleMapsApiKey || import.meta.env.VITE_GOOGLE_MAPS_KEY;
-    if (!apiKey) {
-      addSystemLog('ERROR', 'Maps', 'No se encontró la API Key de Google Maps en configuración ni en variables de entorno');
-      setStatusText('API Key de Google Maps no configurada en Configuración → General & Ventas');
-      return;
-    }
-
-    // Validar límite de cuota mensual antes de disparar la consulta de red
-    const quotaCheck = checkStoredGoogleMapsQuota();
-    if (!quotaCheck.allowed) {
-      setStatusText(quotaCheck.reason || 'Límite mensual de consultas a Google Maps alcanzado.');
-      addSystemLog('WARN', 'Maps', `Geocodificación omitida por límite mensual: ${quotaCheck.reason}`);
-      return;
-    }
-
-    setIsSearching(true);
-    setStatusText('Buscando dirección...');
-    addSystemLog('API', 'Maps', `Iniciando geocodificación Google Maps para: "${addrStr}"`);
-    try {
-      const query = encodeURIComponent(`${addrStr}`);
-      const res = await fetch(
-        `https://maps.googleapis.com/maps/api/geocode/json?address=${query}&key=${apiKey}`,
-      );
-
-      // Registrar consumo de consulta en cuota mensual
-      incrementStoredGoogleMapsUsage();
-
-      if (res.status === 429) {
-        setStatusText('No hay cupo disponible en la API de Google. Intenta nuevamente más tarde.');
-        addSystemLog('ERROR', 'Maps', 'RATE_LIMIT: Error 429 de Google Geocoding API (código: 429)');
+  const geocodeAddress = useCallback(
+    async (addrStr: string) => {
+      if (!addrStr.trim()) return;
+      const apiKey = googleMapsApiKey || import.meta.env.VITE_GOOGLE_MAPS_KEY;
+      if (!apiKey) {
+        addSystemLog(
+          'ERROR',
+          'Maps',
+          'No se encontró la API Key de Google Maps en configuración ni en variables de entorno'
+        );
+        setStatusText('API Key de Google Maps no configurada en Configuración → General & Ventas');
         return;
       }
-      const data = await res.json();
+
+      // Validar límite de cuota mensual antes de disparar la consulta de red
+      const quotaCheck = checkStoredGoogleMapsQuota();
+      if (!quotaCheck.allowed) {
+        setStatusText(quotaCheck.reason || 'Límite mensual de consultas a Google Maps alcanzado.');
+        addSystemLog('WARN', 'Maps', `Geocodificación omitida por límite mensual: ${quotaCheck.reason}`);
+        return;
+      }
+
+      setIsSearching(true);
+      setStatusText('Buscando dirección...');
+      addSystemLog('API', 'Maps', `Iniciando geocodificación Google Maps para: "${addrStr}"`);
+      try {
+        const query = encodeURIComponent(`${addrStr}`);
+        const res = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${query}&key=${apiKey}`);
+
+        // Registrar consumo de consulta en cuota mensual
+        incrementStoredGoogleMapsUsage();
+
+        if (res.status === 429) {
+          setStatusText('No hay cupo disponible en la API de Google. Intenta nuevamente más tarde.');
+          addSystemLog('ERROR', 'Maps', 'RATE_LIMIT: Error 429 de Google Geocoding API (código: 429)');
+          return;
+        }
+        const data = await res.json();
         if (data && data.results && data.results.length > 0) {
           const lat = data.results[0].geometry.location.lat;
           const lng = data.results[0].geometry.location.lng;
@@ -113,7 +116,9 @@ export const SaleLocationMap: React.FC<SaleLocationMapProps> = ({
       } finally {
         setIsSearching(false);
       }
-    }, [googleMapsApiKey]);
+    },
+    [googleMapsApiKey]
+  );
 
   // Instantiate map once
   useEffect(() => {
@@ -197,7 +202,9 @@ export const SaleLocationMap: React.FC<SaleLocationMapProps> = ({
         <h3 className="font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-[11px] uppercase tracking-wider">
           <MapPin className="w-4 h-4 text-red-500" /> Localizador Geográfico
         </h3>
-        <p className="text-[10px] text-slate-500">Mueve el pin en el mapa para corregir la ubicación si es necesario.</p>
+        <p className="text-[10px] text-slate-500">
+          Mueve el pin en el mapa para corregir la ubicación si es necesario.
+        </p>
 
         {/* Search Container: NOT a form to avoid bubbling submit to parent SaleFormModal form */}
         <div className="flex gap-1.5">
@@ -229,9 +236,7 @@ export const SaleLocationMap: React.FC<SaleLocationMapProps> = ({
           </button>
         </div>
 
-        {statusText && (
-          <p className="text-[10px] font-medium text-blue-600 dark:text-blue-400">{statusText}</p>
-        )}
+        {statusText && <p className="text-[10px] font-medium text-blue-600 dark:text-blue-400">{statusText}</p>}
       </div>
 
       <div className="flex-1 min-h-[250px] relative z-10" ref={mapContainerRef} />
@@ -247,7 +252,11 @@ export const SaleLocationMap: React.FC<SaleLocationMapProps> = ({
           target="_blank"
           rel="noopener noreferrer"
           onClick={() => {
-            addSystemLog('INFO', 'Maps', `Ubicación compartida por WhatsApp para cliente ${clientName || 'Sin Nombre'}`);
+            addSystemLog(
+              'INFO',
+              'Maps',
+              `Ubicación compartida por WhatsApp para cliente ${clientName || 'Sin Nombre'}`
+            );
           }}
           className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-3 rounded flex items-center justify-center gap-1.5 text-xs transition-colors cursor-pointer"
         >

@@ -16,7 +16,6 @@ export const ExportModal: React.FC<ExportModalProps> = (props) => {
 };
 
 const ExportModalInner: React.FC<ExportModalProps> = ({ onClose, sales, currentMonthIso }) => {
-
   const [exportRange, setExportRange] = useState<'este_mes' | 'todos'>('este_mes');
   const [exportChannel, setExportChannel] = useState<string>('TODOS');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -46,7 +45,6 @@ const ExportModalInner: React.FC<ExportModalProps> = ({ onClose, sales, currentM
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-md rounded-xl shadow-2xl overflow-hidden flex flex-col my-auto">
-        
         {/* Header */}
         <div className="bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 px-5 py-3.5 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -62,14 +60,16 @@ const ExportModalInner: React.FC<ExportModalProps> = ({ onClose, sales, currentM
               </p>
             </div>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-100 p-1 rounded-md hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors cursor-pointer">
+          <button
+            onClick={onClose}
+            className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-100 p-1 rounded-md hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+          >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Modal Body */}
         <div className="p-5 space-y-4 text-xs text-slate-800 dark:text-slate-200">
-          
           <div>
             <label className="block text-slate-500 dark:text-slate-400 mb-1">Rango de fechas a exportar</label>
             <select
@@ -103,7 +103,10 @@ const ExportModalInner: React.FC<ExportModalProps> = ({ onClose, sales, currentM
           )}
 
           <div className="flex justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
-            <button onClick={onClose} className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-md font-medium cursor-pointer transition-colors">
+            <button
+              onClick={onClose}
+              className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-md font-medium cursor-pointer transition-colors"
+            >
               Cancelar
             </button>
             <button
@@ -114,9 +117,7 @@ const ExportModalInner: React.FC<ExportModalProps> = ({ onClose, sales, currentM
               <span>Descargar CSV</span>
             </button>
           </div>
-
         </div>
-
       </div>
     </div>
   );

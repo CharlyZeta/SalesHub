@@ -4,7 +4,8 @@
 
 **Goal:** Implement UI improvements and form rules for sales channels, payment methods, invoice numbering formats, product line discounts, and client dropdown selection in the Sales Hub application.
 
-**Architecture:** 
+**Architecture:**
+
 - Extend `SaleProductItem` to support a line-level percentage discount.
 - Create dynamic badge rendering utilities in the spreadsheet grid for both sales channels and payment methods.
 - Update form fields in the sales modal to conditionally disable the invoice number input, auto-format POS-specific invoice patterns, recalculate item subtotals using discounts, and improve customer dropdown selection.
@@ -12,6 +13,7 @@
 **Tech Stack:** React (TypeScript), Tailwind CSS, Lucide React icons.
 
 ## Global Constraints
+
 - Do not introduce external state management libraries (use React hooks).
 - Ensure all styled elements support dark mode using `dark:` Tailwind classes.
 - Follow existing patterns in the codebase for form validation and display formats.
@@ -22,15 +24,18 @@
 ### Task 1: Actualizaciones de Modelos y Badges de Colores en Planilla
 
 **Files:**
+
 - Modify: `src/types.ts`
 - Modify: `src/components/SpreadsheetGrid.tsx`
 
 **Interfaces:**
+
 - Consumes: `Sale` and `SaleProductItem` interface definitions.
 - Produces: `descuento` field on `SaleProductItem`, functions `getChannelBadge` and `getPaymentMethodBadge` in `SpreadsheetGrid.tsx`.
 
 - [ ] **Step 1: Extender la interfaz SaleProductItem**
-  Add `descuento?: number;` to the `SaleProductItem` interface in `src/types.ts`:
+      Add `descuento?: number;` to the `SaleProductItem` interface in `src/types.ts`:
+
   ```typescript
   export interface SaleProductItem {
     id: string;
@@ -45,18 +50,19 @@
   ```
 
 - [ ] **Step 2: Importar nuevos íconos en SpreadsheetGrid.tsx**
-  Add `MessageSquare`, `Instagram`, `Phone`, and `FileText` to the imports from `'lucide-react'` in `src/components/SpreadsheetGrid.tsx`.
+      Add `MessageSquare`, `Instagram`, `Phone`, and `FileText` to the imports from `'lucide-react'` in `src/components/SpreadsheetGrid.tsx`.
 
 - [ ] **Step 3: Actualizar getChannelBadge en SpreadsheetGrid.tsx**
-  Rewrite `getChannelBadge` to add green badges for WhatsApp, pink for Instagram, blue for phone sales, and dynamic hash-based fallback colors:
+      Rewrite `getChannelBadge` to add green badges for WhatsApp, pink for Instagram, blue for phone sales, and dynamic hash-based fallback colors:
+
   ```typescript
   const getChannelBadge = (canal: SaleChannel) => {
     const canalClean = canal.trim();
     const canalLower = canalClean.toLowerCase();
-    
+
     let colorClasses = "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700";
     let icon = null;
-    
+
     if (canalLower === 'local') {
       colorClasses = "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700";
       icon = <Store className="w-3 h-3 text-slate-500 dark:text-slate-400" />;
@@ -93,7 +99,7 @@
       }
       colorClasses = colors[Math.abs(hash) % colors.length];
     }
-    
+
     return (
       <span className={`inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded font-medium border ${colorClasses}`}>
         {icon}
@@ -104,15 +110,16 @@
   ```
 
 - [ ] **Step 4: Crear getPaymentMethodBadge en SpreadsheetGrid.tsx**
-  Implement `getPaymentMethodBadge` above `getShippingBadge` in `src/components/SpreadsheetGrid.tsx`:
+      Implement `getPaymentMethodBadge` above `getShippingBadge` in `src/components/SpreadsheetGrid.tsx`:
+
   ```typescript
   const getPaymentMethodBadge = (metodo: PaymentMethod) => {
     const metodoClean = metodo.trim();
     const metodoLower = metodoClean.toLowerCase();
-    
+
     let colorClasses = "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700";
     let icon = <CreditCard className="w-3 h-3 text-slate-400" />;
-    
+
     if (metodoLower === 'efectivo') {
       colorClasses = "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/80";
       icon = <DollarSign className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />;
@@ -148,7 +155,7 @@
       }
       colorClasses = colors[Math.abs(hash) % colors.length];
     }
-    
+
     return (
       <span className={`inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded font-medium border ${colorClasses}`}>
         {icon}
@@ -159,7 +166,8 @@
   ```
 
 - [ ] **Step 5: Usar getPaymentMethodBadge en la celda correspondiente**
-  Modify the cell render for `metodoPago` (around line 830) in `src/components/SpreadsheetGrid.tsx`:
+      Modify the cell render for `metodoPago` (around line 830) in `src/components/SpreadsheetGrid.tsx`:
+
   ```typescript
                       {/* Método Pago */}
                       {visibleColumns.metodoPago && (
@@ -170,8 +178,8 @@
   ```
 
 - [ ] **Step 6: Verificar y commitear**
-  Run: `npx tsc --noEmit` to verify type safety.
-  Commit:
+      Run: `npx tsc --noEmit` to verify type safety.
+      Commit:
   ```bash
   git add src/types.ts src/components/SpreadsheetGrid.tsx
   git commit -m "feat: agregar badges de colores para canales y metodos de pago"
@@ -182,77 +190,84 @@
 ### Task 2: Implementación de Descuento por Línea y Layout Reducido en Formulario
 
 **Files:**
+
 - Modify: `src/components/SaleFormModal.tsx`
 
 **Interfaces:**
+
 - Consumes: `SaleProductItem` with `descuento`.
 - Produces: Updated subtotal calculation and grid columns inside `SaleFormModal`.
 
 - [ ] **Step 1: Mapear descuento en la inicialización de productos**
-  Modify the state initialization for `productos` in `src/components/SaleFormModal.tsx` (around line 46):
+      Modify the state initialization for `productos` in `src/components/SaleFormModal.tsx` (around line 46):
+
   ```typescript
-    const [productos, setProductos] = useState<SaleProductItem[]>(
-      existingSale && existingSale.productos.length > 0
-        ? existingSale.productos.map(p => ({ ...p, descuento: p.descuento ?? 0 }))
-        : [{ id: '1', nombre: '', cantidad: 1, precioUnitario: 0, descuento: 0, subtotal: 0 }]
-    );
+  const [productos, setProductos] = useState<SaleProductItem[]>(
+    existingSale && existingSale.productos.length > 0
+      ? existingSale.productos.map((p) => ({ ...p, descuento: p.descuento ?? 0 }))
+      : [{ id: '1', nombre: '', cantidad: 1, precioUnitario: 0, descuento: 0, subtotal: 0 }]
+  );
   ```
 
 - [ ] **Step 2: Modificar handleProductChange para calcular descuento**
-  Update the calculation logic inside `handleProductChange` (around line 76):
+      Update the calculation logic inside `handleProductChange` (around line 76):
+
   ```typescript
-    const handleProductChange = (index: number, field: keyof SaleProductItem, value: any) => {
-      const updated = [...productos];
-      const current = { ...updated[index], [field]: value };
+  const handleProductChange = (index: number, field: keyof SaleProductItem, value: any) => {
+    const updated = [...productos];
+    const current = { ...updated[index], [field]: value };
 
-      if (field === 'cantidad' || field === 'precioUnitario' || field === 'descuento') {
-        const qty = field === 'cantidad' ? parseFloat(value) || 0 : current.cantidad;
-        const price = field === 'precioUnitario' ? parseFloat(value) || 0 : current.precioUnitario;
-        const desc = field === 'descuento' ? parseFloat(value) || 0 : (current.descuento || 0);
-        current.subtotal = qty * price * (1 - desc / 100);
-      }
+    if (field === 'cantidad' || field === 'precioUnitario' || field === 'descuento') {
+      const qty = field === 'cantidad' ? parseFloat(value) || 0 : current.cantidad;
+      const price = field === 'precioUnitario' ? parseFloat(value) || 0 : current.precioUnitario;
+      const desc = field === 'descuento' ? parseFloat(value) || 0 : current.descuento || 0;
+      current.subtotal = qty * price * (1 - desc / 100);
+    }
 
-      updated[index] = current;
-      setProductos(updated);
-    };
+    updated[index] = current;
+    setProductos(updated);
+  };
   ```
 
 - [ ] **Step 3: Modificar handleSelectCatalogProduct para heredar descuento**
-  Update `handleSelectCatalogProduct` (around line 90):
+      Update `handleSelectCatalogProduct` (around line 90):
+
   ```typescript
-    const handleSelectCatalogProduct = (index: number, catProd: CatalogProduct) => {
-      const updated = [...productos];
-      const desc = updated[index].descuento || 0;
-      updated[index] = {
-        ...updated[index],
-        id: catProd.id,
-        nombre: catProd.nombre,
-        sku: catProd.sku,
-        precioUnitario: catProd.precio,
-        subtotal: updated[index].cantidad * catProd.precio * (1 - desc / 100),
-        imagenUrl: catProd.imagenUrl
-      };
-      setProductos(updated);
+  const handleSelectCatalogProduct = (index: number, catProd: CatalogProduct) => {
+    const updated = [...productos];
+    const desc = updated[index].descuento || 0;
+    updated[index] = {
+      ...updated[index],
+      id: catProd.id,
+      nombre: catProd.nombre,
+      sku: catProd.sku,
+      precioUnitario: catProd.precio,
+      subtotal: updated[index].cantidad * catProd.precio * (1 - desc / 100),
+      imagenUrl: catProd.imagenUrl,
     };
+    setProductos(updated);
+  };
   ```
 
 - [ ] **Step 4: Actualizar handleAddProductLine**
-  Initialize `descuento` as `0` in `handleAddProductLine` (around line 104):
+      Initialize `descuento` as `0` in `handleAddProductLine` (around line 104):
+
   ```typescript
-    const handleAddProductLine = () => {
-      setProductos([
-        ...productos,
-        { id: String(Date.now()), nombre: '', cantidad: 1, precioUnitario: 0, descuento: 0, subtotal: 0 }
-      ]);
-    };
+  const handleAddProductLine = () => {
+    setProductos([
+      ...productos,
+      { id: String(Date.now()), nombre: '', cantidad: 1, precioUnitario: 0, descuento: 0, subtotal: 0 },
+    ]);
+  };
   ```
 
 - [ ] **Step 5: Ajustar el Grid y agregar el campo Descuento en el JSX**
-  Replace the rendering block for products rows (around lines 343 to 403) with the new layout column spans and the new `descuento` input:
+      Replace the rendering block for products rows (around lines 343 to 403) with the new layout column spans and the new `descuento` input:
+
   ```typescript
                 {productos.map((prod, idx) => (
                   <div key={idx} className="grid grid-cols-12 gap-2 items-center bg-white dark:bg-slate-900 p-2 rounded-lg border border-slate-200 dark:border-slate-800 shadow-2xs">
-                    
+
                     {/* Búsqueda Sensitiva de Producto con Imagen */}
                     <div className="col-span-12 sm:col-span-5">
                       <label className="block text-[10px] text-slate-500 dark:text-slate-400 mb-0.5">Producto (Búsqueda sensible con imagen)</label>
@@ -329,8 +344,8 @@
   ```
 
 - [ ] **Step 6: Verificar y commitear**
-  Run: `npx tsc --noEmit`
-  Commit:
+      Run: `npx tsc --noEmit`
+      Commit:
   ```bash
   git add src/components/SaleFormModal.tsx
   git commit -m "feat: agregar campo de descuento por linea y ajustar layout"
@@ -341,14 +356,17 @@
 ### Task 3: Facturación Condicional y Autocompletado de Clientes en Formulario
 
 **Files:**
+
 - Modify: `src/components/SaleFormModal.tsx`
 
 **Interfaces:**
+
 - Consumes: None.
 - Produces: State behavior for billing disable rules, default invoice patterns, customer select synchronization, and focus/click-outside UI handlers.
 
 - [ ] **Step 1: Agregar helper para generar números de factura**
-  Add the `generateDefaultInvoiceNumber` helper function inside the `SaleFormModal` component definition (e.g. above `handleSubmit`):
+      Add the `generateDefaultInvoiceNumber` helper function inside the `SaleFormModal` component definition (e.g. above `handleSubmit`):
+
   ```typescript
   const generateDefaultInvoiceNumber = (type: InvoiceType) => {
     const rand = Math.floor(1000 + Math.random() * 9000);
@@ -370,16 +388,18 @@
   ```
 
 - [ ] **Step 2: Cambiar la inicialización de numeroFactura**
-  Update `numeroFactura` default state (around line 53):
+      Update `numeroFactura` default state (around line 53):
+
   ```typescript
-    const [numeroFactura, setNumeroFactura] = useState(() => {
-      if (existingSale) return existingSale.numeroFactura;
-      return `B-0003-0000${Math.floor(1000 + Math.random() * 9000)}`;
-    });
+  const [numeroFactura, setNumeroFactura] = useState(() => {
+    if (existingSale) return existingSale.numeroFactura;
+    return `B-0003-0000${Math.floor(1000 + Math.random() * 9000)}`;
+  });
   ```
 
 - [ ] **Step 3: Agregar lógica condicional en el cambio de Tipo de Factura**
-  Update the `tipoFactura` select element `onChange` handler (around line 430):
+      Update the `tipoFactura` select element `onChange` handler (around line 430):
+
   ```typescript
                 <select
                   value={tipoFactura}
@@ -397,7 +417,8 @@
   ```
 
 - [ ] **Step 4: Deshabilitar el input de Nº Factura si es "Sin Factura"**
-  Update the `numeroFactura` input rendering block (around line 445):
+      Update the `numeroFactura` input rendering block (around line 445):
+
   ```typescript
                 <input
                   type="text"
@@ -410,21 +431,23 @@
   ```
 
 - [ ] **Step 5: Modificar handleSelectCustomer para sincronizar el buscador**
-  Update `handleSelectCustomer` (around line 66) to sync the autocomplete search text:
+      Update `handleSelectCustomer` (around line 66) to sync the autocomplete search text:
+
   ```typescript
-    const handleSelectCustomer = (c: Customer) => {
-      setClienteId(c.clienteId);
-      setClienteNombre(c.nombre);
-      setClienteApellido(c.apellido);
-      setClienteDniCuit(c.dniCuit || '');
-      setClienteTelefono(c.telefono || '');
-      setCustomerSearch(`${c.nombre} ${c.apellido}`);
-      setShowCustomerDropdown(false);
-    };
+  const handleSelectCustomer = (c: Customer) => {
+    setClienteId(c.clienteId);
+    setClienteNombre(c.nombre);
+    setClienteApellido(c.apellido);
+    setClienteDniCuit(c.dniCuit || '');
+    setClienteTelefono(c.telefono || '');
+    setCustomerSearch(`${c.nombre} ${c.apellido}`);
+    setShowCustomerDropdown(false);
+  };
   ```
 
 - [ ] **Step 6: Actualizar el dropdown de clientes para mostrarse siempre al enfocar**
-  Update the outer container of the customer search to add the `customer-search-container` class:
+      Update the outer container of the customer search to add the `customer-search-container` class:
+
   ```typescript
               <div className="relative customer-search-container">
                 <label className="block text-slate-500 dark:text-slate-400 mb-1">Buscar Cliente Existente</label>
@@ -482,7 +505,8 @@
   ```
 
 - [ ] **Step 7: Agregar click-outside listener en SaleFormModal.tsx**
-  Add a `useEffect` inside `SaleFormModal` to capture outside clicks and close the customer search dropdown:
+      Add a `useEffect` inside `SaleFormModal` to capture outside clicks and close the customer search dropdown:
+
   ```typescript
   useEffect(() => {
     const handleOutsideClick = (e: MouseEvent) => {
@@ -497,8 +521,8 @@
   ```
 
 - [ ] **Step 8: Verificar y commitear**
-  Run: `npx tsc --noEmit`
-  Commit:
+      Run: `npx tsc --noEmit`
+      Commit:
   ```bash
   git add src/components/SaleFormModal.tsx
   git commit -m "feat: condicional de facturacion y buscador de clientes con autofill de dni y tel"

@@ -95,14 +95,36 @@ function normalizePersonName(name) {
 
 /** Códigos de provincia argentinos y abreviaturas */
 const ARGENTINE_PROVINCE_CODES = {
-  'A': 'Salta', 'B': 'Buenos Aires', 'C': 'Ciudad Autónoma de Buenos Aires',
-  'D': 'San Luis', 'E': 'Entre Ríos', 'F': 'La Rioja', 'G': 'Santiago del Estero',
-  'H': 'Chaco', 'J': 'San Juan', 'K': 'Catamarca', 'L': 'La Pampa',
-  'M': 'Mendoza', 'N': 'Misiones', 'P': 'Formosa', 'Q': 'Neuquén',
-  'R': 'Río Negro', 'S': 'Santa Fe', 'T': 'Tucumán', 'U': 'Chubut',
-  'V': 'Tierra del Fuego', 'W': 'Corrientes', 'X': 'Córdoba', 'Y': 'Jujuy',
-  'Z': 'Santa Cruz', 'CABA': 'Ciudad Autónoma de Buenos Aires', 'CF': 'Ciudad Autónoma de Buenos Aires',
-  'BA': 'Buenos Aires', 'SF': 'Santa Fe', 'CBA': 'Córdoba', 'ER': 'Entre Ríos'
+  A: 'Salta',
+  B: 'Buenos Aires',
+  C: 'Ciudad Autónoma de Buenos Aires',
+  D: 'San Luis',
+  E: 'Entre Ríos',
+  F: 'La Rioja',
+  G: 'Santiago del Estero',
+  H: 'Chaco',
+  J: 'San Juan',
+  K: 'Catamarca',
+  L: 'La Pampa',
+  M: 'Mendoza',
+  N: 'Misiones',
+  P: 'Formosa',
+  Q: 'Neuquén',
+  R: 'Río Negro',
+  S: 'Santa Fe',
+  T: 'Tucumán',
+  U: 'Chubut',
+  V: 'Tierra del Fuego',
+  W: 'Corrientes',
+  X: 'Córdoba',
+  Y: 'Jujuy',
+  Z: 'Santa Cruz',
+  CABA: 'Ciudad Autónoma de Buenos Aires',
+  CF: 'Ciudad Autónoma de Buenos Aires',
+  BA: 'Buenos Aires',
+  SF: 'Santa Fe',
+  CBA: 'Córdoba',
+  ER: 'Entre Ríos',
 };
 
 /** Resuelve una provincia por código o abreviatura */
@@ -126,17 +148,20 @@ function parseCombinedAddress(rawAddress, rawCity, rawState) {
     return {
       direccion: '',
       localidad: normalizePersonName(city),
-      provincia: resolveArgentineProvince(state)
+      provincia: resolveArgentineProvince(state),
     };
   }
 
   if (address.includes(',')) {
-    const parts = address.split(',').map((p) => p.trim()).filter(Boolean);
+    const parts = address
+      .split(',')
+      .map((p) => p.trim())
+      .filter(Boolean);
     if (parts.length >= 3) {
       return {
         direccion: normalizePersonName(parts[0]),
         localidad: normalizePersonName(city || parts[1]),
-        provincia: resolveArgentineProvince(state || parts[2])
+        provincia: resolveArgentineProvince(state || parts[2]),
       };
     }
     if (parts.length === 2) {
@@ -145,13 +170,13 @@ function parseCombinedAddress(rawAddress, rawCity, rawState) {
         return {
           direccion: normalizePersonName(parts[0]),
           localidad: normalizePersonName(city),
-          provincia: maybeProvince
+          provincia: maybeProvince,
         };
       }
       return {
         direccion: normalizePersonName(parts[0]),
         localidad: normalizePersonName(city || parts[1]),
-        provincia: resolveArgentineProvince(state)
+        provincia: resolveArgentineProvince(state),
       };
     }
   }
@@ -159,7 +184,7 @@ function parseCombinedAddress(rawAddress, rawCity, rawState) {
   return {
     direccion: normalizePersonName(address),
     localidad: normalizePersonName(city),
-    provincia: resolveArgentineProvince(state)
+    provincia: resolveArgentineProvince(state),
   };
 }
 
@@ -194,14 +219,12 @@ function parseCustomerIdentityFromWoo(rawFirstName, rawLastName, fallbackCliente
     cleanFirst = parts.slice(1).join(' ');
   }
 
-  const clienteId = detectedNumber
-    ? `CLI-${detectedNumber}`
-    : (fallbackClienteId || 'CLI-0000');
+  const clienteId = detectedNumber ? `CLI-${detectedNumber}` : fallbackClienteId || 'CLI-0000';
 
   return {
     clienteId,
     nombre: normalizePersonName(cleanFirst),
-    apellido: normalizePersonName(cleanLast)
+    apellido: normalizePersonName(cleanLast),
   };
 }
 
@@ -217,17 +240,34 @@ function mapCustomer(item) {
   const meta = Array.isArray(item.meta_data) ? item.meta_data : [];
 
   const docKeys = [
-    'billing_dni', '_billing_dni',
-    'billing_cuit', '_billing_cuit',
-    'billing_cuit_dni', '_billing_cuit_dni',
-    'billing_cuit_cuil', '_billing_cuit_cuil',
-    'dni', 'cuit', 'cuil',
-    'billing_doc', '_billing_doc', 'doc',
-    'documento', '_documento', 'billing_documento', '_billing_documento',
-    'billing_cedula', 'cedula',
-    'billing_identification_number', '_billing_identification_number',
-    'identification_number', 'numero_documento', 'nro_documento', 'num_documento',
-    'billing_nro_doc', '_billing_nro_doc'
+    'billing_dni',
+    '_billing_dni',
+    'billing_cuit',
+    '_billing_cuit',
+    'billing_cuit_dni',
+    '_billing_cuit_dni',
+    'billing_cuit_cuil',
+    '_billing_cuit_cuil',
+    'dni',
+    'cuit',
+    'cuil',
+    'billing_doc',
+    '_billing_doc',
+    'doc',
+    'documento',
+    '_documento',
+    'billing_documento',
+    '_billing_documento',
+    'billing_cedula',
+    'cedula',
+    'billing_identification_number',
+    '_billing_identification_number',
+    'identification_number',
+    'numero_documento',
+    'nro_documento',
+    'num_documento',
+    'billing_nro_doc',
+    '_billing_nro_doc',
   ];
 
   let dniCuit = '';
@@ -244,13 +284,19 @@ function mapCustomer(item) {
     }
   }
 
-  const phoneMeta = meta.find((m) => 
-    m && m.key && ['billing_phone', 'phone', 'telefono', 'celular', 'billing_cellphone'].includes(String(m.key).trim().toLowerCase())
+  const phoneMeta = meta.find(
+    (m) =>
+      m &&
+      m.key &&
+      ['billing_phone', 'phone', 'telefono', 'celular', 'billing_cellphone'].includes(
+        String(m.key).trim().toLowerCase()
+      )
   );
 
-  const razonSocial = billing.company && billing.company.trim() !== dniCuit
-    ? billing.company.trim()
-    : `${identity.nombre} ${identity.apellido}`.trim();
+  const razonSocial =
+    billing.company && billing.company.trim() !== dniCuit
+      ? billing.company.trim()
+      : `${identity.nombre} ${identity.apellido}`.trim();
 
   return {
     id: `woo-cust-${item.id}`,
@@ -414,9 +460,12 @@ export function createWooService(options = {}) {
     const current = readConfig() || {};
     const next = {
       url: typeof input.url === 'string' ? input.url.trim() : current.url || '',
-      consumerKey: typeof input.consumerKey === 'string' && input.consumerKey ? input.consumerKey : current.consumerKey || '',
+      consumerKey:
+        typeof input.consumerKey === 'string' && input.consumerKey ? input.consumerKey : current.consumerKey || '',
       consumerSecret:
-        typeof input.consumerSecret === 'string' && input.consumerSecret ? input.consumerSecret : current.consumerSecret || '',
+        typeof input.consumerSecret === 'string' && input.consumerSecret
+          ? input.consumerSecret
+          : current.consumerSecret || '',
       autoSync: input.autoSync === undefined ? Boolean(current.autoSync) : Boolean(input.autoSync),
       intervalHours: Number(input.intervalHours) > 0 ? Number(input.intervalHours) : current.intervalHours || 1,
     };
@@ -488,7 +537,8 @@ export function createWooService(options = {}) {
     if (running) return { ok: false, error: 'Ya hay una sincronización en curso' };
     const config = readConfig();
     if (!config?.url) return { ok: false, error: 'WooCommerce no está configurado en el servidor' };
-    if (!config.consumerKey || !config.consumerSecret) return { ok: false, error: 'Faltan las credenciales de WooCommerce' };
+    if (!config.consumerKey || !config.consumerSecret)
+      return { ok: false, error: 'Faltan las credenciales de WooCommerce' };
 
     running = true;
     try {

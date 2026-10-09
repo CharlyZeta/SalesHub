@@ -17,7 +17,7 @@ export const ANDREANI_CANONICAL_STATUSES = [
   'No entregado',
   'Pendiente',
   'Enviado',
-  'No Requiere'
+  'No Requiere',
 ] as const;
 
 export interface AndreaniStatusConfig {
@@ -141,16 +141,18 @@ export function getAndreaniStatusConfig(status?: string | null): AndreaniStatusC
       return {
         label: 'Entregado',
         hint: 'Entregado al destinatario.',
-        badgeClass: 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
-        iconType: 'check'
+        badgeClass:
+          'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
+        iconType: 'check',
       };
 
     case 'Listo para retirar':
       return {
         label: 'Listo para retirar',
         hint: 'Disponible para retirar en la sucursal de destino de Andreani.',
-        badgeClass: 'bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800',
-        iconType: 'store'
+        badgeClass:
+          'bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800',
+        iconType: 'store',
       };
 
     case 'En camino':
@@ -158,16 +160,18 @@ export function getAndreaniStatusConfig(status?: string | null): AndreaniStatusC
       return {
         label: 'En camino',
         hint: 'Despachado y en camino al destino.',
-        badgeClass: 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800',
-        iconType: 'truck'
+        badgeClass:
+          'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800',
+        iconType: 'truck',
       };
 
     case 'No entregado':
       return {
         label: 'No entregado',
         hint: 'No se pudo entregar. Andreani puede reintentar la visita.',
-        badgeClass: 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800',
-        iconType: 'alert'
+        badgeClass:
+          'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800',
+        iconType: 'alert',
       };
 
     case 'Pendiente de ingreso':
@@ -175,24 +179,27 @@ export function getAndreaniStatusConfig(status?: string | null): AndreaniStatusC
       return {
         label: 'Pendiente de ingreso',
         hint: 'El envío se generó y está pendiente de ingreso a la red de Andreani.',
-        badgeClass: 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800',
-        iconType: 'clock'
+        badgeClass:
+          'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800',
+        iconType: 'clock',
       };
 
     case 'No Requiere':
       return {
         label: 'No Requiere',
         hint: 'Esta venta no requiere gestión de envío físico.',
-        badgeClass: 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700',
-        iconType: 'none'
+        badgeClass:
+          'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700',
+        iconType: 'none',
       };
 
     default:
       return {
         label: canonical,
         hint: `Estado de envío: ${canonical}`,
-        badgeClass: 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700',
-        iconType: 'clock'
+        badgeClass:
+          'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700',
+        iconType: 'clock',
       };
   }
 }

@@ -8,8 +8,8 @@ import { verifyPin, authLockWaitMs } from '../utils/security';
 const LOCKOUT_KEY = 'saleshub_auth_lockout_v1';
 
 interface LockoutState {
-  count: number;        // intentos fallidos acumulados
-  lockedUntil: number;  // epoch ms hasta el cual el login queda bloqueado
+  count: number; // intentos fallidos acumulados
+  lockedUntil: number; // epoch ms hasta el cual el login queda bloqueado
 }
 
 const loadLockout = (): LockoutState => {
@@ -48,11 +48,7 @@ interface AuthModalProps {
   isInitialLock?: boolean;
 }
 
-export const AuthModal: React.FC<AuthModalProps> = ({
-  isOpen,
-  onUnlock,
-  securityConfig
-}) => {
+export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onUnlock, securityConfig }) => {
   const [pinInput, setPinInput] = useState('');
   const [selectedRole, setSelectedRole] = useState<UserRole>('OPERADOR');
   const [showPin, setShowPin] = useState(false);
@@ -96,9 +92,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       const storedTrim = storedPin.trim();
       const storedIsHashed = /^[a-f0-9]{64}$/i.test(storedTrim);
 
-      const matches = storedIsHashed
-        ? await verifyPin(pinInput, storedTrim)
-        : pinInput.trim() === storedTrim;
+      const matches = storedIsHashed ? await verifyPin(pinInput, storedTrim) : pinInput.trim() === storedTrim;
 
       if (matches) {
         clearLockout();
@@ -116,10 +110,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         setNowTs(Date.now());
 
         if (waitMs > 0) {
-          addSystemLog('WARN', 'Seguridad', `Bloqueo temporal activado por intentos fallidos (${waitMs / 1000}s)`, { intentos: nextCount });
+          addSystemLog('WARN', 'Seguridad', `Bloqueo temporal activado por intentos fallidos (${waitMs / 1000}s)`, {
+            intentos: nextCount,
+          });
           setErrorMsg(`PIN incorrecto. Demasiados intentos: la app se bloquea por ${waitMs / 1000} segundos.`);
         } else {
-          addSystemLog('WARN', 'Seguridad', `Intento fallido de autenticación (${selectedRole})`, { intento: pinInput.length });
+          addSystemLog('WARN', 'Seguridad', `Intento fallido de autenticación (${selectedRole})`, {
+            intento: pinInput.length,
+          });
           setErrorMsg('PIN / Clave incorrecta');
         }
       }
@@ -131,16 +129,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/80 dark:bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col">
-        
         {/* Header */}
         <div className="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white p-6 text-center relative border-b border-slate-200 dark:border-slate-800">
           <div className="w-14 h-14 bg-blue-100 dark:bg-blue-600/20 border border-blue-200 dark:border-blue-500/30 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center mx-auto mb-3 shadow-inner">
             <Lock className="w-7 h-7 text-blue-600 dark:text-blue-400" />
           </div>
           <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Acceso Protegido</h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            SalesHub • Sistema de Gestión Comercial
-          </p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">SalesHub • Sistema de Gestión Comercial</p>
           <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[11px] text-slate-700 dark:text-slate-300">
             <Server className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
             <span>Subdominio VPS / Entorno Seguro</span>
@@ -149,7 +144,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
         {/* Form Body */}
         <form onSubmit={handleAttemptUnlock} className="p-6 space-y-4 text-xs text-slate-800 dark:text-slate-200">
-          
           {/* Role selector */}
           <div>
             <label className="block font-bold text-slate-700 dark:text-slate-300 mb-2">
@@ -158,7 +152,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
-                onClick={() => { setSelectedRole('OPERADOR'); setErrorMsg(''); }}
+                onClick={() => {
+                  setSelectedRole('OPERADOR');
+                  setErrorMsg('');
+                }}
                 className={`p-3 rounded-xl border text-left flex flex-col gap-1 transition-all cursor-pointer ${
                   selectedRole === 'OPERADOR'
                     ? 'bg-blue-50 dark:bg-blue-950/60 border-blue-600 dark:border-blue-500 text-blue-900 dark:text-blue-100 ring-2 ring-blue-500/20'
@@ -176,7 +173,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
               <button
                 type="button"
-                onClick={() => { setSelectedRole('ADMIN'); setErrorMsg(''); }}
+                onClick={() => {
+                  setSelectedRole('ADMIN');
+                  setErrorMsg('');
+                }}
                 className={`p-3 rounded-xl border text-left flex flex-col gap-1 transition-all cursor-pointer ${
                   selectedRole === 'ADMIN'
                     ? 'bg-purple-50 dark:bg-purple-950/60 border-purple-600 dark:border-purple-500 text-purple-900 dark:text-purple-100 ring-2 ring-purple-500/20'
@@ -196,9 +196,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
           {/* PIN input — required for both roles */}
           <div className="space-y-1.5 pt-1">
-            <label className="block font-bold text-slate-700 dark:text-slate-300">
-              Clave / PIN de acceso:
-            </label>
+            <label className="block font-bold text-slate-700 dark:text-slate-300">Clave / PIN de acceso:</label>
             <div className="relative">
               <input
                 type={showPin ? 'text' : 'password'}
@@ -217,25 +215,31 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               </button>
             </div>
             <p className="text-[11px] text-slate-500 dark:text-slate-400">
-              💡 El PIN por defecto es <strong className="font-mono text-slate-700 dark:text-slate-200">1234</strong>. Puede cambiarlo en Configuración.
-              Tras 3 intentos fallidos el acceso se bloquea temporalmente.
+              💡 El PIN por defecto es <strong className="font-mono text-slate-700 dark:text-slate-200">1234</strong>.
+              Puede cambiarlo en Configuración. Tras 3 intentos fallidos el acceso se bloquea temporalmente.
             </p>
           </div>
 
           <div className="bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 p-3 rounded-lg text-blue-900 dark:text-blue-200 text-[11px]">
-            ℹ️ Como <strong>Operador</strong> podrá registrar ventas, generar presupuestos y crear remitos. La edición de credenciales de WooCommerce y borrado de logs están reservadas para Administradores.
+            ℹ️ Como <strong>Operador</strong> podrá registrar ventas, generar presupuestos y crear remitos. La edición
+            de credenciales de WooCommerce y borrado de logs están reservadas para Administradores.
           </div>
 
           {lockRemainingSec > 0 ? (
             <div className="bg-amber-50 dark:bg-amber-950/50 border border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-200 p-2.5 rounded-lg flex items-center gap-2 text-xs font-medium">
               <Timer className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
-              <span>Bloqueo temporal por seguridad. Reintentá en <strong className="font-mono">{lockRemainingSec} segundos</strong>.</span>
+              <span>
+                Bloqueo temporal por seguridad. Reintentá en{' '}
+                <strong className="font-mono">{lockRemainingSec} segundos</strong>.
+              </span>
             </div>
-          ) : errorMsg && (
-            <div className="bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 p-2.5 rounded-lg flex items-center gap-2 text-xs font-medium animate-shake">
-              <ShieldAlert className="w-4 h-4 text-red-600 dark:text-red-400 shrink-0" />
-              <span>{errorMsg}</span>
-            </div>
+          ) : (
+            errorMsg && (
+              <div className="bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 p-2.5 rounded-lg flex items-center gap-2 text-xs font-medium animate-shake">
+                <ShieldAlert className="w-4 h-4 text-red-600 dark:text-red-400 shrink-0" />
+                <span>{errorMsg}</span>
+              </div>
+            )
           )}
 
           {/* Submit Action */}
@@ -263,7 +267,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         <div className="bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 p-3 text-center text-[11px] text-slate-500 dark:text-slate-400">
           Protección SSL/TLS • VPS Subdominio E-commerce
         </div>
-
       </div>
     </div>
   );

@@ -3,7 +3,7 @@ import {
   mapAndreaniTrackingStatus,
   isTerminalStatus,
   getAndreaniStatusConfig,
-  ANDREANI_CANONICAL_STATUSES
+  ANDREANI_CANONICAL_STATUSES,
 } from '../utils/andreaniStatusMapper';
 
 describe('Andreani Status Mapper (1:1 with Official Plugin)', () => {

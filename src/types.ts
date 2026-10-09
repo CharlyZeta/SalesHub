@@ -2,24 +2,17 @@ export type SaleChannel = string;
 
 export type PaymentMethod = string;
 
-export type ShippingMethod = 
-  | 'Retiro en Local' 
-  | 'Correo Argentino' 
-  | 'Andreani' 
-  | 'OCA' 
-  | 'Cadetería / Moto' 
-  | 'Mercado Envíos' 
-  | 'Otro'
-  | string;
+export type ShippingMethod =
+  'Retiro en Local' | 'Correo Argentino' | 'Andreani' | 'OCA' | 'Cadetería / Moto' | 'Mercado Envíos' | 'Otro' | string;
 
-export type ShippingStatus = 
-  | 'Pendiente' 
-  | 'Pendiente de ingreso' 
-  | 'En camino' 
-  | 'Listo para retirar' 
-  | 'Entregado' 
-  | 'No entregado' 
-  | 'No Requiere' 
+export type ShippingStatus =
+  | 'Pendiente'
+  | 'Pendiente de ingreso'
+  | 'En camino'
+  | 'Listo para retirar'
+  | 'Entregado'
+  | 'No entregado'
+  | 'No Requiere'
   | 'Enviado'
   | string;
 
@@ -49,10 +42,10 @@ export interface Sale {
   clienteLocalidad?: string;
   clienteProvincia?: string;
   clienteCodigoPostal?: string;
-  
+
   productos: SaleProductItem[];
   montoTotal: number;
-  
+
   numeroFactura: string; // e.g. "FC-A-0001-00001234"
   tipoFactura?: InvoiceType;
   metodoPago: PaymentMethod;
@@ -60,7 +53,7 @@ export interface Sale {
   metodoEnvio: ShippingMethod;
   numeroSeguimiento?: string;
   estadoEnvio: ShippingStatus;
-  
+
   envioDomicilioDiferente?: boolean;
   entregaDireccion?: string;
   entregaLocalidad?: string;
@@ -155,7 +148,7 @@ export interface Budget {
   puntoVenta: string; // "0001"
   comprobanteNumero: string; // "00000311"
   fechaEmision: string; // ISO date YYYY-MM-DD
-  
+
   // Customer info
   esClienteAgendado: boolean;
   clienteId?: string;
@@ -168,14 +161,14 @@ export interface Budget {
   codigoPostal: string;
   condicionFiscal: string; // e.g. "CONSUMIDOR FINAL", "RESPONSABLE INSCRIPTO", "MONOTRIBUTO"
   condicionVenta: string; // e.g. "CONTADO", "TRANSFERENCIA", "30 DÍAS"
-  
+
   items: BudgetItem[];
-  
+
   subtotal: number;
   descuentoTotal: number;
   percepciones: number;
   importeTotal: number;
-  
+
   observaciones?: string;
   estado: 'Pendiente' | 'Aprobado' | 'Convertido' | 'Rechazado';
   ventaConvertidaId?: string;
@@ -238,5 +231,3 @@ export interface AppConfig {
   googleMapsMonthlyLimit?: number; // Límite mensual (ej: 2500, 0 o undefined = ilimitado)
   googleMapsUsage?: GoogleMapsUsage;
 }
-
-
