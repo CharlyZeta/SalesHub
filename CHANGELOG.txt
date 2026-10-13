@@ -6,6 +6,9 @@ El formato se basa en Keep a Changelog, y el proyecto respeta Versionado Semánt
 
 ## [0.0.31] - 2026-10-07
 
+### style
+- **Prettier en CI**: `npm run format` aplicado a todo el árbol (97 archivos) y `npm run format:check` agregado al pipeline de CI como paso obligatorio. Corrige B1 (Pendiente de baja prioridad).
+
 ### FEAT-GEO-003: Limitador de Solicitudes Mensuales y Monitor de Consumo para Google Maps Geocoding API
 
 #### Funcionalidades Agregadas

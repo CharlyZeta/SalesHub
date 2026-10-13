@@ -38,3 +38,9 @@ scratch/
 # Archivos temporales de mensajes de commit
 commit-msg*.txt
 commit-message*.txt
+# Internal AI agent cache/logs
+graphify-out/
+.metadata.json
+.agents/
+.superpowers/
+scratch/

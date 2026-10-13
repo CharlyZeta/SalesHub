@@ -10,7 +10,7 @@ proyecto, con su estado, causa, solución aplicada y forma de verificarla.
 >   **Causa** (técnica, con archivo y línea) y **Solución + verificación**.
 > - Los comandos de verificación son los mismos que usa el CI.
 
-**Última actualización:** 2026-09-13 · **Versión del proyecto:** 0.0.18
+**Última actualización:** 2026-10-09 · **Versión del proyecto:** 0.0.31
 
 ---
 
@@ -26,9 +26,9 @@ proyecto, con su estado, causa, solución aplicada y forma de verificarla.
 | **B3** | Sin tests para la capa de API/servidor                                    |   Media   |  🟡 Parcial  |
 | **B5** | `bun.lock` obsoleto versionado                                            |   Baja    | ✅ Reparado  |
 | **B6** | `.env.example` documentaba variables inexistentes (Gemini)                |   Baja    | ✅ Reparado  |
-| **B1** | Prettier configurado pero no aplicado ni verificado en CI                 |   Baja    | ⏳ Pendiente |
+| **B1** | Prettier configurado pero no aplicado ni verificado en CI                 |   Baja    | ✅ Reparado  |
 | **B2** | 53 usos de `any` explícito                                                |   Baja    | ⏳ Pendiente |
-| **B4** | Componentes grandes (`BudgetModal`, `App.tsx`)                            |   Baja    | ⏳ Pendiente |
+| **B4** | Componentes grandes (`BudgetModal`, `App.tsx`)                            |   Baja    | ✅ Reparado |
 | **B7** | 24 `console.*` fuera del logger propio                                    |   Baja    | ⏳ Pendiente |
 | **B8** | Claves WooCommerce precargadas en el modal / defaults de seguridad        |   Media   | ⏳ Pendiente |
 | **B9** | Residuos del entorno original (metadata AI Studio, cachés de agentes)     |   Baja    | ⏳ Pendiente |
@@ -40,7 +40,7 @@ proyecto, con su estado, causa, solución aplicada y forma de verificarla.
 | **W6** | Faltan indicadores (próxima corrida / último error)                       |   Baja    |  🟡 Parcial  |
 
 **Estado global de calidad:** `npm run lint` → 0 errores / **0 warnings** ·
-tests **9 archivos / 90 tests** · build de producción OK · CI en verde.
+tests **17 archivos / 154 tests** · build de producción OK · CI en verde.
 
 ---
 
