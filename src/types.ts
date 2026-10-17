@@ -231,3 +231,40 @@ export interface AppConfig {
   googleMapsMonthlyLimit?: number; // Límite mensual (ej: 2500, 0 o undefined = ilimitado)
   googleMapsUsage?: GoogleMapsUsage;
 }
+
+export type EncargoTipo = 'repuesto' | 'producto';
+
+export type EncargoEstado =
+  | 'pendiente_compra'
+  | 'pedido_proveedor'
+  | 'recibido'
+  | 'entregado'
+  | 'cancelado';
+
+export interface EncargoItem {
+  id: string;
+  tipo: EncargoTipo;
+  productoNombre: string;
+  productoDescripcion?: string;
+  cantidad: number;
+  precioEstimado?: number;
+  seña?: number;
+  clienteTipo: 'agendado' | 'prospecto';
+  clienteId?: string;
+  clienteNombre: string;
+  clienteTelefono?: string;
+  clienteEmail?: string;
+  clienteDniCuit?: string;
+  clienteLocalidad?: string;
+  proveedorSugerido?: string;
+  notas?: string;
+  estado: EncargoEstado;
+  fechaRegistro: string;
+  fechaEstimadaLlegada?: string;
+  fechaCompletado?: string;
+  convertidoEnCatalogo?: boolean;
+  convertidoEnVenta?: boolean;
+  ventaIdCreada?: string;
+  presupuestoIdCreado?: string;
+}
+

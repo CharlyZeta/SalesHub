@@ -4,19 +4,20 @@
 > Es el índice que conviene leer **antes** de abrir archivos: una fila por módulo
 > con su responsabilidad y sus exports principales.
 
-**Resumen:** 56 archivos · 16.867 líneas.
+**Resumen:** 59 archivos · 18.552 líneas.
 
 | Directorio | Archivos | Líneas |
 |:--|--:|--:|
 | `scripts/` | 5 | 563 |
-| `src/` | 3 | 911 |
-| `src/components/` | 21 | 9.045 |
+| `src/` | 3 | 1.036 |
+| `src/components/` | 21 | 9.068 |
 | `src/components/budget/` | 3 | 976 |
+| `src/components/encargos/` | 2 | 1.208 |
 | `src/components/grid/` | 3 | 818 |
 | `src/components/sales/` | 3 | 706 |
 | `src/data/` | 1 | 364 |
 | `src/hooks/` | 5 | 783 |
-| `src/services/` | 1 | 158 |
+| `src/services/` | 2 | 487 |
 | `src/utils/` | 11 | 2.543 |
 
 ## `scripts/`
@@ -33,9 +34,9 @@
 
 | Archivo | Líneas | Responsabilidad | Exports |
 |:--|--:|:--|:--|
-| `App.tsx` | 666 | Orquestador principal: estado global, persistencia, efectos de sync y montaje de modales | (default) |
+| `App.tsx` | 754 | Orquestador principal: estado global, persistencia, efectos de sync y montaje de modales | (default) |
 | `main.tsx` | 11 | Punto de entrada de React (render del árbol en #root) | — |
-| `types.ts` | 234 | Modelo de dominio tipado (Sale, Budget, Customer, CatalogProduct, AppConfig, seguridad) | SaleProductItem, Sale, Customer, CatalogProduct, WooCommerceConfig, ColumnMapping, DateFilterRange, BudgetItem, Budget, SecurityConfig, BackupConfig, CompanyConfig, GoogleMapsUsage, AppConfig, SaleChannel, PaymentMethod, ShippingMethod, ShippingStatus, InvoiceType, UserRole |
+| `types.ts` | 271 | Modelo de dominio tipado (Sale, Budget, Customer, CatalogProduct, AppConfig, seguridad) | SaleProductItem, Sale, Customer, CatalogProduct, WooCommerceConfig, ColumnMapping, DateFilterRange, BudgetItem, Budget, SecurityConfig, BackupConfig, CompanyConfig, GoogleMapsUsage, AppConfig, EncargoItem, SaleChannel, PaymentMethod, ShippingMethod, ShippingStatus, InvoiceType, UserRole, EncargoTipo, EncargoEstado |
 
 ## `src/components/`
 
@@ -51,7 +52,7 @@
 | `ConfigSecurityTab.tsx` | 169 | Pestaña Seguridad & PIN: control de acceso, inactividad y restricciones por rol | ConfigSecurityTab, ConfigSecurityTabProps |
 | `CustomerDirectoryModal.tsx` | 507 | Directorio de clientes: búsqueda, historial de compras y alta de clientes | CustomerDirectoryModal |
 | `ExportModal.tsx` | 125 | Exportador de ventas a CSV por rango y canal | ExportModal |
-| `Header.tsx` | 231 | Barra superior: marca, KPIs rápidos, accesos a modales, tema y bloqueo de sesión | Header |
+| `Header.tsx` | 254 | Barra superior: marca, KPIs rápidos, accesos a modales, tema y bloqueo de sesión | Header |
 | `ImportModal.tsx` | 583 | Importador CSV / pegado desde Google Sheets con mapeo de columnas | ImportModal |
 | `KpiSummary.tsx` | 327 | Banner de KPIs mensuales, filtro por mes/canal y configuración de tarjetas visibles | KpiSummary |
 | `ProductSearchPicker.tsx` | 238 | Buscador autocompletable de productos del catálogo | ProductSearchPicker, ProductSearchPickerProps |
@@ -70,6 +71,13 @@
 | `BudgetEditorTab.tsx` | 529 | — | BudgetEditorTab, BudgetEditorTabProps |
 | `BudgetListTab.tsx` | 143 | — | BudgetListTab, BudgetListTabProps |
 | `BudgetPrintPreview.tsx` | 304 | — | BudgetPrintPreview, BudgetPrintPreviewProps |
+
+## `src/components/encargos/`
+
+| Archivo | Líneas | Responsabilidad | Exports |
+|:--|--:|:--|:--|
+| `EncargoFormModal.tsx` | 484 | — | EncargoFormModal |
+| `EncargosModal.tsx` | 724 | — | EncargosModal |
 
 ## `src/components/grid/`
 
@@ -107,6 +115,7 @@
 
 | Archivo | Líneas | Responsabilidad | Exports |
 |:--|--:|:--|:--|
+| `encargosService.ts` | 329 | — | getEncargos, saveEncargos, generateEncargoId, addEncargo, updateEncargo, deleteEncargo, getEncargosMetrics, agruparParaCompras, generarMensajeWhatsAppProveedor, generarMensajeWhatsAppCliente, generarUrlWhatsApp, crearProductoDeEncargo, ItemCompraConsolidado, EncargosMetrics |
 | `storageRepository.ts` | 158 | — | defaultStorageRepository, IStorageRepository, LocalStorageRepository |
 
 ## `src/utils/`

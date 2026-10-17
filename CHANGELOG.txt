@@ -4,6 +4,18 @@ Todas las mejoras y fixes notables del proyecto.
 
 El formato se basa en Keep a Changelog, y el proyecto respeta Versionado Semántico.
 
+## [0.0.32] - 2026-10-15
+
+### feat
+- **FEAT-ENCARGOS-001: Módulo Integral de Encargos, Demanda y Lista de Compras para Proveedores**:
+  - Reemplazo y rediseño completo del intento previo con errores de compilación (`PropectOrderModal`).
+  - **Captura rápida de demanda**: Registro ágil en 1 solo paso de solicitudes de repuestos o productos no disponibles en catálogo, para clientes agendados o prospectos (con validación de teléfono y seña opcional).
+  - **Tablero interactivo**: Vista general con métricas en tiempo real (`Pendientes`, `En Camino`, `Recibidos`, `Entregados`, `Total Señas`), filtros por categoría (`Repuesto` vs `Producto`), buscador y transiciones rápidas de estado.
+  - **Lista de compras consolidada para distribuidores**: Agrupación automática de solicitudes del mismo ítem sumando cantidades, exportación/copia a WhatsApp formateada para el proveedor, botón de impresión y acción de lote para marcar en camino.
+  - **Aviso directo por WhatsApp al cliente**: Generación de mensaje personalizado indicando disponibilidad y saldo restante para retirar por el local.
+  - **Integración comercial fluida**: Incorporación de ítems al catálogo (`CatalogProduct`) con 1 clic y conversión directa a ventas (`Sale`) precargando el formulario de facturación.
+  - **Pruebas de calidad**: 13 nuevos tests unitarios en `src/__tests__/encargosService.test.ts` (167 tests totales en la suite al 100%), cero advertencias de linting y empaquetado de producción lazy exitoso.
+
 ## [0.0.31] - 2026-10-07
 
 ### style

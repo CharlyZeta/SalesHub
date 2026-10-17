@@ -25,6 +25,9 @@ const RemitoModal = React.lazy(() => import('./components/RemitoModal').then((m)
 const SystemLogsModal = React.lazy(() =>
   import('./components/SystemLogsModal').then((m) => ({ default: m.SystemLogsModal }))
 );
+const EncargosModal = React.lazy(() =>
+  import('./components/encargos/EncargosModal').then((m) => ({ default: m.EncargosModal }))
+);
 
 const ModalFallback: React.FC = () => (
   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs">
@@ -202,6 +205,31 @@ export default function App() {
   const [isConfigOpen, setIsConfigOpen] = useState(false);
   const [isBudgetOpen, setIsBudgetOpen] = useState(false);
   const [isLogsOpen, setIsLogsOpen] = useState(false);
+  const [isEncargosOpen, setIsEncargosOpen] = useState(false);
+  const [encargosPendientesCount, setEncargosPendientesCount] = useState<number>(0);
+
+  // Sincronizar contador de encargos pendientes para el badge del Header
+  useEffect(() => {
+    const updateCount = () => {
+      try {
+        const raw = localStorage.getItem('app_encargos_v1');
+        if (raw) {
+          const items = JSON.parse(raw);
+          if (Array.isArray(items)) {
+            const count = items.filter((i) => i.estado === 'pendiente' || i.estado === 'pedido_proveedor').length;
+            setEncargosPendientesCount(count);
+            return;
+          }
+        }
+        setEncargosPendientesCount(0);
+      } catch {
+        setEncargosPendientesCount(0);
+      }
+    };
+    updateCount();
+    window.addEventListener('storage', updateCount);
+    return () => window.removeEventListener('storage', updateCount);
+  }, [isEncargosOpen]);
 
   // Theme state
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
@@ -357,6 +385,50 @@ export default function App() {
     setIsSaleModalOpen(true);
   };
 
+  const handleNewSaleFromEncargo = (data: {
+    clienteNombre: string;
+    clienteTelefono?: string;
+    productoNombre: string;
+    cantidad: number;
+    precio: number;
+  }) => {
+    setIsEncargosOpen(false);
+    const matchedCustomer = customers.find(
+      (c) => c.nombre.toLowerCase().trim() === data.clienteNombre.toLowerCase().trim()
+    );
+    const newSaleDraft: Partial<Sale> = {
+      fecha: new Date().toISOString().split('T')[0],
+      clienteId: matchedCustomer ? matchedCustomer.id : 'CLI-EVENTUAL',
+      clienteNombre: matchedCustomer ? `${matchedCustomer.nombre} ${matchedCustomer.apellido || ''}`.trim() : data.clienteNombre,
+      clienteTelefono: data.clienteTelefono || matchedCustomer?.telefono || '',
+      clienteEmail: matchedCustomer?.email || '',
+      clienteDniCuit: matchedCustomer?.cuitDni || '',
+      clienteDireccion: matchedCustomer?.direccion || '',
+      clienteLocalidad: matchedCustomer?.localidad || '',
+      clienteProvincia: matchedCustomer?.provincia || 'Misiones',
+      clienteCodigoPostal: matchedCustomer?.codigoPostal || '',
+      productos: [
+        {
+          id: `PROD-${Date.now()}`,
+          nombre: data.productoNombre,
+          cantidad: data.cantidad,
+          precioUnitario: data.precio,
+          subtotal: data.cantidad * data.precio,
+        },
+      ],
+      montoTotal: data.cantidad * data.precio,
+      numeroFactura: '',
+      tipoFactura: 'Ticket',
+      metodoPago: config.metodosPago?.[0] || 'Efectivo',
+      canal: config.canales?.[0] || 'Local',
+      metodoEnvio: config.metodosEnvio?.[0] || 'Retiro en Local',
+      estadoEnvio: 'Entregado',
+      notas: `Generado desde Encargo: ${data.productoNombre}`,
+    };
+    setEditingSale(newSaleDraft as Sale);
+    setIsSaleModalOpen(true);
+  };
+
   return (
     <div className="flex flex-col h-screen w-screen overflow-hidden bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans select-none transition-colors duration-200">
       {/* 1. Header Toolbar */}
@@ -376,6 +448,8 @@ export default function App() {
         onOpenWooCommerce={() => setIsWooCommerceOpen(true)}
         onOpenExport={() => setIsExportOpen(true)}
         onOpenBudget={() => setIsBudgetOpen(true)}
+        onOpenEncargos={() => setIsEncargosOpen(true)}
+        encargosPendientesCount={encargosPendientesCount}
         onOpenConfig={() => setIsConfigOpen(true)}
         onOpenLogs={() => setIsLogsOpen(true)}
         onLockApp={handleLockApp}
@@ -621,6 +695,20 @@ export default function App() {
             onSaveBudget={handleSaveBudget}
             onDeleteBudget={handleDeleteBudget}
             onConvertToSale={handleConvertBudgetToSale}
+          />
+        </React.Suspense>
+      )}
+
+      {isEncargosOpen && (
+        <React.Suspense fallback={<ModalFallback />}>
+          <EncargosModal
+            isOpen={isEncargosOpen}
+            onClose={() => setIsEncargosOpen(false)}
+            customers={customers}
+            catalog={catalog}
+            config={config}
+            onUpdateCatalog={setCatalog}
+            onNewSaleWithItem={handleNewSaleFromEncargo}
           />
         </React.Suspense>
       )}

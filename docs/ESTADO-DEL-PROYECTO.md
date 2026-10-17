@@ -4,8 +4,8 @@ Documento de **handoff**: qué se hizo, cómo quedó el repositorio y qué sigue
 Pensado para retomar el trabajo en cualquier momento (o para que otra persona entienda
 el punto exacto en el que está el desarrollo).
 
-**Última actualización:** 2026-10-07
-**Versión del proyecto:** 0.0.31
+**Última actualización:** 2026-10-15
+**Versión del proyecto:** 0.0.32
 **Commit de cierre:** el último de `master` (`git log -1 --oneline`)
 **Repositorio:** https://github.com/CharlyZeta/SalesHub (rama `master`)
 
@@ -21,12 +21,13 @@ documentado, con lint/CI reales y con arquitectura modularizada y optimizada**.
 | Área                       | Estado                                                                    |
 | :------------------------- | :------------------------------------------------------------------------ |
 | Calidad                    | `npm run lint` (tsc + ESLint): **0 errores / 0 warnings**                 |
-| Tests                      | **17 archivos / 154 tests** (Vitest)                                      |
-| Rendimiento                | Chunk principal: **302 kB** (-74% respecto al monolito original)          |
-| Dependencias               | **0 ciclos circulares** (Madge, 72 módulos analizados)                    |
+| Tests                      | **18 archivos / 167 tests** (Vitest)                                      |
+| Rendimiento                | Chunk principal: **304 kB** (-74% respecto al monolito original)          |
+| Dependencias               | **0 ciclos circulares** (Madge, 76 módulos analizados)                    |
 | Build                      | Producción OK (Code-Splitting y Rollup `manualChunks`)                    |
 | CI                         | GitHub Actions **en verde** en cada push (typecheck + lint, tests, build) |
 | Sincronización WooCommerce | **Funcionando según la configuración** (validado en uso real)             |
+| Encargos y Demanda         | **Módulo entregado (`FEAT-ENCARGOS-001`)**: Tablero + Lista de Compras     |
 | Repositorio                | Sincronizado: local = remoto, árbol limpio                                |
 
 ---
