@@ -177,14 +177,57 @@ export interface Budget {
 
 export type UserRole = 'ADMIN' | 'OPERADOR';
 
-export interface SecurityConfig {
+export type AuthMode = 'hibrido_pin_o_password' | 'solo_password' | 'solo_pin';
+
+export interface AppUser {
+  id: string;
+  username: string;
+  nombre: string;
+  rol: UserRole;
+  passwordHash: string;
+  pinHash?: string; // Hash para PIN rápido personal opcional
+  activo: boolean;
+  creadoEn: string;
+  ultimoAcceso?: string;
+  mustChangeCredentials?: boolean;
+}
+
+export type PermissionLevel = 'none' | 'read' | 'full';
+
+export type ToolResourceId =
+  | 'ventas'
+  | 'presupuestos'
+  | 'clientes'
+  | 'catalogo'
+  | 'encargos'
+  | 'estadisticas'
+  | 'configuracion'
+  | 'seguridad'
+  | 'backups'
+  | 'logs'
+  | string;
+
+export type ResourcePermissionMap = Record<string, PermissionLevel>;
+
+export interface RolePermissions {
+  OPERADOR: ResourcePermissionMap;
+  ADMIN?: ResourcePermissionMap;
+  [roleName: string]: ResourcePermissionMap | undefined;
+}
+
+export interface SecurityPolicyConfig {
   seguridadHabilitada: boolean;
-  pinAcceso: string; // PIN or Password (default "1234")
-  tiempoInactividadMinutos: number; // Inactivity auto-lock minutes (e.g. 15, 0 = disabled)
+  modoAutenticacion: AuthMode;
+  tiempoInactividadMinutos: number;
   modoProduccionVPS: boolean;
-  bloquearSincronizacionWooCommerce: boolean; // Only Admin
-  bloquearBorradoLogs: boolean; // Only Admin
+  bloquearSincronizacionWooCommerce: boolean;
+  bloquearBorradoLogs: boolean;
+}
+
+export interface SecurityConfig extends SecurityPolicyConfig {
+  pinAcceso?: string; // Legacy fallback
   rolActual?: UserRole;
+  usuarioActivo?: AppUser | null;
 }
 
 export interface BackupConfig {
@@ -234,12 +277,7 @@ export interface AppConfig {
 
 export type EncargoTipo = 'repuesto' | 'producto';
 
-export type EncargoEstado =
-  | 'pendiente_compra'
-  | 'pedido_proveedor'
-  | 'recibido'
-  | 'entregado'
-  | 'cancelado';
+export type EncargoEstado = 'pendiente_compra' | 'pedido_proveedor' | 'recibido' | 'entregado' | 'cancelado';
 
 export interface EncargoItem {
   id: string;
@@ -267,4 +305,3 @@ export interface EncargoItem {
   ventaIdCreada?: string;
   presupuestoIdCreado?: string;
 }
-

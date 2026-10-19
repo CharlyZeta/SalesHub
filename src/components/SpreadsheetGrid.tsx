@@ -1,11 +1,12 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { ArrowUpDown, Search } from 'lucide-react';
-import { Sale } from '../types';
+import { Sale, UserRole } from '../types';
 import { formatCurrency } from '../utils/formatters';
 import { isTerminalStatus } from '../utils/andreaniStatusMapper';
 import { GridRow, GridVisibleColumns } from './grid/GridRow';
 import { GridToolbar } from './grid/GridToolbar';
 import { GridPagination } from './grid/GridPagination';
+import { usePermissions } from '../hooks/usePermissions';
 
 interface SpreadsheetGridProps {
   sales: Sale[];
@@ -23,6 +24,8 @@ interface SpreadsheetGridProps {
   showAllMonths: boolean;
   andreaniHash?: string;
   onSyncAndreaniTrackings?: (trackingNumbers: string[], force?: boolean) => Promise<void>;
+  readOnly?: boolean;
+  currentRole?: UserRole;
 }
 
 export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
@@ -34,6 +37,8 @@ export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
   onPrintRemito,
   selectedChannelFilter,
   onChannelFilterChange,
+  readOnly = false,
+  currentRole = 'OPERADOR',
   canales = ['Local', 'MercadoLibre', 'WooCommerce', 'WhatsApp', 'Instagram', 'Venta Telefónica', 'Otro'],
   metodosPago = [
     'Efectivo',
@@ -83,6 +88,10 @@ export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
     acciones: true,
   });
   const [showColumnMenu, setShowColumnMenu] = useState(false);
+
+  // Derivar readOnly efectivo desde usePermissions según el rol actual
+  const { isReadOnly } = usePermissions((currentRole || 'OPERADOR') as UserRole);
+  const effectiveReadOnly = readOnly || isReadOnly('ventas');
 
   // Bulk Selection
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -265,13 +274,18 @@ export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
     setSelectedIds((prev) => (prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]));
   }, []);
 
-  const startInlineEdit = useCallback((sale: Sale, field: string) => {
-    setEditingCell({ id: sale.id, field: field as keyof Sale });
-    setInlineValue(String(sale[field as keyof Sale] || ''));
-  }, []);
+  const startInlineEdit = useCallback(
+    (sale: Sale, field: string) => {
+      if (effectiveReadOnly) return;
+      setEditingCell({ id: sale.id, field: field as keyof Sale });
+      setInlineValue(String(sale[field as keyof Sale] || ''));
+    },
+    [effectiveReadOnly]
+  );
 
   const saveInlineEdit = useCallback(
     (saleId: string) => {
+      if (effectiveReadOnly) return;
       if (!editingCell) return;
       const { field } = editingCell;
 
@@ -285,7 +299,7 @@ export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
       setEditingCell(null);
       setInlineValue('');
     },
-    [editingCell, inlineValue, onUpdateInlineSale]
+    [effectiveReadOnly, editingCell, inlineValue, onUpdateInlineSale]
   );
 
   return (
@@ -313,6 +327,7 @@ export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
         selectedIds={selectedIds}
         setSelectedIds={setSelectedIds}
         onDeleteSale={onDeleteSale}
+        readOnly={effectiveReadOnly}
       />
 
       {/* High Density Spreadsheet Table */}
@@ -447,13 +462,15 @@ export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
                     <p className="text-xs text-slate-400 dark:text-slate-500">
                       Prueba modificando la búsqueda, los filtros de canal o agrega una nueva venta.
                     </p>
-                    <button
-                      type="button"
-                      onClick={onQuickAddSale}
-                      className="mt-2 bg-slate-900 dark:bg-blue-600 hover:bg-slate-800 dark:hover:bg-blue-500 text-white px-3 py-1.5 rounded text-xs font-medium cursor-pointer"
-                    >
-                      + Registrar Venta Ahora
-                    </button>
+                    {!effectiveReadOnly && (
+                      <button
+                        type="button"
+                        onClick={onQuickAddSale}
+                        className="mt-2 bg-slate-900 dark:bg-blue-600 hover:bg-slate-800 dark:hover:bg-blue-500 text-white px-3 py-1.5 rounded text-xs font-medium cursor-pointer"
+                      >
+                        + Registrar Venta Ahora
+                      </button>
+                    )}
                   </div>
                 </td>
               </tr>
@@ -467,6 +484,7 @@ export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
                   editingCell={editingCell}
                   inlineValue={inlineValue}
                   copiedId={copiedId}
+                  readOnly={effectiveReadOnly}
                   onSelectRow={handleSelectRow}
                   onStartInlineEdit={startInlineEdit}
                   onChangeInlineValue={setInlineValue}

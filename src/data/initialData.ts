@@ -53,6 +53,7 @@ export const INITIAL_CONFIG: AppConfig = {
   empresa: INITIAL_COMPANY_CONFIG,
   seguridad: {
     seguridadHabilitada: false,
+    modoAutenticacion: 'hibrido_pin_o_password',
     pinAcceso: '1234',
     tiempoInactividadMinutos: 15,
     modoProduccionVPS: false,

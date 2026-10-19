@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { getMonthYearLabel } from '../utils/formatters';
 import { UserRole } from '../types';
+import { usePermissions } from '../hooks/usePermissions';
 
 interface HeaderProps {
   currentMonthIso: string;
@@ -36,6 +37,7 @@ interface HeaderProps {
   onOpenLogs?: () => void;
   onLockApp?: () => void;
   currentRole?: UserRole;
+  currentUsername?: string;
   wooConnected: boolean;
   theme?: 'light' | 'dark';
   onToggleTheme?: () => void;
@@ -54,11 +56,13 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenConfig,
   onOpenLogs,
   onLockApp,
-  currentRole = 'OPERADOR',
+  currentRole = 'OPERADOR' as UserRole,
+  currentUsername,
   wooConnected,
   theme = 'light',
   onToggleTheme,
 }) => {
+  const { canAccess, canWrite } = usePermissions(currentRole);
   return (
     <header className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-30 shadow-xs transition-colors duration-200">
       <div className="max-w-[1920px] mx-auto px-4 py-2.5 flex flex-wrap items-center justify-between gap-3">
@@ -82,29 +86,33 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Action Controls Toolbar */}
         <div className="flex items-center flex-wrap gap-2">
           {/* Main Quick Entry Action */}
-          <button
-            id="btn-nueva-venta"
-            onClick={onOpenNewSale}
-            className="bg-slate-900 dark:bg-blue-600 hover:bg-slate-800 dark:hover:bg-blue-500 text-white font-medium text-xs md:text-sm px-3.5 py-1.5 rounded-md flex items-center gap-1.5 transition-colors shadow-xs active:scale-95 cursor-pointer"
-            title="Registrar una nueva venta en la planilla"
-          >
-            <PlusCircle className="w-4 h-4 text-emerald-400 dark:text-emerald-300" />
-            <span>+ Nueva Venta</span>
-          </button>
+          {canWrite('ventas') && (
+            <button
+              id="btn-nueva-venta"
+              onClick={onOpenNewSale}
+              className="bg-slate-900 dark:bg-blue-600 hover:bg-slate-800 dark:hover:bg-blue-500 text-white font-medium text-xs md:text-sm px-3.5 py-1.5 rounded-md flex items-center gap-1.5 transition-colors shadow-xs active:scale-95 cursor-pointer"
+              title="Registrar una nueva venta en la planilla"
+            >
+              <PlusCircle className="w-4 h-4 text-emerald-400 dark:text-emerald-300" />
+              <span>+ Nueva Venta</span>
+            </button>
+          )}
 
           {/* Budgeting Tool */}
-          <button
-            id="btn-presupuestos"
-            onClick={onOpenBudget}
-            className="bg-blue-50 dark:bg-slate-800 hover:bg-blue-100 dark:hover:bg-slate-700 text-blue-900 dark:text-blue-300 border border-blue-200 dark:border-slate-700 font-medium text-xs md:text-sm px-3 py-1.5 rounded-md flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
-            title="Herramienta de presupuestos para clientes agendados o eventuales"
-          >
-            <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-            <span>Presupuestos</span>
-          </button>
+          {canAccess('presupuestos') && (
+            <button
+              id="btn-presupuestos"
+              onClick={onOpenBudget}
+              className="bg-blue-50 dark:bg-slate-800 hover:bg-blue-100 dark:hover:bg-slate-700 text-blue-900 dark:text-blue-300 border border-blue-200 dark:border-slate-700 font-medium text-xs md:text-sm px-3 py-1.5 rounded-md flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
+              title="Herramienta de presupuestos para clientes agendados o eventuales"
+            >
+              <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              <span>Presupuestos</span>
+            </button>
+          )}
 
           {/* Encargos & Compras */}
-          {onOpenEncargos && (
+          {onOpenEncargos && canAccess('encargos') && (
             <button
               id="btn-encargos"
               onClick={onOpenEncargos}
@@ -122,46 +130,52 @@ export const Header: React.FC<HeaderProps> = ({
           )}
 
           {/* Analytics / Stats */}
-          <button
-            id="btn-estadisticas"
-            onClick={onOpenAnalytics}
-            className="bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-medium text-xs md:text-sm px-3 py-1.5 rounded-md flex items-center gap-1.5 transition-colors cursor-pointer"
-            title="Ver reportes y estadísticas de ventas"
-          >
-            <BarChart3 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-            <span className="hidden md:inline">Estadísticas</span>
-          </button>
+          {canAccess('estadisticas') && (
+            <button
+              id="btn-estadisticas"
+              onClick={onOpenAnalytics}
+              className="bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-medium text-xs md:text-sm px-3 py-1.5 rounded-md flex items-center gap-1.5 transition-colors cursor-pointer"
+              title="Ver reportes y estadísticas de ventas"
+            >
+              <BarChart3 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              <span className="hidden md:inline">Estadísticas</span>
+            </button>
+          )}
 
           {/* Customer Directory */}
-          <button
-            id="btn-clientes"
-            onClick={onOpenCustomers}
-            className="bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-medium text-xs md:text-sm px-3 py-1.5 rounded-md flex items-center gap-1.5 transition-colors cursor-pointer"
-            title="Directorio de Clientes e Historiales"
-          >
-            <Users className="w-4 h-4 text-slate-500 dark:text-slate-400" />
-            <span className="hidden lg:inline">Clientes</span>
-          </button>
+          {canAccess('clientes') && (
+            <button
+              id="btn-clientes"
+              onClick={onOpenCustomers}
+              className="bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-medium text-xs md:text-sm px-3 py-1.5 rounded-md flex items-center gap-1.5 transition-colors cursor-pointer"
+              title="Directorio de Clientes e Historiales"
+            >
+              <Users className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+              <span className="hidden lg:inline">Clientes</span>
+            </button>
+          )}
 
           {/* Catalog & WooCommerce API */}
-          <button
-            id="btn-woocommerce"
-            onClick={onOpenWooCommerce}
-            className="bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-medium text-xs md:text-sm px-3 py-1.5 rounded-md flex items-center gap-1.5 transition-colors relative cursor-pointer"
-            title="Integración WooCommerce / Catálogo de Productos"
-          >
-            <ShoppingBag className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-            <span className="hidden xl:inline">Catálogo / Woo</span>
-            <span className="xl:hidden">Woo</span>
-            {wooConnected ? (
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" title="WooCommerce Conectado" />
-            ) : (
-              <span className="w-2 h-2 rounded-full bg-amber-500" title="Configuración pendiente" />
-            )}
-          </button>
+          {canAccess('catalogo') && (
+            <button
+              id="btn-woocommerce"
+              onClick={onOpenWooCommerce}
+              className="bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-medium text-xs md:text-sm px-3 py-1.5 rounded-md flex items-center gap-1.5 transition-colors relative cursor-pointer"
+              title="Integración WooCommerce / Catálogo de Productos"
+            >
+              <ShoppingBag className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+              <span className="hidden xl:inline">Catálogo / Woo</span>
+              <span className="xl:hidden">Woo</span>
+              {wooConnected ? (
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" title="WooCommerce Conectado" />
+              ) : (
+                <span className="w-2 h-2 rounded-full bg-amber-500" title="Configuración pendiente" />
+              )}
+            </button>
+          )}
 
           {/* System Logs */}
-          {onOpenLogs && (
+          {onOpenLogs && canAccess('logs') && (
             <button
               id="btn-logs-sistema"
               onClick={onOpenLogs}
@@ -173,14 +187,16 @@ export const Header: React.FC<HeaderProps> = ({
           )}
 
           {/* System Settings (Channels & Payment Methods) */}
-          <button
-            id="btn-configuracion"
-            onClick={onOpenConfig}
-            className="bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-medium text-xs md:text-sm px-2.5 py-1.5 rounded-md flex items-center gap-1.5 transition-colors cursor-pointer"
-            title="Configurar Canales de Venta, Métodos de Pago y Seguridad"
-          >
-            <Settings className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-          </button>
+          {canAccess('configuracion') && (
+            <button
+              id="btn-configuracion"
+              onClick={onOpenConfig}
+              className="bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-medium text-xs md:text-sm px-2.5 py-1.5 rounded-md flex items-center gap-1.5 transition-colors cursor-pointer"
+              title="Configurar Canales de Venta, Métodos de Pago y Seguridad"
+            >
+              <Settings className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+            </button>
+          )}
 
           {/* Security & Lock Button */}
           {onLockApp && (
@@ -192,14 +208,16 @@ export const Header: React.FC<HeaderProps> = ({
                   ? 'bg-purple-50 dark:bg-purple-950/60 text-purple-900 dark:text-purple-300 border-purple-200 dark:border-purple-800 hover:bg-purple-100 dark:hover:bg-purple-900/80'
                   : 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700'
               }`}
-              title={`Perfil: ${currentRole}. Clic para bloquear o cambiar perfil`}
+              title={`Usuario: ${currentUsername ? `@${currentUsername} (${currentRole})` : currentRole}. Clic para bloquear puesto`}
             >
               {currentRole === 'ADMIN' ? (
                 <ShieldCheck className="w-4 h-4 text-purple-600 dark:text-purple-400" />
               ) : (
                 <UserCheck className="w-4 h-4 text-blue-600 dark:text-blue-400" />
               )}
-              <span className="hidden sm:inline font-bold text-[11px]">{currentRole}</span>
+              <span className="hidden sm:inline font-bold text-[11px]">
+                {currentUsername ? `@${currentUsername}` : currentRole}
+              </span>
               <Lock className="w-3.5 h-3.5 text-slate-400 ml-0.5" />
             </button>
           )}

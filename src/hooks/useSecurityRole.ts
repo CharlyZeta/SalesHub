@@ -1,29 +1,62 @@
 import type React from 'react';
-import { useState, useEffect } from 'react';
-import { UserRole, SecurityConfig } from '../types';
+import { useState, useEffect, useCallback } from 'react';
+import { UserRole, SecurityConfig, AppUser } from '../types';
 import { addSystemLog } from '../utils/logger';
+import { getActiveSessionUser, setActiveSessionUser } from '../services/userService';
 
 export interface UseSecurityRoleReturn {
   currentRole: UserRole;
+  currentUser: AppUser | null;
   isAuthLocked: boolean;
   handleUnlockRole: (role: UserRole) => void;
+  handleUnlockSession: (user: AppUser) => void;
   handleLockApp: () => void;
+  handleLogout: () => void;
   setIsAuthLocked: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export function useSecurityRole(securityConfig?: SecurityConfig): UseSecurityRoleReturn {
-  const [currentRole, setCurrentRole] = useState<UserRole>('OPERADOR');
-  const [isAuthLocked, setIsAuthLocked] = useState<boolean>(false);
+  const [currentUser, setCurrentUser] = useState<AppUser | null>(() => getActiveSessionUser());
+  const [currentRole, setCurrentRole] = useState<UserRole>(() => currentUser?.rol || 'OPERADOR');
+  const [isAuthLocked, setIsAuthLocked] = useState<boolean>(() => {
+    // Si la seguridad está habilitada, inicia bloqueado a menos que esté desactivada
+    return Boolean(securityConfig?.seguridadHabilitada);
+  });
 
-  // Inicializar bloqueado si la seguridad está habilitada
+  // Si cambia la configuración de seguridad y se activa
   useEffect(() => {
-    if (securityConfig?.seguridadHabilitada) {
+    if (securityConfig?.seguridadHabilitada && !currentUser) {
       setIsAuthLocked(true);
-      addSystemLog('INFO', 'Seguridad', 'Sesión iniciada bloqueada: se requiere PIN de acceso');
+      addSystemLog('INFO', 'Seguridad', 'Sesión bloqueada: se requiere autenticación de usuario');
     }
-  }, [securityConfig?.seguridadHabilitada]);
+  }, [securityConfig?.seguridadHabilitada, currentUser]);
 
-  // Temporizador de inactividad
+  const handleLockApp = useCallback(() => {
+    setIsAuthLocked(true);
+    addSystemLog('INFO', 'Seguridad', `Sesión bloqueada manualmente (${currentUser?.username || currentRole})`);
+  }, [currentUser, currentRole]);
+
+  const handleLogout = useCallback(() => {
+    setActiveSessionUser(null);
+    setCurrentUser(null);
+    setCurrentRole('OPERADOR');
+    setIsAuthLocked(true);
+    addSystemLog('INFO', 'Seguridad', 'Cierre de sesión de usuario');
+  }, []);
+
+  const handleUnlockSession = useCallback((user: AppUser) => {
+    setCurrentUser(user);
+    setCurrentRole(user.rol);
+    setActiveSessionUser(user);
+    setIsAuthLocked(false);
+  }, []);
+
+  const handleUnlockRole = useCallback((role: UserRole) => {
+    setCurrentRole(role);
+    setIsAuthLocked(false);
+  }, []);
+
+  // Temporizador de auto-bloqueo por inactividad
   useEffect(() => {
     if (
       !securityConfig ||
@@ -58,39 +91,27 @@ export function useSecurityRole(securityConfig?: SecurityConfig): UseSecurityRol
       }
     };
 
-    window.addEventListener('mousemove', scheduleLock);
-    window.addEventListener('keydown', scheduleLock);
-    window.addEventListener('click', scheduleLock);
-    window.addEventListener('focus', scheduleLock);
+    const events = ['mousemove', 'keydown', 'click', 'focus', 'touchstart'];
+    events.forEach((ev) => window.addEventListener(ev, scheduleLock, { passive: true }));
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     scheduleLock();
 
     return () => {
       clearTimeout(timer);
-      window.removeEventListener('mousemove', scheduleLock);
-      window.removeEventListener('keydown', scheduleLock);
-      window.removeEventListener('click', scheduleLock);
-      window.removeEventListener('focus', scheduleLock);
+      events.forEach((ev) => window.removeEventListener(ev, scheduleLock));
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [securityConfig, isAuthLocked]);
 
-  const handleUnlockRole = (role: UserRole) => {
-    setCurrentRole(role);
-    setIsAuthLocked(false);
-  };
-
-  const handleLockApp = () => {
-    setIsAuthLocked(true);
-    addSystemLog('INFO', 'Seguridad', 'Sesión bloqueada manualmente por el usuario');
-  };
-
   return {
     currentRole,
+    currentUser,
     isAuthLocked,
     handleUnlockRole,
+    handleUnlockSession,
     handleLockApp,
+    handleLogout,
     setIsAuthLocked,
   };
 }

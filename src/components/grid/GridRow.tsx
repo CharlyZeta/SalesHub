@@ -46,6 +46,7 @@ export interface GridRowProps {
   editingCell: { id: string; field: string } | null;
   inlineValue: string;
   copiedId: string | null;
+  readOnly?: boolean;
   onSelectRow: (id: string) => void;
   onStartInlineEdit: (sale: Sale, field: string) => void;
   onChangeInlineValue: (val: string) => void;
@@ -194,6 +195,7 @@ export const GridRow: React.FC<GridRowProps> = React.memo(
     editingCell,
     inlineValue,
     copiedId,
+    readOnly = false,
     onSelectRow,
     onStartInlineEdit,
     onChangeInlineValue,
@@ -208,6 +210,11 @@ export const GridRow: React.FC<GridRowProps> = React.memo(
     const isAndreani = sale.metodoEnvio?.toLowerCase().includes('andreani');
     const hasTracking = Boolean(sale.numeroSeguimiento && sale.numeroSeguimiento.trim() !== '');
     const valResult = validateRequiredSaleFields(sale);
+
+    const handleStartEdit = (field: string) => {
+      if (readOnly) return;
+      onStartInlineEdit(sale, field);
+    };
 
     return (
       <tr
@@ -295,9 +302,9 @@ export const GridRow: React.FC<GridRowProps> = React.memo(
               />
             ) : (
               <span
-                onClick={() => onStartInlineEdit(sale, 'montoTotal')}
-                className="cursor-pointer hover:underline"
-                title="Haz clic para editar el monto"
+                onClick={() => handleStartEdit('montoTotal')}
+                className={readOnly ? '' : 'cursor-pointer hover:underline'}
+                title={readOnly ? undefined : 'Haz clic para editar el monto'}
               >
                 {formatCurrency(sale.montoTotal)}
               </span>
@@ -321,9 +328,9 @@ export const GridRow: React.FC<GridRowProps> = React.memo(
             ) : (
               <div className="flex items-center gap-1 group/fac">
                 <span
-                  onClick={() => onStartInlineEdit(sale, 'numeroFactura')}
-                  className="cursor-pointer hover:text-blue-600 dark:hover:text-blue-400"
-                  title="Haz clic para editar número de factura"
+                  onClick={() => handleStartEdit('numeroFactura')}
+                  className={readOnly ? '' : 'cursor-pointer hover:text-blue-600 dark:hover:text-blue-400'}
+                  title={readOnly ? undefined : 'Haz clic para editar número de factura'}
                 >
                   {sale.numeroFactura || '---'}
                 </span>
@@ -391,9 +398,13 @@ export const GridRow: React.FC<GridRowProps> = React.memo(
                   </a>
                 ) : (
                   <span
-                    onClick={() => onStartInlineEdit(sale, 'numeroSeguimiento')}
-                    className="text-slate-700 dark:text-slate-300 font-medium cursor-pointer hover:underline hover:text-blue-600 dark:hover:text-blue-400"
-                    title="Haz clic para editar nº de seguimiento"
+                    onClick={() => handleStartEdit('numeroSeguimiento')}
+                    className={
+                      readOnly
+                        ? 'text-slate-700 dark:text-slate-300 font-medium'
+                        : 'text-slate-700 dark:text-slate-300 font-medium cursor-pointer hover:underline hover:text-blue-600 dark:hover:text-blue-400'
+                    }
+                    title={readOnly ? undefined : 'Haz clic para editar nº de seguimiento'}
                   >
                     {sale.numeroSeguimiento || 'Sin tracking'}
                   </span>
@@ -401,14 +412,16 @@ export const GridRow: React.FC<GridRowProps> = React.memo(
 
                 {sale.numeroSeguimiento && (
                   <div className="flex items-center gap-0.5">
-                    <button
-                      type="button"
-                      onClick={() => onStartInlineEdit(sale, 'numeroSeguimiento')}
-                      className="opacity-0 group-hover/track:opacity-100 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5 transition-opacity"
-                      title="Editar tracking"
-                    >
-                      <Edit3 className="w-3 h-3" />
-                    </button>
+                    {!readOnly && (
+                      <button
+                        type="button"
+                        onClick={() => handleStartEdit('numeroSeguimiento')}
+                        className="opacity-0 group-hover/track:opacity-100 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5 transition-opacity"
+                        title="Editar tracking"
+                      >
+                        <Edit3 className="w-3 h-3" />
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={() => onCopyText(sale.numeroSeguimiento!, `track-${sale.id}`)}
@@ -453,9 +466,9 @@ export const GridRow: React.FC<GridRowProps> = React.memo(
               </select>
             ) : (
               <div
-                onClick={() => onStartInlineEdit(sale, 'estadoEnvio')}
-                className="cursor-pointer"
-                title="Haz clic para cambiar el estado de envío"
+                onClick={() => handleStartEdit('estadoEnvio')}
+                className={readOnly ? '' : 'cursor-pointer'}
+                title={readOnly ? undefined : 'Haz clic para cambiar el estado de envío'}
               >
                 {getAndreaniStatusBadge(sale.estadoEnvio)}
               </div>
@@ -475,22 +488,26 @@ export const GridRow: React.FC<GridRowProps> = React.memo(
               >
                 <Printer className="w-3.5 h-3.5" />
               </button>
-              <button
-                type="button"
-                onClick={() => onEditSale(sale)}
-                className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 rounded transition-colors"
-                title="Editar venta completa"
-              >
-                <Edit3 className="w-3.5 h-3.5" />
-              </button>
-              <button
-                type="button"
-                onClick={() => onDeleteSale(sale.id)}
-                className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 rounded transition-colors"
-                title="Eliminar venta"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-              </button>
+              {!readOnly && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => onEditSale(sale)}
+                    className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 rounded transition-colors"
+                    title="Editar venta completa"
+                  >
+                    <Edit3 className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onDeleteSale(sale.id)}
+                    className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 rounded transition-colors"
+                    title="Eliminar venta"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </>
+              )}
             </div>
           </td>
         )}

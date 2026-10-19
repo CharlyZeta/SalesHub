@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Lock, KeyRound, ShieldAlert, ShieldCheck, UserCheck, Eye, EyeOff, Server, Timer } from 'lucide-react';
-import { SecurityConfig, UserRole } from '../types';
+import { Lock, KeyRound, ShieldAlert, User, Eye, EyeOff, Server, Timer, ShieldCheck } from 'lucide-react';
+import { SecurityConfig, UserRole, AppUser, AuthMode } from '../types';
 import { addSystemLog } from '../utils/logger';
-import { verifyPin, authLockWaitMs } from '../utils/security';
+import { authLockWaitMs, verifyPin } from '../utils/security';
+import { authenticateWithPin, authenticateWithPassword, ensureDefaultAdminExists } from '../services/userService';
 
-// --- H1: bloqueo progresivo ante intentos fallidos de PIN --------------------
 const LOCKOUT_KEY = 'saleshub_auth_lockout_v1';
 
 interface LockoutState {
-  count: number; // intentos fallidos acumulados
-  lockedUntil: number; // epoch ms hasta el cual el login queda bloqueado
+  count: number;
+  lockedUntil: number;
 }
 
 const loadLockout = (): LockoutState => {
@@ -20,7 +20,7 @@ const loadLockout = (): LockoutState => {
       return { count: Number(p.count) || 0, lockedUntil: Number(p.lockedUntil) || 0 };
     }
   } catch (_) {
-    // sessionStorage no disponible o dato corrupto: comenzar de cero
+    // sessionStorage no disponible
   }
   return { count: 0, lockedUntil: 0 };
 };
@@ -29,7 +29,7 @@ const persistLockout = (state: LockoutState) => {
   try {
     sessionStorage.setItem(LOCKOUT_KEY, JSON.stringify(state));
   } catch (_) {
-    // sin persistencia entre recargas, el bloqueo sigue activo en memoria
+    // fallback
   }
 };
 
@@ -44,21 +44,45 @@ const clearLockout = () => {
 interface AuthModalProps {
   isOpen: boolean;
   onUnlock: (role: UserRole) => void;
+  onUnlockSession?: (user: AppUser) => void;
   securityConfig: SecurityConfig;
   isInitialLock?: boolean;
 }
 
-export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onUnlock, securityConfig }) => {
+export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onUnlock, onUnlockSession, securityConfig }) => {
+  const authMode: AuthMode = securityConfig.modoAutenticacion || 'hibrido_pin_o_password';
+
+  // Si el modo es solo_password, arrancar en formulario de password; si es híbrido o solo_pin, arrancar en PIN
+  const [usePasswordForm, setUsePasswordForm] = useState<boolean>(() => authMode === 'solo_password');
+
+  // Inputs
   const [pinInput, setPinInput] = useState('');
-  const [selectedRole, setSelectedRole] = useState<UserRole>('OPERADOR');
-  const [showPin, setShowPin] = useState(false);
+  const [usernameInput, setUsernameInput] = useState('');
+  const [passwordInput, setPasswordInput] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
 
-  // H1: estado de bloqueo progresivo (persistido en sessionStorage)
+  // Bloqueo progresivo ante intentos fallidos
   const [lockState, setLockState] = useState<LockoutState>(loadLockout);
   const [nowTs, setNowTs] = useState<number>(() => Date.now());
   const lockRemainingSec = Math.max(0, Math.ceil((lockState.lockedUntil - nowTs) / 1000));
+
+  // Inicializar admin predeterminado si es la primera vez
+  useEffect(() => {
+    if (isOpen) {
+      ensureDefaultAdminExists().catch((err) => console.error('Error al inicializar admin:', err));
+    }
+  }, [isOpen]);
+
+  // Si cambia el modo de autenticación configurado
+  useEffect(() => {
+    if (authMode === 'solo_password') {
+      setUsePasswordForm(true);
+    } else if (authMode === 'solo_pin') {
+      setUsePasswordForm(false);
+    }
+  }, [authMode]);
 
   // Cuenta regresiva mientras el login esté bloqueado
   useEffect(() => {
@@ -74,53 +98,110 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onUnlock, security
 
   if (!isOpen) return null;
 
-  const handleAttemptUnlock = async (e: React.FormEvent) => {
+  const handleSuccessUnlock = (user: AppUser) => {
+    clearLockout();
+    setLockState({ count: 0, lockedUntil: 0 });
+    setNowTs(Date.now());
+    addSystemLog('INFO', 'Seguridad', `Autenticación exitosa: ${user.username} (${user.rol})`);
+
+    if (onUnlockSession) {
+      onUnlockSession(user);
+    }
+    onUnlock(user.rol);
+
+    setPinInput('');
+    setPasswordInput('');
+    setErrorMsg('');
+  };
+
+  const handleFailedAttempt = (contextDesc: string) => {
+    const nextCount = lockState.count + 1;
+    const waitMs = authLockWaitMs(nextCount);
+    const nextState: LockoutState = { count: nextCount, lockedUntil: Date.now() + waitMs };
+    persistLockout(nextState);
+    setLockState(nextState);
+    setNowTs(Date.now());
+
+    if (waitMs > 0) {
+      addSystemLog('WARN', 'Seguridad', `Bloqueo temporal por intentos fallidos (${waitMs / 1000}s)`, {
+        intentos: nextCount,
+      });
+      setErrorMsg(`Demasiados intentos fallidos. Aplicación bloqueada temporalmente por ${waitMs / 1000} segundos.`);
+    } else {
+      addSystemLog('WARN', 'Seguridad', `Intento fallido de autenticación (${contextDesc})`);
+      setErrorMsg('Credenciales incorrectas. Verifique el PIN o Usuario/Contraseña.');
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
 
     if (lockRemainingSec > 0) {
-      setErrorMsg(`Demasiados intentos fallidos. Reintentá en ${lockRemainingSec} segundos.`);
+      setErrorMsg(`Acceso bloqueado temporalmente. Reintenta en ${lockRemainingSec} segundos.`);
       return;
     }
     if (isVerifying) return;
 
     setIsVerifying(true);
     try {
-      const storedPin = securityConfig.pinAcceso || '1234';
-      // Legacy plaintext PINs (pre-hash) are verified directly; hashed ones
-      // are compared via verifyPin, que acepta hashes actuales y legacy.
-      const storedTrim = storedPin.trim();
-      const storedIsHashed = /^[a-f0-9]{64}$/i.test(storedTrim);
-
-      const matches = storedIsHashed ? await verifyPin(pinInput, storedTrim) : pinInput.trim() === storedTrim;
-
-      if (matches) {
-        clearLockout();
-        setLockState({ count: 0, lockedUntil: 0 });
-        setNowTs(Date.now());
-        addSystemLog('INFO', 'Seguridad', `Autenticación exitosa como ${selectedRole}`);
-        onUnlock(selectedRole);
-        setPinInput('');
-      } else {
-        const nextCount = lockState.count + 1;
-        const waitMs = authLockWaitMs(nextCount);
-        const nextState: LockoutState = { count: nextCount, lockedUntil: Date.now() + waitMs };
-        persistLockout(nextState);
-        setLockState(nextState);
-        setNowTs(Date.now());
-
-        if (waitMs > 0) {
-          addSystemLog('WARN', 'Seguridad', `Bloqueo temporal activado por intentos fallidos (${waitMs / 1000}s)`, {
-            intentos: nextCount,
-          });
-          setErrorMsg(`PIN incorrecto. Demasiados intentos: la app se bloquea por ${waitMs / 1000} segundos.`);
-        } else {
-          addSystemLog('WARN', 'Seguridad', `Intento fallido de autenticación (${selectedRole})`, {
-            intento: pinInput.length,
-          });
-          setErrorMsg('PIN / Clave incorrecta');
+      if (usePasswordForm) {
+        // Autenticación por Usuario y Contraseña
+        if (!usernameInput.trim()) {
+          setErrorMsg('Ingrese su nombre de usuario');
+          return;
         }
+        if (!passwordInput) {
+          setErrorMsg('Ingrese su contraseña');
+          return;
+        }
+
+        const authenticatedUser = await authenticateWithPassword(usernameInput, passwordInput);
+        if (authenticatedUser) {
+          handleSuccessUnlock(authenticatedUser);
+        } else {
+          handleFailedAttempt(`Usuario ${usernameInput}`);
+        }
+      } else {
+        // Autenticación por PIN Rápido
+        const cleanPin = pinInput.trim();
+        if (!cleanPin) {
+          setErrorMsg('Ingrese su PIN de acceso');
+          return;
+        }
+
+        // 1) Intentar autenticar contra usuarios activos con PIN
+        const userByPin = await authenticateWithPin(cleanPin);
+        if (userByPin) {
+          handleSuccessUnlock(userByPin);
+          return;
+        }
+
+        // 2) Fallback retrocompatible con securityConfig.pinAcceso legado
+        const legacyPin = securityConfig.pinAcceso?.trim();
+        if (legacyPin) {
+          const isHashed = /^[a-f0-9]{64}$/i.test(legacyPin);
+          const legacyMatch = isHashed ? await verifyPin(cleanPin, legacyPin) : cleanPin === legacyPin;
+          if (legacyMatch) {
+            // Usuario sintético para fallback legacy
+            const legacyUser: AppUser = {
+              id: 'USR-LEGACY',
+              username: 'admin',
+              nombre: 'Administrador (Legacy)',
+              rol: 'ADMIN',
+              passwordHash: '',
+              activo: true,
+              creadoEn: new Date().toISOString(),
+            };
+            handleSuccessUnlock(legacyUser);
+            return;
+          }
+        }
+
+        handleFailedAttempt('PIN Rápido');
       }
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Error durante la verificación de credenciales');
     } finally {
       setIsVerifying(false);
     }
@@ -134,97 +215,104 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onUnlock, security
           <div className="w-14 h-14 bg-blue-100 dark:bg-blue-600/20 border border-blue-200 dark:border-blue-500/30 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center mx-auto mb-3 shadow-inner">
             <Lock className="w-7 h-7 text-blue-600 dark:text-blue-400" />
           </div>
-          <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Acceso Protegido</h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">SalesHub • Sistema de Gestión Comercial</p>
+          <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Acceso al Sistema</h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            SalesHub • Control de Acceso y Terminal de Ventas
+          </p>
           <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[11px] text-slate-700 dark:text-slate-300">
             <Server className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-            <span>Subdominio VPS / Entorno Seguro</span>
+            <span>Puesto de Atención • Sesión Protegida</span>
           </div>
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleAttemptUnlock} className="p-6 space-y-4 text-xs text-slate-800 dark:text-slate-200">
-          {/* Role selector */}
-          <div>
-            <label className="block font-bold text-slate-700 dark:text-slate-300 mb-2">
-              Seleccione el Perfil de Usuario:
-            </label>
-            <div className="grid grid-cols-2 gap-2">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4 text-xs text-slate-800 dark:text-slate-200">
+          {usePasswordForm ? (
+            /* Modo Usuario y Contraseña */
+            <div className="space-y-3">
+              <div>
+                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Nombre de Usuario:</label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="ej: admin o tu usuario"
+                    value={usernameInput}
+                    onChange={(e) => setUsernameInput(e.target.value)}
+                    autoFocus
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-600 focus:bg-white dark:focus:bg-slate-900"
+                  />
+                  <User className="w-4 h-4 text-slate-400 absolute left-3 top-2.5 pointer-events-none" />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Contraseña:</label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="••••••••"
+                    value={passwordInput}
+                    onChange={(e) => setPasswordInput(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg pl-9 pr-10 py-2 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-600 focus:bg-white dark:focus:bg-slate-900"
+                  />
+                  <KeyRound className="w-4 h-4 text-slate-400 absolute left-3 top-2.5 pointer-events-none" />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 cursor-pointer"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            /* Modo PIN Rápido de Mostrador */
+            <div className="space-y-2">
+              <label className="block font-bold text-slate-700 dark:text-slate-300">
+                PIN Personal de Acceso Rápido:
+              </label>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Ingrese su PIN de 4 dígitos"
+                  maxLength={6}
+                  value={pinInput}
+                  onChange={(e) => setPinInput(e.target.value.replace(/\D/g, ''))}
+                  autoFocus
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg pl-3 pr-10 py-2.5 font-mono text-center tracking-widest text-lg font-bold text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-600 focus:bg-white dark:focus:bg-slate-900"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 cursor-pointer"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 text-center">
+                El sistema detectará automáticamente tu usuario y rol al ingresar tu PIN.
+              </p>
+            </div>
+          )}
+
+          {/* Selector de modo si está configurado en Híbrido */}
+          {authMode === 'hibrido_pin_o_password' && (
+            <div className="text-center pt-1">
               <button
                 type="button"
                 onClick={() => {
-                  setSelectedRole('OPERADOR');
+                  setUsePasswordForm(!usePasswordForm);
                   setErrorMsg('');
                 }}
-                className={`p-3 rounded-xl border text-left flex flex-col gap-1 transition-all cursor-pointer ${
-                  selectedRole === 'OPERADOR'
-                    ? 'bg-blue-50 dark:bg-blue-950/60 border-blue-600 dark:border-blue-500 text-blue-900 dark:text-blue-100 ring-2 ring-blue-500/20'
-                    : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                }`}
+                className="text-xs text-blue-600 dark:text-blue-400 hover:underline cursor-pointer font-medium inline-flex items-center gap-1"
               >
-                <div className="flex items-center justify-between font-bold text-sm">
-                  <span>Operador</span>
-                  <UserCheck className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                </div>
-                <span className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight">
-                  Ventas, presupuestos y remitos diarios.
-                </span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedRole('ADMIN');
-                  setErrorMsg('');
-                }}
-                className={`p-3 rounded-xl border text-left flex flex-col gap-1 transition-all cursor-pointer ${
-                  selectedRole === 'ADMIN'
-                    ? 'bg-purple-50 dark:bg-purple-950/60 border-purple-600 dark:border-purple-500 text-purple-900 dark:text-purple-100 ring-2 ring-purple-500/20'
-                    : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                }`}
-              >
-                <div className="flex items-center justify-between font-bold text-sm">
-                  <span>Administrador</span>
-                  <ShieldCheck className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                </div>
-                <span className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight">
-                  Acceso total, configuración API y logs.
-                </span>
+                <span>{usePasswordForm ? '← Ingresar con PIN Rápido' : 'Ingresar con Usuario y Contraseña →'}</span>
               </button>
             </div>
-          </div>
+          )}
 
-          {/* PIN input — required for both roles */}
-          <div className="space-y-1.5 pt-1">
-            <label className="block font-bold text-slate-700 dark:text-slate-300">Clave / PIN de acceso:</label>
-            <div className="relative">
-              <input
-                type={showPin ? 'text' : 'password'}
-                placeholder="Ingrese PIN"
-                value={pinInput}
-                onChange={(e) => setPinInput(e.target.value)}
-                autoFocus
-                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg pl-3 pr-10 py-2 font-mono text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-purple-600 focus:bg-white dark:focus:bg-slate-900"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPin(!showPin)}
-                className="absolute right-2.5 top-2.5 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 cursor-pointer"
-              >
-                {showPin ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
-            </div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">
-              💡 El PIN por defecto es <strong className="font-mono text-slate-700 dark:text-slate-200">1234</strong>.
-              Puede cambiarlo en Configuración. Tras 3 intentos fallidos el acceso se bloquea temporalmente.
-            </p>
-          </div>
-
-          <div className="bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 p-3 rounded-lg text-blue-900 dark:text-blue-200 text-[11px]">
-            ℹ️ Como <strong>Operador</strong> podrá registrar ventas, generar presupuestos y crear remitos. La edición
-            de credenciales de WooCommerce y borrado de logs están reservadas para Administradores.
-          </div>
-
+          {/* Alertas de bloqueo o error */}
           {lockRemainingSec > 0 ? (
             <div className="bg-amber-50 dark:bg-amber-950/50 border border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-200 p-2.5 rounded-lg flex items-center gap-2 text-xs font-medium">
               <Timer className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
@@ -246,28 +334,29 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onUnlock, security
           <button
             type="submit"
             disabled={isVerifying || lockRemainingSec > 0}
-            className={`w-full py-2.5 rounded-xl text-white font-bold text-sm flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed ${
-              selectedRole === 'ADMIN'
-                ? 'bg-purple-600 hover:bg-purple-700 active:scale-98'
-                : 'bg-blue-600 hover:bg-blue-700 active:scale-98'
-            }`}
+            className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed active:scale-98"
           >
             <KeyRound className="w-4 h-4" />
             <span>
               {isVerifying
                 ? 'Verificando...'
                 : lockRemainingSec > 0
-                  ? `Bloqueado - reintentá en ${lockRemainingSec}s`
-                  : `Ingresar al Sistema (${selectedRole})`}
+                  ? `Bloqueado (${lockRemainingSec}s)`
+                  : usePasswordForm
+                    ? 'Iniciar Sesión'
+                    : 'Ingresar con PIN'}
             </span>
           </button>
         </form>
 
         {/* Footer info */}
-        <div className="bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 p-3 text-center text-[11px] text-slate-500 dark:text-slate-400">
-          Protección SSL/TLS • VPS Subdominio E-commerce
+        <div className="bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 p-3 text-center text-[11px] text-slate-500 dark:text-slate-400 flex items-center justify-center gap-1.5">
+          <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+          <span>Autenticación por Hash SHA-256 • Sesión Local Protegida</span>
         </div>
       </div>
     </div>
   );
 };
+
+export default AuthModal;

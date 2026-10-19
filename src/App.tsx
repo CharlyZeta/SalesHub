@@ -399,7 +399,9 @@ export default function App() {
     const newSaleDraft: Partial<Sale> = {
       fecha: new Date().toISOString().split('T')[0],
       clienteId: matchedCustomer ? matchedCustomer.id : 'CLI-EVENTUAL',
-      clienteNombre: matchedCustomer ? `${matchedCustomer.nombre} ${matchedCustomer.apellido || ''}`.trim() : data.clienteNombre,
+      clienteNombre: matchedCustomer
+        ? `${matchedCustomer.nombre} ${matchedCustomer.apellido || ''}`.trim()
+        : data.clienteNombre,
       clienteTelefono: data.clienteTelefono || matchedCustomer?.telefono || '',
       clienteEmail: matchedCustomer?.email || '',
       clienteDniCuit: matchedCustomer?.cuitDni || '',
@@ -579,6 +581,7 @@ export default function App() {
         onSyncAndreaniTrackings={handleSyncAndreaniTrackings}
         selectedMonth={selectedMonth}
         showAllMonths={showAllMonths}
+        currentRole={currentRole}
       />
 
       {/* 4. Modals & Drawers */}

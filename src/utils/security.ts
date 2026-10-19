@@ -67,6 +67,24 @@ export async function verifyPin(pin: string, storedHash: string): Promise<boolea
   return syncDigest(value) === target;
 }
 
+export const PASSWORD_SALT = 'saleshub_pwd::';
+
+export async function hashPassword(password: string): Promise<string> {
+  const value = (password || '').trim();
+  const sha = await subtleHex(`${PASSWORD_SALT}${value}`);
+  if (sha) return sha;
+  return syncDigest(`${PASSWORD_SALT}${value}`);
+}
+
+export async function verifyPassword(password: string, storedHash: string): Promise<boolean> {
+  const value = (password || '').trim();
+  const target = (storedHash || '').trim().toLowerCase();
+  if (!target) return false;
+  const sha = await subtleHex(`${PASSWORD_SALT}${value}`);
+  if (sha && sha === target) return true;
+  return syncDigest(`${PASSWORD_SALT}${value}`) === target;
+}
+
 export function isHashedPin(value: string): boolean {
   const clean = (value || '').trim();
   return /^[a-f0-9]{16}$/i.test(clean) || /^[a-f0-9]{64}$/i.test(clean);

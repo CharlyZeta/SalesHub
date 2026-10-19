@@ -24,6 +24,7 @@ export interface GridToolbarProps {
   selectedIds: string[];
   setSelectedIds: (ids: string[]) => void;
   onDeleteSale: (id: string) => void;
+  readOnly?: boolean;
 }
 
 export const GridToolbar: React.FC<GridToolbarProps> = ({
@@ -48,6 +49,7 @@ export const GridToolbar: React.FC<GridToolbarProps> = ({
   selectedIds,
   setSelectedIds,
   onDeleteSale,
+  readOnly = false,
 }) => {
   return (
     <>
@@ -188,14 +190,16 @@ export const GridToolbar: React.FC<GridToolbarProps> = ({
           </button>
 
           {/* Quick Add Row Button */}
-          <button
-            type="button"
-            onClick={onQuickAddSale}
-            className="bg-slate-900 dark:bg-blue-600 hover:bg-slate-800 dark:hover:bg-blue-500 text-white font-medium px-3 py-1.5 rounded-md flex items-center gap-1 transition-colors cursor-pointer shrink-0"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>Fila Rápida</span>
-          </button>
+          {!readOnly && (
+            <button
+              type="button"
+              onClick={onQuickAddSale}
+              className="bg-slate-900 dark:bg-blue-600 hover:bg-slate-800 dark:hover:bg-blue-500 text-white font-medium px-3 py-1.5 rounded-md flex items-center gap-1 transition-colors cursor-pointer shrink-0"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Fila Rápida</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -204,19 +208,21 @@ export const GridToolbar: React.FC<GridToolbarProps> = ({
         <div className="bg-blue-50 dark:bg-blue-950/80 border-b border-blue-200 dark:border-blue-800 px-4 py-2 flex items-center justify-between text-xs text-blue-900 dark:text-blue-200">
           <span className="font-medium">{selectedIds.length} fila(s) seleccionada(s)</span>
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                if (confirm(`¿Eliminar ${selectedIds.length} ventas seleccionadas?`)) {
-                  selectedIds.forEach((id) => onDeleteSale(id));
-                  setSelectedIds([]);
-                }
-              }}
-              className="bg-red-600 hover:bg-red-700 text-white px-2.5 py-1 rounded flex items-center gap-1 cursor-pointer font-medium"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-              <span>Eliminar Selección</span>
-            </button>
+            {!readOnly && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (confirm(`¿Eliminar ${selectedIds.length} ventas seleccionadas?`)) {
+                    selectedIds.forEach((id) => onDeleteSale(id));
+                    setSelectedIds([]);
+                  }
+                }}
+                className="bg-red-600 hover:bg-red-700 text-white px-2.5 py-1 rounded flex items-center gap-1 cursor-pointer font-medium"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Eliminar Selección</span>
+              </button>
+            )}
             <button
               type="button"
               onClick={() => setSelectedIds([])}

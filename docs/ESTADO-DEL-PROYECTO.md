@@ -21,7 +21,7 @@ documentado, con lint/CI reales y con arquitectura modularizada y optimizada**.
 | Área                       | Estado                                                                    |
 | :------------------------- | :------------------------------------------------------------------------ |
 | Calidad                    | `npm run lint` (tsc + ESLint): **0 errores / 0 warnings**                 |
-| Tests                      | **18 archivos / 167 tests** (Vitest)                                      |
+| Tests                      | **20 archivos / 179 tests** (Vitest)                                      |
 | Rendimiento                | Chunk principal: **304 kB** (-74% respecto al monolito original)          |
 | Dependencias               | **0 ciclos circulares** (Madge, 76 módulos analizados)                    |
 | Build                      | Producción OK (Code-Splitting y Rollup `manualChunks`)                    |
@@ -47,6 +47,7 @@ documentado, con lint/CI reales y con arquitectura modularizada y optimizada**.
 - PIN **siempre hasheado** (salt `saleshub::`, con verificación retrocompatible del salt
   legacy), **bloqueo progresivo** por intentos fallidos, **Auth Gate al iniciar** y
   validación que impide habilitar la seguridad con el PIN predeterminado.
+- **Sistema de cuentas de usuario y autenticación híbrida (FEAT-AUTH-002)** ✅: perfiles `ADMIN`/`OPERADOR` con credenciales hasheadas (SHA-256 + salt individual), PIN rápido personal de 4-6 dígitos (único por usuario activo), modo de autenticación configurable (híbrido PIN+password vs. solo password), forzar cambio de credenciales en primer login, protección BR-AUTH-005 (siempre al menos un ADMIN activo), persistencia de usuarios con respaldo ante JSON corrupto, y no-mutación del array de usuarios en autenticación.
 
 ### 2.3 Robustez y UX
 

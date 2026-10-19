@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { X, Settings, Sliders, Building2, ShieldCheck, Database, Check } from 'lucide-react';
-import { AppConfig, SecurityConfig, GoogleMapsUsage } from '../types';
+import { X, Settings, Sliders, Building2, ShieldCheck, Database, Check, Users, Shield } from 'lucide-react';
+import { AppConfig, SecurityConfig, GoogleMapsUsage, UserRole } from '../types';
 import { INITIAL_COMPANY_CONFIG } from '../data/initialData';
 import { hashPin, isHashedPin } from '../utils/security';
 import { BackupItem, listAllBackups, runBackup, restoreBackup, deleteFromIndexedDb } from '../utils/backupService';
@@ -9,6 +9,8 @@ import { ConfigGeneralTab } from './ConfigGeneralTab';
 import { ConfigEmpresaTab } from './ConfigEmpresaTab';
 import { ConfigSecurityTab } from './ConfigSecurityTab';
 import { ConfigBackupsTab } from './ConfigBackupsTab';
+import { ConfigUsersTab } from './config/ConfigUsersTab';
+import { ConfigPermissionsTab } from './config/ConfigPermissionsTab';
 
 interface ConfigModalProps {
   isOpen: boolean;
@@ -18,9 +20,10 @@ interface ConfigModalProps {
   onOpenImport?: () => void;
   onRestoreBackup: (state: any) => void;
   fullAppState: any;
+  currentRole?: UserRole;
 }
 
-type ConfigTab = 'general' | 'empresa' | 'security' | 'backups';
+type ConfigTab = 'general' | 'empresa' | 'users' | 'permissions' | 'security' | 'backups';
 
 export const ConfigModal: React.FC<ConfigModalProps> = ({
   isOpen,
@@ -107,6 +110,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
     seguridadHabilitada: true,
     pinAcceso: '1234',
     tiempoInactividadMinutos: 15,
+    modoAutenticacion: 'solo_pin',
     modoProduccionVPS: true,
     bloquearSincronizacionWooCommerce: true,
     bloquearBorradoLogs: true,
@@ -397,15 +401,28 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
 
           <button
             type="button"
-            onClick={() => setActiveTab('security')}
+            onClick={() => setActiveTab('users')}
             className={`py-1.5 px-3.5 rounded-md text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
-              activeTab === 'security'
+              activeTab === 'users'
+                ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-2xs border border-slate-200 dark:border-slate-700'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
+            }`}
+          >
+            <Users className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+            <span>Usuarios & Sesión</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('permissions')}
+            className={`py-1.5 px-3.5 rounded-md text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
+              activeTab === 'permissions'
                 ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-2xs border border-slate-200 dark:border-slate-700'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
             }`}
           >
             <ShieldCheck className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-            <span>Seguridad & PIN</span>
+            <span>Permisos & Herramientas</span>
           </button>
 
           <button
@@ -419,6 +436,19 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
           >
             <Database className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
             <span>Copias de Seguridad</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('security')}
+            className={`py-1.5 px-3.5 rounded-md text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
+              activeTab === 'security'
+                ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-2xs border border-slate-200 dark:border-slate-700'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
+            }`}
+          >
+            <Shield className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400" />
+            <span>Seguridad VPS</span>
           </button>
         </div>
 
@@ -482,6 +512,16 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
               setPuntoVenta={setPuntoVenta}
             />
           )}
+
+          {activeTab === 'users' && (
+            <ConfigUsersTab
+              secConfig={secConfig}
+              setSecConfig={setSecConfig}
+              currentRole={config.seguridad?.rolActual}
+            />
+          )}
+
+          {activeTab === 'permissions' && <ConfigPermissionsTab />}
 
           {activeTab === 'security' && (
             <ConfigSecurityTab
