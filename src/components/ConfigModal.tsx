@@ -5,6 +5,7 @@ import { INITIAL_COMPANY_CONFIG } from '../data/initialData';
 import { hashPin, isHashedPin } from '../utils/security';
 import { BackupItem, listAllBackups, runBackup, restoreBackup, deleteFromIndexedDb } from '../utils/backupService';
 import { addSystemLog } from '../utils/logger';
+import { usePermissions } from '../hooks/usePermissions';
 import { ConfigGeneralTab } from './ConfigGeneralTab';
 import { ConfigEmpresaTab } from './ConfigEmpresaTab';
 import { ConfigSecurityTab } from './ConfigSecurityTab';
@@ -33,8 +34,11 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
   onOpenImport,
   onRestoreBackup,
   fullAppState,
+  currentRole,
 }) => {
   const [activeTab, setActiveTab] = useState<ConfigTab>('general');
+  const { canWrite } = usePermissions(currentRole ?? 'OPERADOR');
+  const canManageSecurity = currentRole === 'ADMIN' || canWrite('seguridad');
 
   const defaultEmpresa = config.empresa ||
     INITIAL_COMPANY_CONFIG || {
@@ -399,31 +403,35 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
             <span>Empresa / Firma</span>
           </button>
 
-          <button
-            type="button"
-            onClick={() => setActiveTab('users')}
-            className={`py-1.5 px-3.5 rounded-md text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
-              activeTab === 'users'
-                ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-2xs border border-slate-200 dark:border-slate-700'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
-            }`}
-          >
-            <Users className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-            <span>Usuarios & Sesión</span>
-          </button>
+          {canManageSecurity && (
+            <button
+              type="button"
+              onClick={() => setActiveTab('users')}
+              className={`py-1.5 px-3.5 rounded-md text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
+                activeTab === 'users'
+                  ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-2xs border border-slate-200 dark:border-slate-700'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
+              }`}
+            >
+              <Users className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+              <span>Usuarios & Sesión</span>
+            </button>
+          )}
 
-          <button
-            type="button"
-            onClick={() => setActiveTab('permissions')}
-            className={`py-1.5 px-3.5 rounded-md text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
-              activeTab === 'permissions'
-                ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-2xs border border-slate-200 dark:border-slate-700'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
-            }`}
-          >
-            <ShieldCheck className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-            <span>Permisos & Herramientas</span>
-          </button>
+          {canManageSecurity && (
+            <button
+              type="button"
+              onClick={() => setActiveTab('permissions')}
+              className={`py-1.5 px-3.5 rounded-md text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
+                activeTab === 'permissions'
+                  ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-2xs border border-slate-200 dark:border-slate-700'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
+              }`}
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+              <span>Permisos & Herramientas</span>
+            </button>
+          )}
 
           <button
             type="button"
@@ -513,7 +521,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
             />
           )}
 
-          {activeTab === 'users' && (
+          {activeTab === 'users' && canManageSecurity && (
             <ConfigUsersTab
               secConfig={secConfig}
               setSecConfig={setSecConfig}
@@ -521,7 +529,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
             />
           )}
 
-          {activeTab === 'permissions' && <ConfigPermissionsTab />}
+          {activeTab === 'permissions' && canManageSecurity && <ConfigPermissionsTab />}
 
           {activeTab === 'security' && (
             <ConfigSecurityTab

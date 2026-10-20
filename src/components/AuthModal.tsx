@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Lock, KeyRound, ShieldAlert, User, Eye, EyeOff, Server, Timer, ShieldCheck } from 'lucide-react';
 import { SecurityConfig, UserRole, AppUser, AuthMode } from '../types';
 import { addSystemLog } from '../utils/logger';
-import { authLockWaitMs, verifyPin } from '../utils/security';
+import { authLockWaitMs } from '../utils/security';
 import { authenticateWithPin, authenticateWithPassword, ensureDefaultAdminExists } from '../services/userService';
 
 const LOCKOUT_KEY = 'saleshub_auth_lockout_v1';
@@ -178,25 +178,29 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onUnlock, onUnlock
         }
 
         // 2) Fallback retrocompatible con securityConfig.pinAcceso legado
-        const legacyPin = securityConfig.pinAcceso?.trim();
-        if (legacyPin) {
-          const isHashed = /^[a-f0-9]{64}$/i.test(legacyPin);
-          const legacyMatch = isHashed ? await verifyPin(cleanPin, legacyPin) : cleanPin === legacyPin;
-          if (legacyMatch) {
-            // Usuario sintético para fallback legacy
-            const legacyUser: AppUser = {
-              id: 'USR-LEGACY',
-              username: 'admin',
-              nombre: 'Administrador (Legacy)',
-              rol: 'ADMIN',
-              passwordHash: '',
-              activo: true,
-              creadoEn: new Date().toISOString(),
-            };
-            handleSuccessUnlock(legacyUser);
-            return;
-          }
-        }
+        // BORRADO: El PIN legado compartido otorga ADMIN sin validación unívoca.
+        // Si había un usuario legacy configurado, la migración debe forzarse a crear
+        // un admin real mediante FEAT-AUTH-002. Nunca se concede ADMIN desde un PIN
+        // compartido.
+        // const legacyPin = securityConfig.pinAcceso?.trim();
+        // if (legacyPin) {
+        //   const isHashed = /^[a-f0-9]{64}$/i.test(legacyPin);
+        //   const legacyMatch = isHashed ? await verifyPin(cleanPin, legacyPin) : cleanPin === legacyPin;
+        //   if (legacyMatch) {
+        //     // Usuario sintético para fallback legacy
+        //     const legacyUser: AppUser = {
+        //       id: 'USR-LEGACY',
+        //       username: 'admin',
+        //       nombre: 'Administrador (Legacy)',
+        //       rol: 'ADMIN',
+        //       passwordHash: '',
+        //       activo: true,
+        //       creadoEn: new Date().toISOString(),
+        //     };
+        //     handleSuccessUnlock(legacyUser);
+        //     return;
+        //   }
+        // }
 
         handleFailedAttempt('PIN Rápido');
       }

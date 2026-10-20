@@ -4,13 +4,13 @@
 > Es el índice que conviene leer **antes** de abrir archivos: una fila por módulo
 > con su responsabilidad y sus exports principales.
 
-**Resumen:** 66 archivos · 20.223 líneas.
+**Resumen:** 66 archivos · 20.235 líneas.
 
 | Directorio | Archivos | Líneas |
 |:--|--:|--:|
 | `scripts/` | 5 | 563 |
 | `src/` | 3 | 1.076 |
-| `src/components/` | 21 | 9.233 |
+| `src/components/` | 21 | 9.245 |
 | `src/components/budget/` | 3 | 976 |
 | `src/components/common/` | 1 | 35 |
 | `src/components/config/` | 2 | 670 |
@@ -46,12 +46,12 @@
 | Archivo | Líneas | Responsabilidad | Exports |
 |:--|--:|:--|:--|
 | `AnalyticsModal.tsx` | 319 | Panel de analítica con gráficos Recharts (tendencia y distribución por canal) | AnalyticsModal |
-| `AuthModal.tsx` | 363 | Auth Gate: PIN, selección de rol (RBAC) y bloqueo progresivo por intentos | AuthModal |
+| `AuthModal.tsx` | 367 | Auth Gate: PIN, selección de rol (RBAC) y bloqueo progresivo por intentos | AuthModal |
 | `BudgetModal.tsx` | 709 | Presupuestos AFIP: ítems, IVA/percepciones, PDF y conversión a venta | BudgetModal |
 | `ConfigBackupsTab.tsx` | 242 | Pestaña Copias de seguridad: backup automático, copia manual y restauración | ConfigBackupsTab, ConfigBackupsTabProps |
 | `ConfigEmpresaTab.tsx` | 351 | Pestaña Empresa / Firma: identidad, logo, datos fiscales y puntos de venta | ConfigEmpresaTab, ConfigEmpresaTabProps |
 | `ConfigGeneralTab.tsx` | 795 | Pestaña General & Ventas: canales, pagos, envíos, Andreani, numeración e importación | ConfigGeneralTab, ConfigGeneralTabProps |
-| `ConfigModal.tsx` | 579 | Configuración del sistema: shell del modal, estado compartido, guardado y pestañas | ConfigModal |
+| `ConfigModal.tsx` | 587 | Configuración del sistema: shell del modal, estado compartido, guardado y pestañas | ConfigModal |
 | `ConfigSecurityTab.tsx` | 169 | Pestaña Seguridad & PIN: control de acceso, inactividad y restricciones por rol | ConfigSecurityTab, ConfigSecurityTabProps |
 | `CustomerDirectoryModal.tsx` | 507 | Directorio de clientes: búsqueda, historial de compras y alta de clientes | CustomerDirectoryModal |
 | `ExportModal.tsx` | 125 | Exportador de ventas a CSV por rango y canal | ExportModal |

@@ -4,8 +4,8 @@ Documento de **handoff**: qué se hizo, cómo quedó el repositorio y qué sigue
 Pensado para retomar el trabajo en cualquier momento (o para que otra persona entienda
 el punto exacto en el que está el desarrollo).
 
-**Última actualización:** 2026-10-15
-**Versión del proyecto:** 0.0.32
+**Última actualización:** 2026-10-19
+**Versión del proyecto:** 0.0.33
 **Commit de cierre:** el último de `master` (`git log -1 --oneline`)
 **Repositorio:** https://github.com/CharlyZeta/SalesHub (rama `master`)
 
@@ -47,7 +47,7 @@ documentado, con lint/CI reales y con arquitectura modularizada y optimizada**.
 - PIN **siempre hasheado** (salt `saleshub::`, con verificación retrocompatible del salt
   legacy), **bloqueo progresivo** por intentos fallidos, **Auth Gate al iniciar** y
   validación que impide habilitar la seguridad con el PIN predeterminado.
-- **Sistema de cuentas de usuario y autenticación híbrida (FEAT-AUTH-002)** ✅: perfiles `ADMIN`/`OPERADOR` con credenciales hasheadas (SHA-256 + salt individual), PIN rápido personal de 4-6 dígitos (único por usuario activo), modo de autenticación configurable (híbrido PIN+password vs. solo password), forzar cambio de credenciales en primer login, protección BR-AUTH-005 (siempre al menos un ADMIN activo), persistencia de usuarios con respaldo ante JSON corrupto, y no-mutación del array de usuarios en autenticación.
+- **Sistema de cuentas de usuario y autenticación híbrida (FEAT-AUTH-002)** ✅: perfiles `ADMIN`/`OPERADOR` con credenciales hasheadas (SHA-256 + salt individual), PIN rápido personal de 4-6 dígitos (único por usuario activo), modo de autenticación configurable (híbrido PIN+password vs. solo password), forzar cambio de credenciales en primer login, protección BR-AUTH-005 (siempre al menos un ADMIN activo), persistencia de usuarios con respaldo ante JSON corrupto, y no-mutación del array de usuarios en autenticación. Autorización de pestañas sensibles en `ConfigModal`: "Usuarios & Sesión" y "Permisos & Herramientas" solo visibles cuando `currentRole === 'ADMIN'` o `canWrite('seguridad')` es verdadero (fix de acceso no autorizado a gestión de usuarios/permisos).
 
 ### 2.3 Robustez y UX
 
