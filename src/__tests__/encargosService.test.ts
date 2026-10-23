@@ -151,9 +151,7 @@ describe('encargosService', () => {
       const amoladora = consolidado.find((c) => c.productoNombre.toLowerCase().includes('amoladora'));
       expect(amoladora).toBeDefined();
       expect(amoladora?.cantidadTotal).toBe(5);
-      expect(amoladora?.clientes.map((c) => c.nombre)).toEqual(
-        expect.arrayContaining(['Juan Perez', 'Pedro Gomez'])
-      );
+      expect(amoladora?.clientes.map((c) => c.nombre)).toEqual(expect.arrayContaining(['Juan Perez', 'Pedro Gomez']));
     });
   });
 

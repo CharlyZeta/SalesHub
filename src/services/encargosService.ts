@@ -65,7 +65,7 @@ export function generateEncargoId(existentes: EncargoItem[] = []): string {
   const now = new Date();
   const yearMonth = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}`;
   const prefix = `ENC-${yearMonth}-`;
-  
+
   const numbers = existentes
     .filter((e) => e.id.startsWith(prefix))
     .map((e) => parseInt(e.id.replace(prefix, ''), 10))
@@ -92,7 +92,11 @@ export function addEncargo(
 
   const actualizados = [nuevoEncargo, ...existentes];
   saveEncargos(actualizados);
-  addSystemLog('INFO', 'Encargos', `Nuevo encargo registrado: ${nuevoEncargo.id} (${nuevoEncargo.productoNombre}) para ${nuevoEncargo.clienteNombre}`);
+  addSystemLog(
+    'INFO',
+    'Encargos',
+    `Nuevo encargo registrado: ${nuevoEncargo.id} (${nuevoEncargo.productoNombre}) para ${nuevoEncargo.clienteNombre}`
+  );
   return nuevoEncargo;
 }
 
@@ -258,10 +262,7 @@ export function generarMensajeWhatsAppProveedor(
 /**
  * Genera el mensaje de aviso para el cliente notificándole que su encargo ya arribó a la tienda.
  */
-export function generarMensajeWhatsAppCliente(
-  encargo: EncargoItem,
-  empresaNombre: string = 'Mi Empresa'
-): string {
+export function generarMensajeWhatsAppCliente(encargo: EncargoItem, empresaNombre: string = 'Mi Empresa'): string {
   const nombreCliente = encargo.clienteNombre.split(' ')[0] || encargo.clienteNombre;
   const saldoPendiente =
     encargo.precioEstimado && encargo.seña
@@ -304,9 +305,7 @@ export function crearProductoDeEncargo(
   catalogoActual: CatalogProduct[]
 ): { producto: CatalogProduct; yaExiste: boolean } {
   const nombreTrim = encargo.productoNombre.trim();
-  const existente = catalogoActual.find(
-    (p) => p.nombre.toLowerCase().trim() === nombreTrim.toLowerCase()
-  );
+  const existente = catalogoActual.find((p) => p.nombre.toLowerCase().trim() === nombreTrim.toLowerCase());
 
   if (existente) {
     return { producto: existente, yaExiste: true };

@@ -145,14 +145,10 @@ export const ConfigPermissionsTab: React.FC = () => {
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <h4 className="font-bold text-xs text-slate-900 dark:text-slate-100">
-                              {tool.nombre}
-                            </h4>
+                            <h4 className="font-bold text-xs text-slate-900 dark:text-slate-100">{tool.nombre}</h4>
                             <span className="font-mono text-[10px] text-slate-400">({tool.id})</span>
                           </div>
-                          <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                            {tool.descripcion}
-                          </p>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{tool.descripcion}</p>
                         </div>
                       </div>
 
@@ -229,7 +225,9 @@ export const ConfigPermissionsTab: React.FC = () => {
       <div className="bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 rounded-lg p-3 text-[11px] text-blue-900 dark:text-blue-200 flex items-start gap-2">
         <Info className="w-4 h-4 shrink-0 text-blue-600 dark:text-blue-400 mt-0.5" />
         <span>
-          <strong>Extensibilidad Automática:</strong> Cualquier funcionalidad o módulo adicional que se incorpore al sistema en el futuro se registrará en el Tool Registry y heredará de inmediato esta política granular de control sin necesidad de programar permisos manuales.
+          <strong>Extensibilidad Automática:</strong> Cualquier funcionalidad o módulo adicional que se incorpore al
+          sistema en el futuro se registrará en el Tool Registry y heredará de inmediato esta política granular de
+          control sin necesidad de programar permisos manuales.
         </span>
       </div>
     </div>

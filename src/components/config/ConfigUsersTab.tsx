@@ -1,5 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Plus, Shield, ShieldCheck, KeyRound, Lock, Trash2, Edit2, Check, X, AlertCircle, Timer } from 'lucide-react';
+import {
+  Users,
+  Plus,
+  Shield,
+  ShieldCheck,
+  KeyRound,
+  Lock,
+  Trash2,
+  Edit2,
+  Check,
+  X,
+  AlertCircle,
+  Timer,
+} from 'lucide-react';
 import { AppUser, UserRole, AuthMode, SecurityConfig } from '../../types';
 import { getUsers, createUser, updateUser, deleteUser, ensureDefaultAdminExists } from '../../services/userService';
 
@@ -140,20 +153,12 @@ export const ConfigUsersTab: React.FC<ConfigUsersTabProps> = ({ secConfig, setSe
             </label>
             <select
               value={secConfig.modoAutenticacion || 'hibrido_pin_o_password'}
-              onChange={(e) =>
-                setSecConfig({ ...secConfig, modoAutenticacion: e.target.value as AuthMode })
-              }
+              onChange={(e) => setSecConfig({ ...secConfig, modoAutenticacion: e.target.value as AuthMode })}
               className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-3 py-1.5 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-purple-500 shadow-2xs font-medium cursor-pointer"
             >
-              <option value="hibrido_pin_o_password">
-                Híbrido (PIN Rápido en mostrador o Contraseña)
-              </option>
-              <option value="solo_password">
-                Estricto (Solo Usuario y Contraseña)
-              </option>
-              <option value="solo_pin">
-                Solo PIN Rápido
-              </option>
+              <option value="hibrido_pin_o_password">Híbrido (PIN Rápido en mostrador o Contraseña)</option>
+              <option value="solo_password">Estricto (Solo Usuario y Contraseña)</option>
+              <option value="solo_pin">Solo PIN Rápido</option>
             </select>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
               {secConfig.modoAutenticacion === 'solo_password'
@@ -169,9 +174,7 @@ export const ConfigUsersTab: React.FC<ConfigUsersTabProps> = ({ secConfig, setSe
             <div className="relative">
               <select
                 value={secConfig.tiempoInactividadMinutos ?? 15}
-                onChange={(e) =>
-                  setSecConfig({ ...secConfig, tiempoInactividadMinutos: Number(e.target.value) })
-                }
+                onChange={(e) => setSecConfig({ ...secConfig, tiempoInactividadMinutos: Number(e.target.value) })}
                 className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md pl-8 pr-3 py-1.5 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-purple-500 shadow-2xs font-medium cursor-pointer"
               >
                 <option value={2}>2 Minutos</option>
@@ -223,9 +226,7 @@ export const ConfigUsersTab: React.FC<ConfigUsersTabProps> = ({ secConfig, setSe
             <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
               {users.map((u) => (
                 <tr key={u.id} className="hover:bg-slate-100/50 dark:hover:bg-slate-800/40">
-                  <td className="p-2.5 font-mono font-bold text-slate-900 dark:text-slate-100">
-                    @{u.username}
-                  </td>
+                  <td className="p-2.5 font-mono font-bold text-slate-900 dark:text-slate-100">@{u.username}</td>
                   <td className="p-2.5 text-slate-800 dark:text-slate-200 font-medium">{u.nombre}</td>
                   <td className="p-2.5">
                     <span
@@ -314,9 +315,7 @@ export const ConfigUsersTab: React.FC<ConfigUsersTabProps> = ({ secConfig, setSe
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-slate-600 dark:text-slate-400 font-medium mb-1">
-                    Usuario (Login):
-                  </label>
+                  <label className="block text-slate-600 dark:text-slate-400 font-medium mb-1">Usuario (Login):</label>
                   <input
                     type="text"
                     required
@@ -328,9 +327,7 @@ export const ConfigUsersTab: React.FC<ConfigUsersTabProps> = ({ secConfig, setSe
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-600 dark:text-slate-400 font-medium mb-1">
-                    Rol en Sistema:
-                  </label>
+                  <label className="block text-slate-600 dark:text-slate-400 font-medium mb-1">Rol en Sistema:</label>
                   <select
                     value={formData.rol}
                     onChange={(e) => setFormData({ ...formData, rol: e.target.value as UserRole })}
@@ -343,9 +340,7 @@ export const ConfigUsersTab: React.FC<ConfigUsersTabProps> = ({ secConfig, setSe
               </div>
 
               <div>
-                <label className="block text-slate-600 dark:text-slate-400 font-medium mb-1">
-                  Nombre Completo:
-                </label>
+                <label className="block text-slate-600 dark:text-slate-400 font-medium mb-1">Nombre Completo:</label>
                 <input
                   type="text"
                   required
@@ -394,9 +389,7 @@ export const ConfigUsersTab: React.FC<ConfigUsersTabProps> = ({ secConfig, setSe
                       onChange={(e) => setFormData({ ...formData, activo: e.target.checked })}
                       className="w-4 h-4 text-blue-600 rounded"
                     />
-                    <span className="font-medium text-slate-700 dark:text-slate-300">
-                      Usuario Habilitado / Activo
-                    </span>
+                    <span className="font-medium text-slate-700 dark:text-slate-300">Usuario Habilitado / Activo</span>
                   </label>
                 </div>
               )}

@@ -4,7 +4,7 @@
 > Es el índice que conviene leer **antes** de abrir archivos: una fila por módulo
 > con su responsabilidad y sus exports principales.
 
-**Resumen:** 66 archivos · 20.235 líneas.
+**Resumen:** 66 archivos · 20.237 líneas.
 
 | Directorio | Archivos | Líneas |
 |:--|--:|--:|
@@ -13,14 +13,14 @@
 | `src/components/` | 21 | 9.245 |
 | `src/components/budget/` | 3 | 976 |
 | `src/components/common/` | 1 | 35 |
-| `src/components/config/` | 2 | 670 |
-| `src/components/encargos/` | 2 | 1.208 |
+| `src/components/config/` | 2 | 661 |
+| `src/components/encargos/` | 2 | 1.220 |
 | `src/components/grid/` | 3 | 841 |
 | `src/components/sales/` | 3 | 706 |
 | `src/config/` | 1 | 145 |
 | `src/data/` | 1 | 365 |
 | `src/hooks/` | 6 | 877 |
-| `src/services/` | 4 | 967 |
+| `src/services/` | 4 | 966 |
 | `src/utils/` | 11 | 2.561 |
 
 ## `scripts/`
@@ -85,15 +85,15 @@
 
 | Archivo | Líneas | Responsabilidad | Exports |
 |:--|--:|:--|:--|
-| `ConfigPermissionsTab.tsx` | 240 | — | ConfigPermissionsTab |
-| `ConfigUsersTab.tsx` | 430 | — | ConfigUsersTab, ConfigUsersTabProps |
+| `ConfigPermissionsTab.tsx` | 238 | — | ConfigPermissionsTab |
+| `ConfigUsersTab.tsx` | 423 | — | ConfigUsersTab, ConfigUsersTabProps |
 
 ## `src/components/encargos/`
 
 | Archivo | Líneas | Responsabilidad | Exports |
 |:--|--:|:--|:--|
-| `EncargoFormModal.tsx` | 484 | — | EncargoFormModal |
-| `EncargosModal.tsx` | 724 | — | EncargosModal |
+| `EncargoFormModal.tsx` | 482 | — | EncargoFormModal |
+| `EncargosModal.tsx` | 738 | — | EncargosModal |
 
 ## `src/components/grid/`
 
@@ -138,7 +138,7 @@
 
 | Archivo | Líneas | Responsabilidad | Exports |
 |:--|--:|:--|:--|
-| `encargosService.ts` | 329 | — | getEncargos, saveEncargos, generateEncargoId, addEncargo, updateEncargo, deleteEncargo, getEncargosMetrics, agruparParaCompras, generarMensajeWhatsAppProveedor, generarMensajeWhatsAppCliente, generarUrlWhatsApp, crearProductoDeEncargo, ItemCompraConsolidado, EncargosMetrics |
+| `encargosService.ts` | 328 | — | getEncargos, saveEncargos, generateEncargoId, addEncargo, updateEncargo, deleteEncargo, getEncargosMetrics, agruparParaCompras, generarMensajeWhatsAppProveedor, generarMensajeWhatsAppCliente, generarUrlWhatsApp, crearProductoDeEncargo, ItemCompraConsolidado, EncargosMetrics |
 | `permissionService.ts` | 98 | — | PERMISSIONS_STORAGE_KEY, getRolePermissions, saveRolePermissions, resolveUserPermission, canViewTool, canModifyTool |
 | `storageRepository.ts` | 158 | — | defaultStorageRepository, IStorageRepository, LocalStorageRepository |
 | `userService.ts` | 382 | — | USERS_STORAGE_KEY, USERS_STORAGE_KEY_CORRUPT, ACTIVE_USER_SESSION_KEY, ACTIVE_USER_SESSION_KEY_LEGACY, DEFAULT_ADMIN_CREDENTIALS, getUsers, hasCorruptedUsers, saveUsers, generateUserId, getActiveSessionUser, setActiveSessionUser, ensureDefaultAdminExists, createUser, updateUser, deleteUser, authenticateWithPassword, authenticateWithPin, CreateUserData, UpdateUserData |

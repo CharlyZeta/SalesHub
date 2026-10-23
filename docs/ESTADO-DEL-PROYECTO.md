@@ -27,7 +27,7 @@ documentado, con lint/CI reales y con arquitectura modularizada y optimizada**.
 | Build                      | Producción OK (Code-Splitting y Rollup `manualChunks`)                    |
 | CI                         | GitHub Actions **en verde** en cada push (typecheck + lint, tests, build) |
 | Sincronización WooCommerce | **Funcionando según la configuración** (validado en uso real)             |
-| Encargos y Demanda         | **Módulo entregado (`FEAT-ENCARGOS-001`)**: Tablero + Lista de Compras     |
+| Encargos y Demanda         | **Módulo entregado (`FEAT-ENCARGOS-001`)**: Tablero + Lista de Compras    |
 | Repositorio                | Sincronizado: local = remoto, árbol limpio                                |
 
 ---

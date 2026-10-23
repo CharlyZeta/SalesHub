@@ -42,7 +42,13 @@ interface EncargosModalProps {
   catalog: CatalogProduct[];
   config?: AppConfig;
   onUpdateCatalog: (newCatalog: CatalogProduct[]) => void;
-  onNewSaleWithItem?: (data: { clienteNombre: string; clienteTelefono?: string; productoNombre: string; cantidad: number; precio: number }) => void;
+  onNewSaleWithItem?: (data: {
+    clienteNombre: string;
+    clienteTelefono?: string;
+    productoNombre: string;
+    cantidad: number;
+    precio: number;
+  }) => void;
 }
 
 export const EncargosModal: React.FC<EncargosModalProps> = ({
@@ -164,7 +170,11 @@ export const EncargosModal: React.FC<EncargosModalProps> = ({
 
   const handleMarcarTodosComoPedidos = () => {
     if (listaCompras.length === 0) return;
-    if (window.confirm(`¿Confirmas marcar los ${listaCompras.length} productos agrupados (${encargos.filter(e => e.estado === 'pendiente_compra').length} encargos) como "Pedido a Proveedor"?`)) {
+    if (
+      window.confirm(
+        `¿Confirmas marcar los ${listaCompras.length} productos agrupados (${encargos.filter((e) => e.estado === 'pendiente_compra').length} encargos) como "Pedido a Proveedor"?`
+      )
+    ) {
       encargos
         .filter((e) => e.estado === 'pendiente_compra')
         .forEach((e) => updateEncargo(e.id, { estado: 'pedido_proveedor' }));
@@ -282,7 +292,9 @@ export const EncargosModal: React.FC<EncargosModalProps> = ({
 
           <div className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 flex items-center justify-between">
             <div>
-              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Recibidos (Listo p/ Avisar)</span>
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
+                Recibidos (Listo p/ Avisar)
+              </span>
               <p className="text-base font-bold text-emerald-600 dark:text-emerald-400">{metrics.recibidos}</p>
             </div>
             <Package className="w-5 h-5 text-emerald-500/70" />
@@ -290,7 +302,9 @@ export const EncargosModal: React.FC<EncargosModalProps> = ({
 
           <div className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 flex items-center justify-between">
             <div>
-              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Entregados / Completados</span>
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
+                Entregados / Completados
+              </span>
               <p className="text-base font-bold text-slate-700 dark:text-slate-300">{metrics.entregados}</p>
             </div>
             <CheckCircle2 className="w-5 h-5 text-slate-400" />
@@ -446,13 +460,15 @@ export const EncargosModal: React.FC<EncargosModalProps> = ({
                                   : 'bg-blue-100 text-blue-800 dark:bg-blue-950/80 dark:text-blue-300'
                               }`}
                             >
-                              {item.tipo === 'repuesto' ? <Wrench className="w-3 h-3" /> : <Package className="w-3 h-3" />}
+                              {item.tipo === 'repuesto' ? (
+                                <Wrench className="w-3 h-3" />
+                              ) : (
+                                <Package className="w-3 h-3" />
+                              )}
                               <span>{item.tipo}</span>
                             </span>
 
-                            <span className="font-mono text-[10px] text-slate-400">
-                              {item.id}
-                            </span>
+                            <span className="font-mono text-[10px] text-slate-400">{item.id}</span>
 
                             {/* Badge de Estado con selector de cambio rápido */}
                             <div className="relative inline-flex items-center">
@@ -655,9 +671,7 @@ export const EncargosModal: React.FC<EncargosModalProps> = ({
                             </span>
                           </td>
                           <td className="p-3">
-                            <p className="font-bold text-slate-900 dark:text-slate-100">
-                              {item.productoNombre}
-                            </p>
+                            <p className="font-bold text-slate-900 dark:text-slate-100">{item.productoNombre}</p>
                             {item.productoDescripcion && (
                               <p className="text-[11px] text-slate-500 dark:text-slate-400 italic">
                                 {item.productoDescripcion}

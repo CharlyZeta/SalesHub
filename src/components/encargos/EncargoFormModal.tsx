@@ -1,15 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import {
-  X,
-  Check,
-  User,
-  Wrench,
-  Package,
-  Search,
-  Phone,
-  FileText,
-  Building,
-} from 'lucide-react';
+import { X, Check, User, Wrench, Package, Search, Phone, FileText, Building } from 'lucide-react';
 import { Customer, EncargoItem, EncargoTipo } from '../../types';
 
 interface EncargoFormModalProps {
@@ -106,13 +96,15 @@ export const EncargoFormModal: React.FC<EncargoFormModalProps> = ({
 
   // Filtrado de clientes agendados
   const filteredCustomers = searchClienteText.trim()
-    ? customers.filter((c) => {
-        const query = searchClienteText.toLowerCase().trim();
-        const fullName = `${c.nombre} ${c.apellido || ''}`.toLowerCase();
-        const phone = (c.telefono || '').toLowerCase();
-        const doc = (c.dniCuit || '').toLowerCase();
-        return fullName.includes(query) || phone.includes(query) || doc.includes(query);
-      }).slice(0, 6)
+    ? customers
+        .filter((c) => {
+          const query = searchClienteText.toLowerCase().trim();
+          const fullName = `${c.nombre} ${c.apellido || ''}`.toLowerCase();
+          const phone = (c.telefono || '').toLowerCase();
+          const doc = (c.dniCuit || '').toLowerCase();
+          return fullName.includes(query) || phone.includes(query) || doc.includes(query);
+        })
+        .slice(0, 6)
     : [];
 
   const handleSelectCustomer = (customer: Customer) => {
@@ -234,7 +226,11 @@ export const EncargoFormModal: React.FC<EncargoFormModalProps> = ({
               <input
                 type="text"
                 required
-                placeholder={tipo === 'repuesto' ? 'Ej: Filtro de aire motor, Correa distribución...' : 'Ej: Linterna LED táctica, Batería 12V 7Ah...'}
+                placeholder={
+                  tipo === 'repuesto'
+                    ? 'Ej: Filtro de aire motor, Correa distribución...'
+                    : 'Ej: Linterna LED táctica, Batería 12V 7Ah...'
+                }
                 value={productoNombre}
                 onChange={(e) => setProductoNombre(e.target.value)}
                 className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-3 py-1.5 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500 shadow-2xs font-medium"
@@ -326,11 +322,13 @@ export const EncargoFormModal: React.FC<EncargoFormModalProps> = ({
                 <User className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
                 <span>Datos del Cliente / Prospecto</span>
               </span>
-              <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold border ${
-                clienteTipo === 'agendado'
-                  ? 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-950 dark:text-purple-300 dark:border-purple-800'
-                  : 'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800'
-              }`}>
+              <span
+                className={`text-[10px] px-2 py-0.5 rounded-full font-bold border ${
+                  clienteTipo === 'agendado'
+                    ? 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-950 dark:text-purple-300 dark:border-purple-800'
+                    : 'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800'
+                }`}
+              >
                 {clienteTipo === 'agendado' ? 'Cliente Agendado' : 'Prospecto Nuevo'}
               </span>
             </div>

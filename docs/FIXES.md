@@ -28,7 +28,7 @@ proyecto, con su estado, causa, solución aplicada y forma de verificarla.
 | **B6** | `.env.example` documentaba variables inexistentes (Gemini)                |   Baja    | ✅ Reparado  |
 | **B1** | Prettier configurado pero no aplicado ni verificado en CI                 |   Baja    | ✅ Reparado  |
 | **B2** | 53 usos de `any` explícito                                                |   Baja    | ⏳ Pendiente |
-| **B4** | Componentes grandes (`BudgetModal`, `App.tsx`)                            |   Baja    | ✅ Reparado |
+| **B4** | Componentes grandes (`BudgetModal`, `App.tsx`)                            |   Baja    | ✅ Reparado  |
 | **B7** | 24 `console.*` fuera del logger propio                                    |   Baja    | ⏳ Pendiente |
 | **B8** | Claves WooCommerce precargadas en el modal / defaults de seguridad        |   Media   | ⏳ Pendiente |
 | **B9** | Residuos del entorno original (metadata AI Studio, cachés de agentes)     |   Baja    | ⏳ Pendiente |
