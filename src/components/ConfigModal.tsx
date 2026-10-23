@@ -135,17 +135,28 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
     };
   }, []);
 
-  // Sync secConfig changes back to config.seguridad immediately when modal is open
-  // This ensures the auto-lock timer (useSecurityRole) respects the admin's configured timeout
+  // Sync only the non-credential field tiempoInactividadMinutos live to config.seguridad
+  // so the auto-lock timer (useSecurityRole) respects the admin's configured timeout
   // without waiting for "Guardar Configuración" to be clicked.
+  // Credential fields (pinAcceso, modoAutenticacion, etc.) are NEVER synced here;
+  // they are only persisted through handleSaveAll, which hashes the PIN and enforces
+  // the default-PIN-on-enable check (H1).
   useEffect(() => {
-    if (isOpen && JSON.stringify(secConfig) !== JSON.stringify(config.seguridad)) {
-      onSaveConfig({
-        ...config,
-        seguridad: secConfig,
-      });
+    if (isOpen && config.seguridad) {
+      const currentTimeout = config.seguridad.tiempoInactividadMinutos;
+      const newTimeout = secConfig.tiempoInactividadMinutos;
+      if (currentTimeout !== newTimeout) {
+        onSaveConfig({
+          ...config,
+          seguridad: {
+            ...config.seguridad,
+            tiempoInactividadMinutos: newTimeout,
+          },
+        });
+      }
     }
-  }, [isOpen, secConfig, config, onSaveConfig]);
+  }, [isOpen, secConfig.tiempoInactividadMinutos, config, onSaveConfig]);
+
 
   // Backups config state
   const [autoBackup, setAutoBackup] = useState(config.backup?.autoBackup ?? false);
