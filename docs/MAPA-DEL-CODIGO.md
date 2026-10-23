@@ -4,13 +4,13 @@
 > Es el índice que conviene leer **antes** de abrir archivos: una fila por módulo
 > con su responsabilidad y sus exports principales.
 
-**Resumen:** 66 archivos · 20.237 líneas.
+**Resumen:** 66 archivos · 20.249 líneas.
 
 | Directorio | Archivos | Líneas |
 |:--|--:|--:|
 | `scripts/` | 5 | 563 |
 | `src/` | 3 | 1.076 |
-| `src/components/` | 21 | 9.245 |
+| `src/components/` | 21 | 9.257 |
 | `src/components/budget/` | 3 | 976 |
 | `src/components/common/` | 1 | 35 |
 | `src/components/config/` | 2 | 661 |
@@ -51,7 +51,7 @@
 | `ConfigBackupsTab.tsx` | 242 | Pestaña Copias de seguridad: backup automático, copia manual y restauración | ConfigBackupsTab, ConfigBackupsTabProps |
 | `ConfigEmpresaTab.tsx` | 351 | Pestaña Empresa / Firma: identidad, logo, datos fiscales y puntos de venta | ConfigEmpresaTab, ConfigEmpresaTabProps |
 | `ConfigGeneralTab.tsx` | 795 | Pestaña General & Ventas: canales, pagos, envíos, Andreani, numeración e importación | ConfigGeneralTab, ConfigGeneralTabProps |
-| `ConfigModal.tsx` | 587 | Configuración del sistema: shell del modal, estado compartido, guardado y pestañas | ConfigModal |
+| `ConfigModal.tsx` | 599 | Configuración del sistema: shell del modal, estado compartido, guardado y pestañas | ConfigModal |
 | `ConfigSecurityTab.tsx` | 169 | Pestaña Seguridad & PIN: control de acceso, inactividad y restricciones por rol | ConfigSecurityTab, ConfigSecurityTabProps |
 | `CustomerDirectoryModal.tsx` | 507 | Directorio de clientes: búsqueda, historial de compras y alta de clientes | CustomerDirectoryModal |
 | `ExportModal.tsx` | 125 | Exportador de ventas a CSV por rango y canal | ExportModal |

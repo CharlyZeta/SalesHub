@@ -135,6 +135,18 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
     };
   }, []);
 
+  // Sync secConfig changes back to config.seguridad immediately when modal is open
+  // This ensures the auto-lock timer (useSecurityRole) respects the admin's configured timeout
+  // without waiting for "Guardar Configuración" to be clicked.
+  useEffect(() => {
+    if (isOpen && JSON.stringify(secConfig) !== JSON.stringify(config.seguridad)) {
+      onSaveConfig({
+        ...config,
+        seguridad: secConfig,
+      });
+    }
+  }, [isOpen, secConfig, config, onSaveConfig]);
+
   // Backups config state
   const [autoBackup, setAutoBackup] = useState(config.backup?.autoBackup ?? false);
   const [periodicity, setPeriodicity] = useState(config.backup?.periodicity ?? 'daily');
