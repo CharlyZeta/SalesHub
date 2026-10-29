@@ -149,7 +149,6 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
     }
   }, [isOpen, secConfig.tiempoInactividadMinutos, config, onSaveConfig]);
 
-
   // Backups config state
   const [autoBackup, setAutoBackup] = useState(config.backup?.autoBackup ?? false);
   const [periodicity, setPeriodicity] = useState(config.backup?.periodicity ?? 'daily');
@@ -538,11 +537,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
           )}
 
           {activeTab === 'users' && puedeGestionarSeguridad && (
-            <ConfigUsersTab
-              secConfig={secConfig}
-              setSecConfig={setSecConfig}
-              currentRole={currentRole}
-            />
+            <ConfigUsersTab secConfig={secConfig} setSecConfig={setSecConfig} currentRole={currentRole} />
           )}
 
           {activeTab === 'permissions' && puedeGestionarSeguridad && <ConfigPermissionsTab />}

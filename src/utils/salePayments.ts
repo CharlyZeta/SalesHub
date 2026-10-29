@@ -75,9 +75,7 @@ function isoToday(): string {
 }
 
 export function generatePaymentId(existing: SalePayment[] = []): string {
-  const nums = existing
-    .map((p) => parseInt(p.id.replace(/^PG-/, ''), 10))
-    .filter((n) => !Number.isNaN(n));
+  const nums = existing.map((p) => parseInt(p.id.replace(/^PG-/, ''), 10)).filter((n) => !Number.isNaN(n));
   const next = nums.length > 0 ? Math.max(...nums) + 1 : 1;
   return `PG-${String(next).padStart(4, '0')}`;
 }

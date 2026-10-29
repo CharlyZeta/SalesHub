@@ -6,7 +6,7 @@
 
 # Mode: LOOP
 
-# Gate-Mode: GATE
+# Gate-Mode: FULL
 
 ## Intent
 

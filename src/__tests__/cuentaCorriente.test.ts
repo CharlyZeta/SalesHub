@@ -1,11 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { Sale, SalePayment } from '../types';
-import {
-  claveCliente,
-  getClientesConDeuda,
-  getCuentaCorriente,
-  getPagosDelCliente,
-} from '../utils/cuentaCorriente';
+import { claveCliente, getClientesConDeuda, getCuentaCorriente, getPagosDelCliente } from '../utils/cuentaCorriente';
 
 function pago(monto: number, id: string, fecha = '2026-09-20'): SalePayment {
   return { id, fecha, monto, medio: 'Efectivo', registradoEn: `${fecha}T10:00:00.000Z` };

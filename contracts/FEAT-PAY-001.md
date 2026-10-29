@@ -1,7 +1,11 @@
 # CONTRACT: Pagos parciales, saldo derivado y estado de pago por venta (libro de pagos)
+
 # ID: FEAT-PAY-001
+
 # Status: APPROVED
+
 # Mode: LOOP
+
 # Gate-Mode: STRICT
 
 ## Intent
@@ -93,13 +97,13 @@ pagos** por venta (`Sale.pagos`) del que se **derivan** el total cobrado, el sal
 
 ## Ambiguity Log
 
-- [x] *¿Un monto acumulado en la venta o un libro de pagos?*
+- [x] _¿Un monto acumulado en la venta o un libro de pagos?_
       **Libro de pagos.** El requisito es "cuenta corriente": pagos sucesivos con fecha, medio y
       responsable. Un escalar obliga a sobrescribir historia y no permite auditar.
-- [x] *¿Cómo distinguir venta histórica de venta nueva impaga sin migrar datos?*
+- [x] _¿Cómo distinguir venta histórica de venta nueva impaga sin migrar datos?_
       Por la **presencia del campo**: `undefined` = histórica (pagada), `[]` = nueva (pendiente).
       Se evita cualquier migración destructiva sobre `app_sales_v1`.
-- [x] *¿La fecha del pago se puede editar?*
+- [x] _¿La fecha del pago se puede editar?_
       Propuesta: se registra al momento (no editable). Si hay que corregir, se borra y se vuelve a
       cargar, con doble registro en auditoría.
 - [x] **Alta de venta: nace "Pagada" o "Pendiente"?** El riesgo detectado es que si toda venta
@@ -110,22 +114,31 @@ pagos** por venta (`Sale.pagos`) del que se **derivan** el total cobrado, el sal
 - [x] **Las ventas importadas por CSV/Sheets quedan sin el campo `pagos`** (= pagadas). Son datos
       históricos: no corresponde marcarlas como deuda.
 - [x] **No se modificó `useSalesState`.** La operación ya existía: `handleUpdateInlineSale(id, {
-      pagos })`. Se usan las utilidades puras para construir el libro nuevo.
+pagos })`. Se usan las utilidades puras para construir el libro nuevo.
 - [x] **El acento izquierdo de 3 px quedó fuera** de esta entrega: la píldora ya distingue los
       tres estados sin pintar la fila y se prefirió no sumar más ruido visual. Queda disponible
       si hace falta reforzar.
-- [ ] *¿La fecha del pago debería poder elegirse?* (revisar cuando se registren pagos de días
+- [ ] _¿La fecha del pago debería poder elegirse?_ (revisar cuando se registren pagos de días
       anteriores).
 
 ## Completion Map
 
 # generated: 2026-10-24T00:00:00Z
+
 # Tarea 1: Tipos PaymentStatus, SalePayment y Sale.pagos|coder-agent|✅
+
 # Tarea 2: Utilidades puras de saldo, estado y validación|BR-PAY-002,BR-PAY-003,BR-PAY-004,AC-001|coder-agent|✅
+
 # Tarea 3: Operaciones de alta/baja de pago (vía handleUpdateInlineSale)|BR-PAY-006|coder-agent|✅
+
 # Tarea 4: Modal de registro de pago con validación viva|AC-001,AC-003|coder-agent|✅
+
 # Tarea 5: Historial de pagos de la venta con borrado auditado|BR-PAY-005,AC-004|coder-agent|✅
+
 # Tarea 6: Píldora de estado en la planilla (acento diferido)|BR-PAY-008,AC-003|coder-agent|✅
+
 # Tarea 7: Retrocompatibilidad de ventas históricas|BR-PAY-001,AC-005,AC-006|coder-agent|✅
+
 # Tarea 8: CSV con estado y saldo|BR-PAY-007,AC-006|coder-agent|✅
+
 # Tarea 9: Tests de derivación, validación y migración|AC-002,AC-007|coder-agent|✅

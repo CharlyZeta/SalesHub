@@ -4,25 +4,25 @@
 > Es el índice que conviene leer **antes** de abrir archivos: una fila por módulo
 > con su responsabilidad y sus exports principales.
 
-**Resumen:** 77 archivos · 21.820 líneas.
+**Resumen:** 77 archivos · 21.819 líneas.
 
 | Directorio | Archivos | Líneas |
 |:--|--:|--:|
 | `scripts/` | 5 | 563 |
 | `src/` | 3 | 1.162 |
-| `src/components/` | 22 | 9.596 |
+| `src/components/` | 22 | 9.593 |
 | `src/components/budget/` | 3 | 976 |
 | `src/components/common/` | 1 | 35 |
 | `src/components/config/` | 2 | 661 |
 | `src/components/encargos/` | 2 | 1.220 |
 | `src/components/grid/` | 3 | 892 |
-| `src/components/payments/` | 3 | 462 |
+| `src/components/payments/` | 3 | 470 |
 | `src/components/sales/` | 3 | 706 |
 | `src/config/` | 1 | 145 |
 | `src/data/` | 1 | 364 |
 | `src/hooks/` | 7 | 910 |
 | `src/services/` | 4 | 966 |
-| `src/utils/` | 17 | 3.162 |
+| `src/utils/` | 17 | 3.156 |
 
 ## `scripts/`
 
@@ -49,12 +49,12 @@
 | `AnalyticsModal.tsx` | 319 | Panel de analítica con gráficos Recharts (tendencia y distribución por canal) | AnalyticsModal |
 | `AuthModal.tsx` | 367 | Auth Gate: PIN, selección de rol (RBAC) y bloqueo progresivo por intentos | AuthModal |
 | `BudgetModal.tsx` | 709 | Presupuestos AFIP: ítems, IVA/percepciones, PDF y conversión a venta | BudgetModal |
-| `CobrosPendientesModal.tsx` | 233 | — | CobrosPendientesModal, CobrosPendientesModalProps |
+| `CobrosPendientesModal.tsx` | 236 | — | CobrosPendientesModal, CobrosPendientesModalProps |
 | `ConfigBackupsTab.tsx` | 242 | Pestaña Copias de seguridad: backup automático, copia manual y restauración | ConfigBackupsTab, ConfigBackupsTabProps |
 | `ConfigEmpresaTab.tsx` | 351 | Pestaña Empresa / Firma: identidad, logo, datos fiscales y puntos de venta | ConfigEmpresaTab, ConfigEmpresaTabProps |
 | `ConfigGeneralTab.tsx` | 795 | Pestaña General & Ventas: canales, pagos, envíos, Andreani, numeración e importación | ConfigGeneralTab, ConfigGeneralTabProps |
-| `ConfigModal.tsx` | 602 | Configuración del sistema: shell del modal, estado compartido, guardado y pestañas | ConfigModal |
-| `ConfigSecurityTab.tsx` | 166 | Pestaña Seguridad & PIN: control de acceso, inactividad y restricciones por rol | ConfigSecurityTab, ConfigSecurityTabProps |
+| `ConfigModal.tsx` | 597 | Configuración del sistema: shell del modal, estado compartido, guardado y pestañas | ConfigModal |
+| `ConfigSecurityTab.tsx` | 165 | Pestaña Seguridad & PIN: control de acceso, inactividad y restricciones por rol | ConfigSecurityTab, ConfigSecurityTabProps |
 | `CustomerDirectoryModal.tsx` | 507 | Directorio de clientes: búsqueda, historial de compras y alta de clientes | CustomerDirectoryModal |
 | `ExportModal.tsx` | 125 | Exportador de ventas a CSV por rango y canal | ExportModal |
 | `Header.tsx` | 296 | Barra superior: marca, KPIs rápidos, accesos a modales, tema y bloqueo de sesión | Header |
@@ -109,9 +109,9 @@
 
 | Archivo | Líneas | Responsabilidad | Exports |
 |:--|--:|:--|:--|
-| `CuentaCorrienteModal.tsx` | 204 | — | CuentaCorrienteModal, CuentaCorrienteModalProps |
+| `CuentaCorrienteModal.tsx` | 208 | — | CuentaCorrienteModal, CuentaCorrienteModalProps |
 | `PaymentStatusBadge.tsx` | 43 | — | PaymentStatusBadge |
-| `SalePaymentsModal.tsx` | 215 | — | SalePaymentsModal, NuevoPagoForm, SalePaymentsModalProps |
+| `SalePaymentsModal.tsx` | 219 | — | SalePaymentsModal, NuevoPagoForm, SalePaymentsModalProps |
 
 ## `src/components/sales/`
 
@@ -169,9 +169,9 @@
 | `googleMapsService.ts` | 319 | — | getCurrentMonthKey, getGoogleMapsUsageInfo, checkGoogleMapsQuota, recordGoogleMapsRequest, resetGoogleMapsUsage, getStoredAppConfig, saveStoredAppConfig, incrementStoredGoogleMapsUsage, checkStoredGoogleMapsQuota, testGoogleMapsApiKey, GoogleMapsTestResult, GoogleMapsUsageInfo |
 | `logger.ts` | 129 | Motor de auditoría (localStorage + eventos) con filtros y exportación | getSystemLogs, addSystemLog, clearSystemLogs, filterSystemLogs, exportLogsJSON, exportLogsCSV, LogEntry, LogFilterOptions, LogLevel |
 | `numberToWords.ts` | 104 | Conversión de importes a texto (para comprobantes) | numberToWordsSpanish |
-| `pdfCobros.ts` | 141 | — | exportarCobrosPendientesPDF |
+| `pdfCobros.ts` | 137 | — | exportarCobrosPendientesPDF |
 | `pdfCuentaCorriente.ts` | 149 | — | exportarCuentaCorrientePDF |
-| `salePayments.ts` | 115 | — | ESTADO_PAGO_LABEL, round2, esVentaHistorica, getPagos, getTotalCobrado, getSaldo, getEstadoPago, validarPago, generatePaymentId, crearPago, agregarPago, quitarPago, PaymentValidationResult, NuevoPagoInput |
+| `salePayments.ts` | 113 | — | ESTADO_PAGO_LABEL, round2, esVentaHistorica, getPagos, getTotalCobrado, getSaldo, getEstadoPago, validarPago, generatePaymentId, crearPago, agregarPago, quitarPago, PaymentValidationResult, NuevoPagoInput |
 | `security.ts` | 107 | Hash de PIN (SHA-256), verificación retrocompatible y escalada de bloqueo | PIN_SALT, PASSWORD_SALT, isHashedPin, authLockWaitMs, hashPin, verifyPin, hashPassword, verifyPassword |
 | `securityAccess.ts` | 37 | — | canManageSecurity, hayAdminConCredencialesSeguras, AdminCredencialInput |
 | `wooCommerceApi.ts` | 554 | Cliente REST de WooCommerce: productos y clientes paginados | buildWooApiUrl, transformWooProduct, transformWooCustomer, fetchWithCorsProxy, fetchWooCommerceProducts, fetchWooCommerceCustomers, WooProductDTO, WooCustomerDTO |

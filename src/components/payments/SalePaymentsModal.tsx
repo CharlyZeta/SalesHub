@@ -85,11 +85,15 @@ export const SalePaymentsModal: React.FC<SalePaymentsModalProps> = ({ sale, onCl
           <div className="grid grid-cols-3 gap-2">
             <div className="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5">
               <div className="text-[10px] uppercase tracking-wide text-slate-500 dark:text-slate-400">Total</div>
-              <div className="font-mono font-bold text-slate-900 dark:text-slate-100">{formatCurrency(sale.montoTotal)}</div>
+              <div className="font-mono font-bold text-slate-900 dark:text-slate-100">
+                {formatCurrency(sale.montoTotal)}
+              </div>
             </div>
             <div className="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5">
               <div className="text-[10px] uppercase tracking-wide text-slate-500 dark:text-slate-400">Cobrado</div>
-              <div className="font-mono font-bold text-emerald-700 dark:text-emerald-300">{formatCurrency(cobrado)}</div>
+              <div className="font-mono font-bold text-emerald-700 dark:text-emerald-300">
+                {formatCurrency(cobrado)}
+              </div>
             </div>
             <div className="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5">
               <div className="text-[10px] uppercase tracking-wide text-slate-500 dark:text-slate-400">Saldo</div>

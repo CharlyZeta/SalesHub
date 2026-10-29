@@ -54,11 +54,7 @@ export async function exportarCobrosPendientesPDF(
 
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(8);
-    const fiscal = [
-      empresa?.cuit ? `CUIT: ${empresa.cuit}` : '',
-      empresa?.domicilio || '',
-      empresa?.telefono || '',
-    ]
+    const fiscal = [empresa?.cuit ? `CUIT: ${empresa.cuit}` : '', empresa?.domicilio || '', empresa?.telefono || '']
       .filter(Boolean)
       .join('  ·  ');
     if (fiscal) pdf.text(fiscal, MARGIN, 21);

@@ -22,7 +22,6 @@ export const ConfigSecurityTab: React.FC<ConfigSecurityTabProps> = ({
   onGoToUsers,
   puedeGestionarUsuarios,
 }) => {
-
   return (
     <div className="space-y-4">
       {/* App Lock Toggle & PIN */}
@@ -46,8 +45,8 @@ export const ConfigSecurityTab: React.FC<ConfigSecurityTabProps> = ({
         <div className="flex items-start gap-2 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 rounded-lg p-2.5 text-blue-800 dark:text-blue-200 text-[11px]">
           <KeyRound className="w-4 h-4 shrink-0 text-blue-600 dark:text-blue-400" />
           <span>
-            <strong>El PIN es personal, no global.</strong> Cada usuario tiene su propio PIN rápido y se administra
-            en «Usuarios &amp; Sesión». El PIN único compartido de versiones anteriores ya no otorga acceso.
+            <strong>El PIN es personal, no global.</strong> Cada usuario tiene su propio PIN rápido y se administra en
+            «Usuarios &amp; Sesión». El PIN único compartido de versiones anteriores ya no otorga acceso.
           </span>
         </div>
 

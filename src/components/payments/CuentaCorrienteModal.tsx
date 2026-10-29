@@ -88,11 +88,15 @@ export const CuentaCorrienteModal: React.FC<CuentaCorrienteModalProps> = ({
             </div>
             <div className="bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900 rounded-lg p-2.5">
               <div className="text-[10px] uppercase tracking-wide text-slate-500 dark:text-slate-400">Saldo</div>
-              <div className="font-mono font-bold text-rose-700 dark:text-rose-300">{formatCurrency(resumen.saldo)}</div>
+              <div className="font-mono font-bold text-rose-700 dark:text-rose-300">
+                {formatCurrency(resumen.saldo)}
+              </div>
             </div>
             <div className="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5">
               <div className="text-[10px] uppercase tracking-wide text-slate-500 dark:text-slate-400">Antigüedad</div>
-              <div className="font-mono font-bold text-slate-900 dark:text-slate-100">{resumen.antiguedadDias} días</div>
+              <div className="font-mono font-bold text-slate-900 dark:text-slate-100">
+                {resumen.antiguedadDias} días
+              </div>
             </div>
           </div>
 

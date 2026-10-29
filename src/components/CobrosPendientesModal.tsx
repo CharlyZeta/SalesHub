@@ -36,7 +36,10 @@ export const CobrosPendientesModal: React.FC<CobrosPendientesModalProps> = ({
   const [exportando, setExportando] = useState(false);
   const [error, setError] = useState('');
 
-  const ventas = useMemo(() => filtrarCobros(sales, query, desde || undefined, hasta || undefined), [sales, query, desde, hasta]);
+  const ventas = useMemo(
+    () => filtrarCobros(sales, query, desde || undefined, hasta || undefined),
+    [sales, query, desde, hasta]
+  );
   const resumen = useMemo(() => getResumenCobros(sales), [sales]);
   const hayDeuda = getVentasPendientes(sales).length > 0;
 
@@ -173,7 +176,9 @@ export const CobrosPendientesModal: React.FC<CobrosPendientesModalProps> = ({
                 <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
                   {ventas.map((s) => (
                     <tr key={s.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
-                      <td className="p-2.5 whitespace-nowrap text-slate-600 dark:text-slate-400">{formatDate(s.fecha)}</td>
+                      <td className="p-2.5 whitespace-nowrap text-slate-600 dark:text-slate-400">
+                        {formatDate(s.fecha)}
+                      </td>
                       <td className="p-2.5 font-medium">
                         {onOpenCuentaCorriente ? (
                           <button
@@ -190,9 +195,7 @@ export const CobrosPendientesModal: React.FC<CobrosPendientesModalProps> = ({
                           </span>
                         )}
                       </td>
-                      <td className="p-2.5 font-mono text-slate-600 dark:text-slate-400">
-                        {s.numeroFactura || s.id}
-                      </td>
+                      <td className="p-2.5 font-mono text-slate-600 dark:text-slate-400">{s.numeroFactura || s.id}</td>
                       <td className="p-2.5 text-right font-mono text-slate-700 dark:text-slate-300">
                         {formatCurrency(s.montoTotal)}
                       </td>
