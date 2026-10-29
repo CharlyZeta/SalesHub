@@ -8,9 +8,8 @@ import { GridToolbar } from './grid/GridToolbar';
 import { GridPagination } from './grid/GridPagination';
 import { usePermissions } from '../hooks/usePermissions';
 import { SalePaymentsModal, NuevoPagoForm } from './payments/SalePaymentsModal';
-import { agregarPago, crearPago, getPagos, quitarPago } from '../utils/salePayments';
-import { getActiveSessionUser } from '../services/userService';
-import { addSystemLog } from '../utils/logger';
+import { cumpleFiltroEstadoPago } from '../utils/cobrosPendientes';
+import { useSalePaymentActions } from '../hooks/useSalePaymentActions';
 
 interface SpreadsheetGridProps {
   sales: Sale[];
@@ -73,6 +72,8 @@ export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [paymentFilter, setPaymentFilter] = useState<string>('TODOS');
   const [shippingStatusFilter, setShippingStatusFilter] = useState<string>('TODOS');
+  // Filtro por estado de pago (FEAT-PAY-002). Independiente del filtro por método de pago.
+  const [pagoEstadoFilter, setPagoEstadoFilter] = useState<string>('TODOS');
   const [sortField, setSortField] = useState<keyof Sale>('fecha');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
@@ -109,29 +110,17 @@ export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
   const [paymentsSaleId, setPaymentsSaleId] = useState<string | null>(null);
   const paymentsSale = useMemo(() => sales.find((s) => s.id === paymentsSaleId) ?? null, [sales, paymentsSaleId]);
 
+  const { addPayment, removePayment } = useSalePaymentActions(onUpdateInlineSale);
+
   const handleAddPayment = (input: NuevoPagoForm) => {
     if (!paymentsSale) return;
-    const usuario = getActiveSessionUser()?.username ?? 'sistema';
-    const pago = crearPago({ ...input, registradoPor: usuario }, getPagos(paymentsSale));
-    const actualizada = agregarPago(paymentsSale, pago);
-    onUpdateInlineSale(paymentsSale.id, { pagos: actualizada.pagos });
-    addSystemLog(
-      'INFO',
-      'Pagos',
-      `Pago registrado en venta ${paymentsSale.numeroFactura || paymentsSale.id}: ${formatCurrency(pago.monto)} (${pago.medio}) por ${usuario}`
-    );
+    addPayment(paymentsSale, input);
   };
 
   const handleRemovePayment = (pagoId: string) => {
     if (!paymentsSale) return;
     if (!window.confirm('¿Eliminar este pago? El saldo de la venta se recalcula.')) return;
-    const actualizada = quitarPago(paymentsSale, pagoId);
-    onUpdateInlineSale(paymentsSale.id, { pagos: actualizada.pagos });
-    addSystemLog(
-      'WARN',
-      'Pagos',
-      `Pago eliminado de venta ${paymentsSale.numeroFactura || paymentsSale.id}: ${pagoId}`
-    );
+    removePayment(paymentsSale, pagoId);
   };
 
   // Andreani Sync Handling
@@ -153,6 +142,7 @@ export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
     selectedChannelFilter,
     paymentFilter,
     shippingStatusFilter,
+    pagoEstadoFilter,
     searchTerm,
     selectedMonth,
     showAllMonths,
@@ -185,6 +175,9 @@ export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
         if (shippingStatusFilter !== 'TODOS' && s.estadoEnvio !== shippingStatusFilter) {
           return false;
         }
+        if (!cumpleFiltroEstadoPago(s, pagoEstadoFilter)) {
+          return false;
+        }
         if (searchTerm.trim() !== '') {
           const query = searchTerm.toLowerCase();
           const pNames = s.productos.map((p) => p.nombre.toLowerCase()).join(' ');
@@ -214,6 +207,7 @@ export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
     selectedChannelFilter,
     paymentFilter,
     shippingStatusFilter,
+    pagoEstadoFilter,
     searchTerm,
     sortField,
     sortDirection,
@@ -351,6 +345,8 @@ export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
         metodosPago={metodosPago}
         shippingStatusFilter={shippingStatusFilter}
         setShippingStatusFilter={setShippingStatusFilter}
+        pagoEstadoFilter={pagoEstadoFilter}
+        onPagoEstadoFilterChange={setPagoEstadoFilter}
         estadosEnvio={estadosEnvio}
         visibleColumns={visibleColumns}
         setVisibleColumns={setVisibleColumns}

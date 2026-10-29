@@ -28,6 +28,12 @@ const SystemLogsModal = React.lazy(() =>
 const EncargosModal = React.lazy(() =>
   import('./components/encargos/EncargosModal').then((m) => ({ default: m.EncargosModal }))
 );
+const CobrosPendientesModal = React.lazy(() =>
+  import('./components/CobrosPendientesModal').then((m) => ({ default: m.CobrosPendientesModal }))
+);
+const SalePaymentsModal = React.lazy(() =>
+  import('./components/payments/SalePaymentsModal').then((m) => ({ default: m.SalePaymentsModal }))
+);
 
 const ModalFallback: React.FC = () => (
   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs">
@@ -52,6 +58,8 @@ import { useCatalogState } from './hooks/useCatalogState';
 import { useSecurityRole } from './hooks/useSecurityRole';
 import { useWooCommerceSync } from './hooks/useWooCommerceSync';
 import { useSalesState } from './hooks/useSalesState';
+import { useSalePaymentActions } from './hooks/useSalePaymentActions';
+import { getVentasPendientes } from './utils/cobrosPendientes';
 
 export default function App() {
   // Configuración de la aplicación
@@ -207,6 +215,12 @@ export default function App() {
   const [isLogsOpen, setIsLogsOpen] = useState(false);
   const [isEncargosOpen, setIsEncargosOpen] = useState(false);
   const [encargosPendientesCount, setEncargosPendientesCount] = useState<number>(0);
+  // FEAT-PAY-002: listado de cobros pendientes y registro de pagos desde ahí.
+  const [isCobrosOpen, setIsCobrosOpen] = useState(false);
+  const [cobrosSaleId, setCobrosSaleId] = useState<string | null>(null);
+  const cobrosSale = sales.find((s) => s.id === cobrosSaleId) ?? null;
+  const cobrosPendientesCount = getVentasPendientes(sales).length;
+  const { addPayment, removePayment } = useSalePaymentActions(handleUpdateInlineSale);
 
   // Sincronizar contador de encargos pendientes para el badge del Header
   useEffect(() => {
@@ -452,6 +466,8 @@ export default function App() {
         onOpenBudget={() => setIsBudgetOpen(true)}
         onOpenEncargos={() => setIsEncargosOpen(true)}
         encargosPendientesCount={encargosPendientesCount}
+        onOpenCobros={() => setIsCobrosOpen(true)}
+        cobrosPendientesCount={cobrosPendientesCount}
         onOpenConfig={() => setIsConfigOpen(true)}
         onOpenLogs={() => setIsLogsOpen(true)}
         onLockApp={handleLockApp}
@@ -735,6 +751,31 @@ export default function App() {
       {isLogsOpen && (
         <React.Suspense fallback={<ModalFallback />}>
           <SystemLogsModal isOpen={isLogsOpen} onClose={() => setIsLogsOpen(false)} currentRole={currentRole} />
+        </React.Suspense>
+      )}
+
+      {isCobrosOpen && (
+        <React.Suspense fallback={<ModalFallback />}>
+          <CobrosPendientesModal
+            sales={sales}
+            empresa={config.empresa}
+            onClose={() => setIsCobrosOpen(false)}
+            onOpenPayments={(s) => setCobrosSaleId(s.id)}
+          />
+        </React.Suspense>
+      )}
+
+      {cobrosSale && (
+        <React.Suspense fallback={<ModalFallback />}>
+          <SalePaymentsModal
+            sale={cobrosSale}
+            onClose={() => setCobrosSaleId(null)}
+            onAdd={(input) => addPayment(cobrosSale, input)}
+            onRemove={(pagoId) => {
+              if (window.confirm('¿Eliminar este pago? El saldo de la venta se recalcula.'))
+                removePayment(cobrosSale, pagoId);
+            }}
+          />
         </React.Suspense>
       )}
 

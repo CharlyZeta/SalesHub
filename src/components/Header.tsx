@@ -8,6 +8,7 @@ import {
   Store,
   Settings,
   FileText,
+  Wallet,
   Terminal,
   Lock,
   ShieldCheck,
@@ -33,6 +34,9 @@ interface HeaderProps {
   onOpenBudget: () => void;
   onOpenEncargos?: () => void;
   encargosPendientesCount?: number;
+  /** Acceso al listado de cobros pendientes (FEAT-PAY-002). */
+  onOpenCobros?: () => void;
+  cobrosPendientesCount?: number;
   onOpenConfig: () => void;
   onOpenLogs?: () => void;
   onLockApp?: () => void;
@@ -53,6 +57,8 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenBudget,
   onOpenEncargos,
   encargosPendientesCount = 0,
+  onOpenCobros,
+  cobrosPendientesCount = 0,
   onOpenConfig,
   onOpenLogs,
   onLockApp,
@@ -124,6 +130,24 @@ export const Header: React.FC<HeaderProps> = ({
               {encargosPendientesCount > 0 && (
                 <span className="inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-bold text-white bg-amber-600 rounded-full leading-none">
                   {encargosPendientesCount}
+                </span>
+              )}
+            </button>
+          )}
+
+          {/* Cobros pendientes (FEAT-PAY-002) */}
+          {onOpenCobros && canAccess('ventas') && (
+            <button
+              id="btn-cobros"
+              onClick={onOpenCobros}
+              className="bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-medium text-xs md:text-sm px-3 py-1.5 rounded-md flex items-center gap-1.5 transition-colors cursor-pointer relative"
+              title="Ventas con saldo pendiente de todos los meses"
+            >
+              <Wallet className="w-4 h-4 text-rose-600 dark:text-rose-400" />
+              <span className="hidden md:inline">Cobros</span>
+              {cobrosPendientesCount > 0 && (
+                <span className="inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-bold text-white bg-rose-600 rounded-full leading-none">
+                  {cobrosPendientesCount}
                 </span>
               )}
             </button>

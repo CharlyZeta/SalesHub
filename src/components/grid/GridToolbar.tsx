@@ -9,6 +9,9 @@ export interface GridToolbarProps {
   onChannelFilterChange: (val: string) => void;
   canales: string[];
   paymentFilter: string;
+  /** Filtro por estado de pago (FEAT-PAY-002). Opcional para no romper consumidores. */
+  pagoEstadoFilter?: string;
+  onPagoEstadoFilterChange?: (value: string) => void;
   setPaymentFilter: (val: string) => void;
   metodosPago: string[];
   shippingStatusFilter: string;
@@ -34,6 +37,8 @@ export const GridToolbar: React.FC<GridToolbarProps> = ({
   onChannelFilterChange,
   canales,
   paymentFilter,
+  pagoEstadoFilter,
+  onPagoEstadoFilterChange,
   setPaymentFilter,
   metodosPago,
   shippingStatusFilter,
@@ -117,6 +122,31 @@ export const GridToolbar: React.FC<GridToolbarProps> = ({
               ))}
             </select>
           </div>
+
+          {/* Payment Status Filter (FEAT-PAY-002) */}
+          {onPagoEstadoFilterChange && (
+            <div className="flex items-center gap-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1">
+              <span className="text-slate-400 dark:text-slate-500 text-[11px]">Estado de pago:</span>
+              <select
+                value={pagoEstadoFilter || 'TODOS'}
+                onChange={(e) => onPagoEstadoFilterChange(e.target.value)}
+                className="bg-transparent text-slate-800 dark:text-slate-200 text-xs focus:outline-none cursor-pointer"
+              >
+                <option value="TODOS" className="dark:bg-slate-900">
+                  Todos
+                </option>
+                <option value="pagado" className="dark:bg-slate-900">
+                  Pagado
+                </option>
+                <option value="parcial" className="dark:bg-slate-900">
+                  Pago parcial
+                </option>
+                <option value="pendiente" className="dark:bg-slate-900">
+                  Pendiente de pago
+                </option>
+              </select>
+            </div>
+          )}
 
           {/* Shipping Status Filter */}
           <div className="flex items-center gap-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1">
