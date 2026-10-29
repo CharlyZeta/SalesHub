@@ -4,25 +4,25 @@
 > Es el índice que conviene leer **antes** de abrir archivos: una fila por módulo
 > con su responsabilidad y sus exports principales.
 
-**Resumen:** 74 archivos · 21.337 líneas.
+**Resumen:** 77 archivos · 21.820 líneas.
 
 | Directorio | Archivos | Líneas |
 |:--|--:|--:|
 | `scripts/` | 5 | 563 |
-| `src/` | 3 | 1.145 |
-| `src/components/` | 22 | 9.579 |
+| `src/` | 3 | 1.162 |
+| `src/components/` | 22 | 9.596 |
 | `src/components/budget/` | 3 | 976 |
 | `src/components/common/` | 1 | 35 |
 | `src/components/config/` | 2 | 661 |
 | `src/components/encargos/` | 2 | 1.220 |
 | `src/components/grid/` | 3 | 892 |
-| `src/components/payments/` | 2 | 258 |
+| `src/components/payments/` | 3 | 462 |
 | `src/components/sales/` | 3 | 706 |
 | `src/config/` | 1 | 145 |
 | `src/data/` | 1 | 364 |
 | `src/hooks/` | 7 | 910 |
 | `src/services/` | 4 | 966 |
-| `src/utils/` | 15 | 2.917 |
+| `src/utils/` | 17 | 3.162 |
 
 ## `scripts/`
 
@@ -38,7 +38,7 @@
 
 | Archivo | Líneas | Responsabilidad | Exports |
 |:--|--:|:--|:--|
-| `App.tsx` | 799 | Orquestador principal: estado global, persistencia, efectos de sync y montaje de modales | (default) |
+| `App.tsx` | 816 | Orquestador principal: estado global, persistencia, efectos de sync y montaje de modales | (default) |
 | `main.tsx` | 11 | Punto de entrada de React (render del árbol en #root) | — |
 | `types.ts` | 335 | Modelo de dominio tipado (Sale, Budget, Customer, CatalogProduct, AppConfig, seguridad) | SaleProductItem, SalePayment, Sale, Customer, CatalogProduct, WooCommerceConfig, ColumnMapping, DateFilterRange, BudgetItem, Budget, AppUser, RolePermissions, SecurityPolicyConfig, SecurityConfig, BackupConfig, CompanyConfig, GoogleMapsUsage, AppConfig, EncargoItem, SaleChannel, PaymentMethod, ShippingMethod, ShippingStatus, InvoiceType, PaymentStatus, UserRole, AuthMode, PermissionLevel, ToolResourceId, ResourcePermissionMap, EncargoTipo, EncargoEstado |
 
@@ -49,7 +49,7 @@
 | `AnalyticsModal.tsx` | 319 | Panel de analítica con gráficos Recharts (tendencia y distribución por canal) | AnalyticsModal |
 | `AuthModal.tsx` | 367 | Auth Gate: PIN, selección de rol (RBAC) y bloqueo progresivo por intentos | AuthModal |
 | `BudgetModal.tsx` | 709 | Presupuestos AFIP: ítems, IVA/percepciones, PDF y conversión a venta | BudgetModal |
-| `CobrosPendientesModal.tsx` | 216 | — | CobrosPendientesModal, CobrosPendientesModalProps |
+| `CobrosPendientesModal.tsx` | 233 | — | CobrosPendientesModal, CobrosPendientesModalProps |
 | `ConfigBackupsTab.tsx` | 242 | Pestaña Copias de seguridad: backup automático, copia manual y restauración | ConfigBackupsTab, ConfigBackupsTabProps |
 | `ConfigEmpresaTab.tsx` | 351 | Pestaña Empresa / Firma: identidad, logo, datos fiscales y puntos de venta | ConfigEmpresaTab, ConfigEmpresaTabProps |
 | `ConfigGeneralTab.tsx` | 795 | Pestaña General & Ventas: canales, pagos, envíos, Andreani, numeración e importación | ConfigGeneralTab, ConfigGeneralTabProps |
@@ -109,6 +109,7 @@
 
 | Archivo | Líneas | Responsabilidad | Exports |
 |:--|--:|:--|:--|
+| `CuentaCorrienteModal.tsx` | 204 | — | CuentaCorrienteModal, CuentaCorrienteModalProps |
 | `PaymentStatusBadge.tsx` | 43 | — | PaymentStatusBadge |
 | `SalePaymentsModal.tsx` | 215 | — | SalePaymentsModal, NuevoPagoForm, SalePaymentsModalProps |
 
@@ -162,12 +163,14 @@
 | `backupService.ts` | 333 | Backups en IndexedDB y disco (API /api/backup) con rotación | IDB_RETENTION, saveToIndexedDb, listFromIndexedDb, getFromIndexedDb, deleteFromIndexedDb, pruneIndexedDbBackups, saveToBackend, listFromBackend, getFromBackend, runBackup, listAllBackups, restoreBackup, checkAndTriggerAutoBackup, FullAppState, BackupItem |
 | `budgetDelivery.ts` | 156 | Plantillas de envío de presupuestos (WhatsApp/correo) y normalización de teléfonos | formatWhatsAppPhone, generateBudgetWhatsAppText, generateBudgetEmailSubject, generateBudgetEmailBody, openWhatsAppForBudget, openEmailForBudget |
 | `cobrosPendientes.ts` | 56 | — | getVentasPendientes, getResumenCobros, filtrarCobros, cumpleFiltroEstadoPago, ResumenCobros |
+| `cuentaCorriente.ts` | 96 | — | claveCliente, nombreClienteDeVenta, getClientesConDeuda, getCuentaCorriente, getPagosDelCliente, CuentaCorrienteResumen, PagoConContexto |
 | `customerIndex.ts` | 53 | — | buildSalesCustomerIndex, filterCustomers, CustomerSalesSummary |
 | `formatters.ts` | 493 | Formateo ARS/fechas, validaciones de venta, IDs y sanitización de CSV | ARGENTINE_PROVINCES, DEFAULT_PROVINCE, ARGENTINE_PROVINCE_CODES, formatCurrency, formatDate, parseDateToISO, parseAmountString, validateRequiredSaleFields, getCurrentMonthISO, generateSaleId, getMonthYearLabel, exportSalesToCSV, normalizePersonName, resolveArgentineProvince, parseCombinedAddress, parseCustomerIdentityFromWoo, RecordValidationResult |
 | `googleMapsService.ts` | 319 | — | getCurrentMonthKey, getGoogleMapsUsageInfo, checkGoogleMapsQuota, recordGoogleMapsRequest, resetGoogleMapsUsage, getStoredAppConfig, saveStoredAppConfig, incrementStoredGoogleMapsUsage, checkStoredGoogleMapsQuota, testGoogleMapsApiKey, GoogleMapsTestResult, GoogleMapsUsageInfo |
 | `logger.ts` | 129 | Motor de auditoría (localStorage + eventos) con filtros y exportación | getSystemLogs, addSystemLog, clearSystemLogs, filterSystemLogs, exportLogsJSON, exportLogsCSV, LogEntry, LogFilterOptions, LogLevel |
 | `numberToWords.ts` | 104 | Conversión de importes a texto (para comprobantes) | numberToWordsSpanish |
 | `pdfCobros.ts` | 141 | — | exportarCobrosPendientesPDF |
+| `pdfCuentaCorriente.ts` | 149 | — | exportarCuentaCorrientePDF |
 | `salePayments.ts` | 115 | — | ESTADO_PAGO_LABEL, round2, esVentaHistorica, getPagos, getTotalCobrado, getSaldo, getEstadoPago, validarPago, generatePaymentId, crearPago, agregarPago, quitarPago, PaymentValidationResult, NuevoPagoInput |
 | `security.ts` | 107 | Hash de PIN (SHA-256), verificación retrocompatible y escalada de bloqueo | PIN_SALT, PASSWORD_SALT, isHashedPin, authLockWaitMs, hashPin, verifyPin, hashPassword, verifyPassword |
 | `securityAccess.ts` | 37 | — | canManageSecurity, hayAdminConCredencialesSeguras, AdminCredencialInput |

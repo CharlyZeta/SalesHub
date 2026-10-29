@@ -34,6 +34,9 @@ const CobrosPendientesModal = React.lazy(() =>
 const SalePaymentsModal = React.lazy(() =>
   import('./components/payments/SalePaymentsModal').then((m) => ({ default: m.SalePaymentsModal }))
 );
+const CuentaCorrienteModal = React.lazy(() =>
+  import('./components/payments/CuentaCorrienteModal').then((m) => ({ default: m.CuentaCorrienteModal }))
+);
 
 const ModalFallback: React.FC = () => (
   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs">
@@ -219,6 +222,7 @@ export default function App() {
   const [isCobrosOpen, setIsCobrosOpen] = useState(false);
   const [cobrosSaleId, setCobrosSaleId] = useState<string | null>(null);
   const cobrosSale = sales.find((s) => s.id === cobrosSaleId) ?? null;
+  const [cuentaClave, setCuentaClave] = useState<string | null>(null);
   const cobrosPendientesCount = getVentasPendientes(sales).length;
   const { addPayment, removePayment } = useSalePaymentActions(handleUpdateInlineSale);
 
@@ -760,6 +764,19 @@ export default function App() {
             sales={sales}
             empresa={config.empresa}
             onClose={() => setIsCobrosOpen(false)}
+            onOpenPayments={(s) => setCobrosSaleId(s.id)}
+            onOpenCuentaCorriente={(clave) => setCuentaClave(clave)}
+          />
+        </React.Suspense>
+      )}
+
+      {cuentaClave && (
+        <React.Suspense fallback={<ModalFallback />}>
+          <CuentaCorrienteModal
+            sales={sales}
+            clave={cuentaClave}
+            empresa={config.empresa}
+            onClose={() => setCuentaClave(null)}
             onOpenPayments={(s) => setCobrosSaleId(s.id)}
           />
         </React.Suspense>

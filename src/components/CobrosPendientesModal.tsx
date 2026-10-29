@@ -4,6 +4,7 @@ import { CompanyConfig, Sale } from '../types';
 import { formatCurrency, formatDate } from '../utils/formatters';
 import { filtrarCobros, getResumenCobros, getVentasPendientes } from '../utils/cobrosPendientes';
 import { getEstadoPago, getSaldo, getTotalCobrado } from '../utils/salePayments';
+import { claveCliente } from '../utils/cuentaCorriente';
 import { exportarCobrosPendientesPDF } from '../utils/pdfCobros';
 import { PaymentStatusBadge } from './payments/PaymentStatusBadge';
 
@@ -12,6 +13,8 @@ export interface CobrosPendientesModalProps {
   empresa?: Partial<CompanyConfig>;
   onClose: () => void;
   onOpenPayments?: (sale: Sale) => void;
+  /** Abre la cuenta corriente del cliente (FEAT-PAY-003). */
+  onOpenCuentaCorriente?: (clave: string) => void;
 }
 
 /**
@@ -25,6 +28,7 @@ export const CobrosPendientesModal: React.FC<CobrosPendientesModalProps> = ({
   empresa,
   onClose,
   onOpenPayments,
+  onOpenCuentaCorriente,
 }) => {
   const [query, setQuery] = useState('');
   const [desde, setDesde] = useState('');
@@ -170,8 +174,21 @@ export const CobrosPendientesModal: React.FC<CobrosPendientesModalProps> = ({
                   {ventas.map((s) => (
                     <tr key={s.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
                       <td className="p-2.5 whitespace-nowrap text-slate-600 dark:text-slate-400">{formatDate(s.fecha)}</td>
-                      <td className="p-2.5 font-medium text-slate-900 dark:text-slate-100">
-                        {s.clienteNombre} {s.clienteApellido || ''}
+                      <td className="p-2.5 font-medium">
+                        {onOpenCuentaCorriente ? (
+                          <button
+                            type="button"
+                            onClick={() => onOpenCuentaCorriente(claveCliente(s))}
+                            className="text-slate-900 dark:text-slate-100 hover:text-purple-600 dark:hover:text-purple-400 hover:underline cursor-pointer text-left"
+                            title="Ver cuenta corriente del cliente"
+                          >
+                            {s.clienteNombre} {s.clienteApellido || ''}
+                          </button>
+                        ) : (
+                          <span className="text-slate-900 dark:text-slate-100">
+                            {s.clienteNombre} {s.clienteApellido || ''}
+                          </span>
+                        )}
                       </td>
                       <td className="p-2.5 font-mono text-slate-600 dark:text-slate-400">
                         {s.numeroFactura || s.id}
