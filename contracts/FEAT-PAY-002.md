@@ -1,8 +1,13 @@
 # CONTRACT: Filtro por Estado de Pago y Listado de Cobros Pendientes (cross-mes) con Export PDF
+
 # ID: FEAT-PAY-002
+
 # Status: APPROVED
+
 # Mode: LOOP
+
 # Gate-Mode: STRICT
+
 # Depende de: FEAT-PAY-001 (libro de pagos y saldo/estado derivados)
 
 ## Intent
@@ -21,7 +26,7 @@ la planilla y (b) un **listado de cobros pendientes que ignora el mes en curso**
 ### Main Flow
 
 1. **Filtro en la planilla:** en la barra de herramientas aparece un selector
-   *Estado de pago* (`Todos` | `Pagado` | `Pago parcial` | `Pendiente`). Al elegir uno, la grilla
+   _Estado de pago_ (`Todos` | `Pagado` | `Pago parcial` | `Pendiente`). Al elegir uno, la grilla
    y sus totales se recalculan.
 2. **Listado de cobros pendientes:** el botón "Cobros pendientes" abre un modal con **todas** las
    ventas con saldo > 0, **sin importar el mes**, ordenadas por fecha ascendente (la más vieja
@@ -95,26 +100,33 @@ la planilla y (b) un **listado de cobros pendientes que ignora el mes en curso**
 
 ## Ambiguity Log
 
-- [x] *¿Alcanza con el toggle `showAllMonths` que ya existe?*
+- [x] _¿Alcanza con el toggle `showAllMonths` que ya existe?_
       No. Ese toggle es global y afecta KPIs y planilla; el requisito es un listado de deuda
       acotado a saldo > 0, con resumen y PDF propios. Se reutiliza el criterio de "no filtrar por
       mes", no el estado global.
-- [x] *¿`html-to-image` o `jspdf` vectorial?*
+- [x] _¿`html-to-image` o `jspdf` vectorial?_
       Vectorial. El proyecto ya usa ambos patrones; para una tabla de datos el vectorial es
       nítido, liviano y no depende de la resolución del DOM.
-- [x] *¿El listado es un modal nuevo o una pestaña de la planilla?*
+- [x] _¿El listado es un modal nuevo o una pestaña de la planilla?_
       Modal nuevo: no recarga la grilla mensual y permite el flujo "abro, miro la deuda, exporto".
-- [ ] *¿Conviene incluir el teléfono del cliente en el PDF para gestionar el cobro?*
+- [ ] _¿Conviene incluir el teléfono del cliente en el PDF para gestionar el cobro?_
       Propuesta: **no** por defecto (dato personal innecesario en un PDF que puede circular); si
       lo querés, se agrega en una segunda pasada.
 
 ## Completion Map
 
 # generated: 2026-10-24T00:00:00Z
+
 # Tarea 1: Utilidades puras de selección de deuda y totales|BR-PAY-009,BR-PAY-010,BR-PAY-011|coder-agent|✅
+
 # Tarea 2: Filtro por estado de pago en la planilla y su toolbar|AC-001|coder-agent|✅
+
 # Tarea 3: Modal de cobros pendientes cross-mes con resumen|AC-002,AC-003,AC-005|coder-agent|✅
+
 # Tarea 4: Export PDF vectorial con membrete, tabla paginada y totales|BR-PAY-012,BR-PAY-013,AC-004|coder-agent|✅
+
 # Tarea 5: Botón en Header con gating RBAC y lazy load (con contador)|BR-PAY-014,AC-006|coder-agent|✅
+
 # Tarea 6: Tests de filtrado, cross-mes, totales y armado de filas|AC-007|coder-agent|✅
+
 # Tarea 7: Verificación visual del listado y del PDF en claro/oscuro|AC-004|humano|❌

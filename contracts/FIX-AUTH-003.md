@@ -1,8 +1,13 @@
 # CONTRACT: Acceso a Gestión de Usuarios y Cambio de PIN efectivo
+
 # ID: FIX-AUTH-003
+
 # Status: APPROVED
+
 # Mode: LOOP
+
 # Gate-Mode: STRICT
+
 # Depende de: FEAT-AUTH-002 (entregado), FEAT-RBAC-001 (entregado)
 
 ## Intent
@@ -126,13 +131,13 @@ correcto. Debe corregirse para que el modal de alta quede siempre por encima.
 
 ## Ambiguity Log
 
-- [x] *¿Se puede simplemente pasar el rol desde `config.seguridad.rolActual`?*
+- [x] _¿Se puede simplemente pasar el rol desde `config.seguridad.rolActual`?_
       **No.** Ese campo nunca se escribe (2 coincidencias de `grep`, ambas de lectura/declaración).
       Se elimina el campo en lugar de "hacerlo funcionar", porque la sesión ya es la fuente real.
-- [x] *¿Se borra el PIN legado `pinAcceso`?*
+- [x] _¿Se borra el PIN legado `pinAcceso`?_
       Se deja de editar en la UI y se documenta. No se borra el dato almacenado para no romper
       backups existentes; el login ya lo ignora por diseño (AuthModal:180-203).
-- [ ] *¿La pestaña "Seguridad & PIN" conserva el control de inactividad y el bloqueo?*
+- [ ] _¿La pestaña "Seguridad & PIN" conserva el control de inactividad y el bloqueo?_
       Propuesta: sí, sólo se retira el campo muerto de PIN. **Aplicado:** la pestaña conserva el
       toggle de habilitación, el tiempo de inactividad y las restricciones de rol.
 - [x] **Hallazgo durante el loop: `INITIAL_CONFIG` fijaba `rolActual: 'ADMIN'`.**
@@ -155,9 +160,15 @@ correcto. Debe corregirse para que el modal de alta quede siempre por encima.
 ## Completion Map
 
 # generated: 2026-10-24T00:00:00Z
+
 # Tarea 1: Pasar la sesión real a ConfigModal y reescribir el gate|BR-AUTH-007,BR-AUTH-008,AC-001,AC-004|coder-agent|✅
+
 # Tarea 2: Eliminar rolActual de SecurityConfig y su lectura|BR-AUTH-007,AC-001|coder-agent|✅
+
 # Tarea 3: Retirar el campo de PIN legado en ConfigSecurityTab con derivación a usuarios|BR-AUTH-009,AC-005|coder-agent|✅
+
 # Tarea 4: Corregir z-60 → z-[60] en el modal de alta|BR-AUTH-011,AC-006|coder-agent|✅
+
 # Tarea 5: Tests de gate de rol y de cambio efectivo de PIN|AC-002,AC-003,AC-007|tester-agent|✅
+
 # Tarea 6: Verificación manual del flujo completo (crear usuario y cambiarlo de PIN)|AC-002,AC-003|humano|❌

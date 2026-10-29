@@ -1,8 +1,13 @@
 # CONTRACT: Cuenta Corriente por Cliente (extracto de deuda y pagos)
+
 # ID: FEAT-PAY-003
+
 # Status: APPROVED
+
 # Mode: LOOP
+
 # Gate-Mode: STRICT
+
 # Depende de: FEAT-PAY-001 (libro de pagos y saldo derivado)
 
 ## Intent
@@ -79,19 +84,25 @@ extracto de qué pagó y cuándo. Hoy esa pregunta se responde sumando a mano en
 
 ## Ambiguity Log
 
-- [x] *¿El extracto incluye teléfono para cobrar?*
+- [x] _¿El extracto incluye teléfono para cobrar?_
       **No.** Decisión del dueño (2026-10-24). Sólo montos e identificación comercial.
-- [x] *¿Se pueden registrar pagos desde la cuenta corriente?*
+- [x] _¿Se pueden registrar pagos desde la cuenta corriente?_
       No. Se registran en la venta, para que el pago quede atado a un comprobante concreto.
-- [ ] *¿La antigüedad de deuda se cuenta en días o en meses?*
+- [ ] _¿La antigüedad de deuda se cuenta en días o en meses?_
       Propuesta: **días** desde la fecha de la venta más vieja con saldo.
 
 ## Completion Map
 
 # generated: 2026-10-24T00:00:00Z
+
 # Tarea 1: Utilidades de agrupación y totales por cliente|BR-PAY-016,BR-PAY-018|coder-agent|✅
+
 # Tarea 2: Modal de cuenta corriente con encabezado de totales|AC-001,AC-002,AC-003,AC-005|coder-agent|✅
+
 # Tarea 3: Extracto PDF vectorial sin datos de contacto|BR-PAY-019,BR-PAY-020,AC-004|coder-agent|✅
+
 # Tarea 4: Acceso desde cobros pendientes (directorio queda pendiente)|AF-03|coder-agent|◐
+
 # Tarea 5: Gating RBAC y lazy load|BR-PAY-021|coder-agent|✅
+
 # Tarea 6: Tests de agrupación, totales y extracto|AC-006|coder-agent|✅
