@@ -225,9 +225,7 @@ export interface SecurityPolicyConfig {
 }
 
 export interface SecurityConfig extends SecurityPolicyConfig {
-  pinAcceso?: string; // Legacy fallback
-  rolActual?: UserRole;
-  usuarioActivo?: AppUser | null;
+  pinAcceso?: string; // Legacy fallback: ya NO otorga acceso (ver AuthModal). Solo se conserva por compatibilidad con backups.
 }
 
 export interface BackupConfig {

@@ -1,14 +1,14 @@
 import React, { type Dispatch, type SetStateAction } from 'react';
-import { Lock, KeyRound, Server, AlertCircle } from 'lucide-react';
+import { Lock, KeyRound, Server, Users } from 'lucide-react';
 import { SecurityConfig } from '../types';
 
 export interface ConfigSecurityTabProps {
   secConfig: SecurityConfig;
   setSecConfig: Dispatch<SetStateAction<SecurityConfig>>;
-  pinChangeInput: string;
-  setPinChangeInput: (value: string) => void;
-  /** Hash del PIN predeterminado "1234", para detectar si sigue en uso (H1). */
-  defaultPinHash: string;
+  /** Navega a la pestaña "Usuarios & Sesión", dueña real de las credenciales. */
+  onGoToUsers: () => void;
+  /** false cuando la sesión activa no puede administrar usuarios. */
+  puedeGestionarUsuarios: boolean;
 }
 
 /**
@@ -19,12 +19,9 @@ export interface ConfigSecurityTabProps {
 export const ConfigSecurityTab: React.FC<ConfigSecurityTabProps> = ({
   secConfig,
   setSecConfig,
-  pinChangeInput,
-  setPinChangeInput,
-  defaultPinHash,
+  onGoToUsers,
+  puedeGestionarUsuarios,
 }) => {
-  const storedPinIsDefault =
-    secConfig.pinAcceso?.trim() === '1234' || (defaultPinHash && secConfig.pinAcceso === defaultPinHash);
 
   return (
     <div className="space-y-4">
@@ -46,30 +43,30 @@ export const ConfigSecurityTab: React.FC<ConfigSecurityTabProps> = ({
           </label>
         </div>
 
-        {secConfig.seguridadHabilitada && storedPinIsDefault && (
-          <div className="flex items-start gap-2 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-lg p-2.5 text-amber-800 dark:text-amber-200 text-[11px]">
-            <AlertCircle className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" />
-            <span>
-              <strong>PIN predeterminado sin cambiar.</strong> Estás usando «1234». No se permite activar el control de
-              acceso con el PIN predeterminado: ingresá un PIN nuevo en el campo de abajo antes de habilitar la
-              seguridad.
-            </span>
-          </div>
-        )}
+        <div className="flex items-start gap-2 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 rounded-lg p-2.5 text-blue-800 dark:text-blue-200 text-[11px]">
+          <KeyRound className="w-4 h-4 shrink-0 text-blue-600 dark:text-blue-400" />
+          <span>
+            <strong>El PIN es personal, no global.</strong> Cada usuario tiene su propio PIN rápido y se administra
+            en «Usuarios &amp; Sesión». El PIN único compartido de versiones anteriores ya no otorga acceso.
+          </span>
+        </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
           <div>
-            <label className="block text-slate-600 dark:text-slate-400 font-medium mb-1">
-              Cambiar PIN de Acceso (4 dígitos)
-            </label>
-            <input
-              type="password"
-              maxLength={4}
-              value={pinChangeInput}
-              onChange={(e) => setPinChangeInput(e.target.value.replace(/\D/g, ''))}
-              placeholder="**** (Dejar vacío para no cambiar)"
-              className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-3 py-1.5 text-xs text-slate-950 dark:text-slate-50 focus:outline-none focus:border-purple-500 shadow-2xs font-mono font-bold"
-            />
+            <button
+              type="button"
+              onClick={onGoToUsers}
+              disabled={!puedeGestionarUsuarios}
+              className="w-full flex items-center justify-center gap-1.5 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium text-xs px-3 py-1.5 rounded-md cursor-pointer transition-colors shadow-2xs"
+            >
+              <Users className="w-3.5 h-3.5" />
+              <span>Administrar usuarios y PIN</span>
+            </button>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+              {puedeGestionarUsuarios
+                ? 'Alta de operadores, cambio de contraseña y PIN por usuario.'
+                : 'Requiere una sesión de Administrador.'}
+            </p>
           </div>
           <div>
             <label className="block text-slate-600 dark:text-slate-400 font-medium mb-1">

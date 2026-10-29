@@ -4,13 +4,13 @@
 > Es el índice que conviene leer **antes** de abrir archivos: una fila por módulo
 > con su responsabilidad y sus exports principales.
 
-**Resumen:** 66 archivos · 20.260 líneas.
+**Resumen:** 67 archivos · 20.284 líneas.
 
 | Directorio | Archivos | Líneas |
 |:--|--:|--:|
 | `scripts/` | 5 | 563 |
-| `src/` | 3 | 1.076 |
-| `src/components/` | 21 | 9.268 |
+| `src/` | 3 | 1.075 |
+| `src/components/` | 21 | 9.257 |
 | `src/components/budget/` | 3 | 976 |
 | `src/components/common/` | 1 | 35 |
 | `src/components/config/` | 2 | 661 |
@@ -18,10 +18,10 @@
 | `src/components/grid/` | 3 | 841 |
 | `src/components/sales/` | 3 | 706 |
 | `src/config/` | 1 | 145 |
-| `src/data/` | 1 | 365 |
+| `src/data/` | 1 | 364 |
 | `src/hooks/` | 6 | 877 |
 | `src/services/` | 4 | 966 |
-| `src/utils/` | 11 | 2.561 |
+| `src/utils/` | 12 | 2.598 |
 
 ## `scripts/`
 
@@ -37,9 +37,9 @@
 
 | Archivo | Líneas | Responsabilidad | Exports |
 |:--|--:|:--|:--|
-| `App.tsx` | 757 | Orquestador principal: estado global, persistencia, efectos de sync y montaje de modales | (default) |
+| `App.tsx` | 758 | Orquestador principal: estado global, persistencia, efectos de sync y montaje de modales | (default) |
 | `main.tsx` | 11 | Punto de entrada de React (render del árbol en #root) | — |
-| `types.ts` | 308 | Modelo de dominio tipado (Sale, Budget, Customer, CatalogProduct, AppConfig, seguridad) | SaleProductItem, Sale, Customer, CatalogProduct, WooCommerceConfig, ColumnMapping, DateFilterRange, BudgetItem, Budget, AppUser, RolePermissions, SecurityPolicyConfig, SecurityConfig, BackupConfig, CompanyConfig, GoogleMapsUsage, AppConfig, EncargoItem, SaleChannel, PaymentMethod, ShippingMethod, ShippingStatus, InvoiceType, UserRole, AuthMode, PermissionLevel, ToolResourceId, ResourcePermissionMap, EncargoTipo, EncargoEstado |
+| `types.ts` | 306 | Modelo de dominio tipado (Sale, Budget, Customer, CatalogProduct, AppConfig, seguridad) | SaleProductItem, Sale, Customer, CatalogProduct, WooCommerceConfig, ColumnMapping, DateFilterRange, BudgetItem, Budget, AppUser, RolePermissions, SecurityPolicyConfig, SecurityConfig, BackupConfig, CompanyConfig, GoogleMapsUsage, AppConfig, EncargoItem, SaleChannel, PaymentMethod, ShippingMethod, ShippingStatus, InvoiceType, UserRole, AuthMode, PermissionLevel, ToolResourceId, ResourcePermissionMap, EncargoTipo, EncargoEstado |
 
 ## `src/components/`
 
@@ -51,8 +51,8 @@
 | `ConfigBackupsTab.tsx` | 242 | Pestaña Copias de seguridad: backup automático, copia manual y restauración | ConfigBackupsTab, ConfigBackupsTabProps |
 | `ConfigEmpresaTab.tsx` | 351 | Pestaña Empresa / Firma: identidad, logo, datos fiscales y puntos de venta | ConfigEmpresaTab, ConfigEmpresaTabProps |
 | `ConfigGeneralTab.tsx` | 795 | Pestaña General & Ventas: canales, pagos, envíos, Andreani, numeración e importación | ConfigGeneralTab, ConfigGeneralTabProps |
-| `ConfigModal.tsx` | 610 | Configuración del sistema: shell del modal, estado compartido, guardado y pestañas | ConfigModal |
-| `ConfigSecurityTab.tsx` | 169 | Pestaña Seguridad & PIN: control de acceso, inactividad y restricciones por rol | ConfigSecurityTab, ConfigSecurityTabProps |
+| `ConfigModal.tsx` | 602 | Configuración del sistema: shell del modal, estado compartido, guardado y pestañas | ConfigModal |
+| `ConfigSecurityTab.tsx` | 166 | Pestaña Seguridad & PIN: control de acceso, inactividad y restricciones por rol | ConfigSecurityTab, ConfigSecurityTabProps |
 | `CustomerDirectoryModal.tsx` | 507 | Directorio de clientes: búsqueda, historial de compras y alta de clientes | CustomerDirectoryModal |
 | `ExportModal.tsx` | 125 | Exportador de ventas a CSV por rango y canal | ExportModal |
 | `Header.tsx` | 272 | Barra superior: marca, KPIs rápidos, accesos a modales, tema y bloqueo de sesión | Header |
@@ -121,7 +121,7 @@
 
 | Archivo | Líneas | Responsabilidad | Exports |
 |:--|--:|:--|:--|
-| `initialData.ts` | 365 | Datos semilla opcionales (demo), configuración inicial y empresa por defecto | DEMO_SEED_ENABLED, INITIAL_DEMO_CUSTOMERS, INITIAL_COMPANY_CONFIG, INITIAL_CONFIG, INITIAL_BUDGETS, INITIAL_SALES, INITIAL_CATALOG, INITIAL_WOO_CONFIG |
+| `initialData.ts` | 364 | Datos semilla opcionales (demo), configuración inicial y empresa por defecto | DEMO_SEED_ENABLED, INITIAL_DEMO_CUSTOMERS, INITIAL_COMPANY_CONFIG, INITIAL_CONFIG, INITIAL_BUDGETS, INITIAL_SALES, INITIAL_CATALOG, INITIAL_WOO_CONFIG |
 
 ## `src/hooks/`
 
@@ -157,6 +157,7 @@
 | `logger.ts` | 129 | Motor de auditoría (localStorage + eventos) con filtros y exportación | getSystemLogs, addSystemLog, clearSystemLogs, filterSystemLogs, exportLogsJSON, exportLogsCSV, LogEntry, LogFilterOptions, LogLevel |
 | `numberToWords.ts` | 104 | Conversión de importes a texto (para comprobantes) | numberToWordsSpanish |
 | `security.ts` | 107 | Hash de PIN (SHA-256), verificación retrocompatible y escalada de bloqueo | PIN_SALT, PASSWORD_SALT, isHashedPin, authLockWaitMs, hashPin, verifyPin, hashPassword, verifyPassword |
+| `securityAccess.ts` | 37 | — | canManageSecurity, hayAdminConCredencialesSeguras, AdminCredencialInput |
 | `wooCommerceApi.ts` | 554 | Cliente REST de WooCommerce: productos y clientes paginados | buildWooApiUrl, transformWooProduct, transformWooCustomer, fetchWithCorsProxy, fetchWooCommerceProducts, fetchWooCommerceCustomers, WooProductDTO, WooCustomerDTO |
 
 ## Documentación de referencia

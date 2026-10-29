@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { X, Settings, Sliders, Building2, ShieldCheck, Database, Check, Users, Shield } from 'lucide-react';
 import { AppConfig, SecurityConfig, GoogleMapsUsage, UserRole } from '../types';
 import { INITIAL_COMPANY_CONFIG } from '../data/initialData';
-import { hashPin, isHashedPin } from '../utils/security';
+import { hashPin, isHashedPin, verifyPin, verifyPassword } from '../utils/security';
 import { BackupItem, listAllBackups, runBackup, restoreBackup, deleteFromIndexedDb } from '../utils/backupService';
 import { addSystemLog } from '../utils/logger';
-import { usePermissions } from '../hooks/usePermissions';
+import { canManageSecurity, hayAdminConCredencialesSeguras } from '../utils/securityAccess';
+import { DEFAULT_ADMIN_CREDENTIALS, ensureDefaultAdminExists } from '../services/userService';
 import { ConfigGeneralTab } from './ConfigGeneralTab';
 import { ConfigEmpresaTab } from './ConfigEmpresaTab';
 import { ConfigSecurityTab } from './ConfigSecurityTab';
@@ -37,8 +38,10 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
   currentRole,
 }) => {
   const [activeTab, setActiveTab] = useState<ConfigTab>('general');
-  const { canWrite } = usePermissions(currentRole ?? 'OPERADOR');
-  const canManageSecurity = currentRole === 'ADMIN' || canWrite('seguridad');
+  // FIX-AUTH-003: el rol proviene de la sesión autenticada (prop `currentRole`).
+  // Antes se leía `config.seguridad.rolActual`, un campo que nunca se escribía,
+  // por lo que el panel de usuarios quedaba inaccesible incluso para un ADMIN.
+  const puedeGestionarSeguridad = canManageSecurity(currentRole, Boolean(config.seguridad?.seguridadHabilitada));
 
   const defaultEmpresa = config.empresa ||
     INITIAL_COMPANY_CONFIG || {
@@ -121,19 +124,8 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
   };
 
   const [secConfig, setSecConfig] = useState<SecurityConfig>(config.seguridad || defaultSec);
-  // PIN field starts empty; the stored value is a hash and is never shown.
-  const [pinChangeInput, setPinChangeInput] = useState('');
-  // Hash del PIN predeterminado "1234" (H1): permite detectar si sigue en uso sin mostrar nada.
-  const [defaultPinHash, setDefaultPinHash] = useState<string>('');
-  useEffect(() => {
-    let active = true;
-    hashPin('1234').then((h) => {
-      if (active) setDefaultPinHash(h);
-    });
-    return () => {
-      active = false;
-    };
-  }, []);
+  // FIX-AUTH-003: el PIN legado ya no se edita desde esta pestaña. El PIN real es
+  // por usuario (`AppUser.pinHash`) y se administra en "Usuarios & Sesión".
 
   // Sync only the non-credential field tiempoInactividadMinutos live to config.seguridad
   // so the auto-lock timer (useSecurityRole) respects the admin's configured timeout
@@ -297,34 +289,35 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
 
   const handleSaveAll = async () => {
     try {
-      const newPin = pinChangeInput.trim();
+      // H1 - Endurecimiento de PIN: persistir SIEMPRE solo el hash, nunca texto
+      // plano. El PIN legado ya no se edita desde la UI (FIX-AUTH-003): se conserva
+      // el valor existente y, si estaba en claro, se migra a hash al guardar.
+      const pinAcceso = isHashedPin(secConfig.pinAcceso)
+        ? secConfig.pinAcceso
+        : await hashPin(secConfig.pinAcceso || DEFAULT_ADMIN_CREDENTIALS);
 
-      // H1 - Endurecimiento de PIN:
-      // 1) Persistir SIEMPRE solo el hash, nunca texto plano. Un PIN legacy en
-      //    claro (ej. "1234" de instalaciones previas) se migra a hash al guardar.
-      let pinAcceso: string;
-      if (newPin) {
-        pinAcceso = await hashPin(newPin);
-      } else if (isHashedPin(secConfig.pinAcceso)) {
-        pinAcceso = secConfig.pinAcceso; // hash ya persistido: se mantiene intacto
-      } else {
-        pinAcceso = await hashPin(secConfig.pinAcceso || '1234');
-      }
-
-      // 2) No permitir HABILITAR la seguridad dejando el PIN predeterminado "1234":
-      //    se exige fijar un PIN nuevo antes de activar el control de acceso.
+      // 2) FIX-AUTH-003: para HABILITAR la seguridad tiene que existir al menos un
+      //    ADMIN con credenciales propias. El guard anterior miraba el PIN legado
+      //    (`pinAcceso`), que ya no otorga acceso; ahora se verifica contra las
+      //    cuentas reales de usuario.
       const wasSecurityEnabled = !!config.seguridad?.seguridadHabilitada;
       const willEnableSecurity = secConfig.seguridadHabilitada && !wasSecurityEnabled;
       if (willEnableSecurity) {
-        const defaultHash = await hashPin('1234');
-        const pinIsDefault =
-          newPin === '1234' || (!newPin && (secConfig.pinAcceso?.trim() === '1234' || pinAcceso === defaultHash));
-        if (pinIsDefault) {
+        const usuarios = await ensureDefaultAdminExists();
+        const adminsActivos = usuarios.filter((u) => u.rol === 'ADMIN' && u.activo);
+        const credenciales = await Promise.all(
+          adminsActivos.map(async (u) => ({
+            passwordEsDefault: await verifyPassword(DEFAULT_ADMIN_CREDENTIALS, u.passwordHash),
+            pinEsDefault: u.pinHash ? await verifyPin(DEFAULT_ADMIN_CREDENTIALS, u.pinHash) : false,
+          }))
+        );
+        if (!hayAdminConCredencialesSeguras(credenciales)) {
           alert(
-            'Para HABILITAR la seguridad primero debés establecer un PIN nuevo (no puede ser el predeterminado "1234").\n\nIngresá el nuevo PIN en "Cambiar PIN de Acceso" e intentá de nuevo.'
+            'Para HABILITAR el control de acceso necesitás al menos un administrador con credenciales propias.\n\n' +
+              'Andá a "Usuarios & Sesión" y cambiá la contraseña y el PIN del administrador (no pueden ser los predeterminados).'
           );
-          setPinChangeInput('');
-          return; // No se guarda nada hasta que el PIN sea seguro
+          setActiveTab('users');
+          return; // No se guarda nada hasta que haya credenciales seguras
         }
       }
 
@@ -426,7 +419,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
             <span>Empresa / Firma</span>
           </button>
 
-          {canManageSecurity && (
+          {puedeGestionarSeguridad && (
             <button
               type="button"
               onClick={() => setActiveTab('users')}
@@ -441,7 +434,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
             </button>
           )}
 
-          {canManageSecurity && (
+          {puedeGestionarSeguridad && (
             <button
               type="button"
               onClick={() => setActiveTab('permissions')}
@@ -544,23 +537,22 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
             />
           )}
 
-          {activeTab === 'users' && canManageSecurity && (
+          {activeTab === 'users' && puedeGestionarSeguridad && (
             <ConfigUsersTab
               secConfig={secConfig}
               setSecConfig={setSecConfig}
-              currentRole={config.seguridad?.rolActual}
+              currentRole={currentRole}
             />
           )}
 
-          {activeTab === 'permissions' && canManageSecurity && <ConfigPermissionsTab />}
+          {activeTab === 'permissions' && puedeGestionarSeguridad && <ConfigPermissionsTab />}
 
           {activeTab === 'security' && (
             <ConfigSecurityTab
               secConfig={secConfig}
               setSecConfig={setSecConfig}
-              pinChangeInput={pinChangeInput}
-              setPinChangeInput={setPinChangeInput}
-              defaultPinHash={defaultPinHash}
+              onGoToUsers={() => setActiveTab('users')}
+              puedeGestionarUsuarios={puedeGestionarSeguridad}
             />
           )}
 

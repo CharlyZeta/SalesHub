@@ -674,6 +674,7 @@ export default function App() {
             onSaveConfig={handleSaveConfig}
             onOpenImport={() => setIsImportOpen(true)}
             onRestoreBackup={handleRestoreState}
+            currentRole={currentRole}
             fullAppState={{
               sales,
               catalog,

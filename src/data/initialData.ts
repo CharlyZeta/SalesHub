@@ -59,7 +59,6 @@ export const INITIAL_CONFIG: AppConfig = {
     modoProduccionVPS: false,
     bloquearSincronizacionWooCommerce: false,
     bloquearBorradoLogs: false,
-    rolActual: 'ADMIN'
   },
   googleMapsApiKey: '',
   googleMapsMonthlyLimit: 2500,
