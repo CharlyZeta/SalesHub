@@ -29,6 +29,26 @@ export interface SaleProductItem {
   descuento?: number; // Porcentaje de descuento (0 a 100)
 }
 
+/** Situación de cobro de una venta. Siempre DERIVADA de `Sale.pagos` (FEAT-PAY-001). */
+export type PaymentStatus = 'pagado' | 'parcial' | 'pendiente';
+
+/**
+ * Un pago recibido sobre una venta. Las ventas se cobran en partes, así que cada
+ * entrega es un movimiento propio con fecha, medio y responsable.
+ */
+export interface SalePayment {
+  id: string;
+  /** Fecha del pago (ISO YYYY-MM-DD). */
+  fecha: string;
+  monto: number;
+  medio: PaymentMethod;
+  nota?: string;
+  /** Momento exacto del alta del registro (ISO). */
+  registradoEn: string;
+  /** Usuario que registró el pago (BR-AUTH-004). */
+  registradoPor?: string;
+}
+
 export interface Sale {
   id: string;
   fecha: string; // ISO String YYYY-MM-DD
@@ -68,6 +88,15 @@ export interface Sale {
   creadoEn: string;
   andreaniStatus?: string;
   andreaniLastCheck?: string;
+  /**
+   * Libro de pagos de la venta (FEAT-PAY-001).
+   *
+   * IMPORTANTE: la diferencia entre `undefined` y `[]` es semántica.
+   * - `undefined` ⇒ venta anterior al módulo de pagos ⇒ se considera PAGADA.
+   * - `[]`        ⇒ venta nueva sin cobros ⇒ PENDIENTE.
+   * Por eso una venta nueva siempre debe persistirse con `pagos: []`.
+   */
+  pagos?: SalePayment[];
 }
 
 export interface Customer {

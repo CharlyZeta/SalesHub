@@ -7,6 +7,10 @@ import { GridRow, GridVisibleColumns } from './grid/GridRow';
 import { GridToolbar } from './grid/GridToolbar';
 import { GridPagination } from './grid/GridPagination';
 import { usePermissions } from '../hooks/usePermissions';
+import { SalePaymentsModal, NuevoPagoForm } from './payments/SalePaymentsModal';
+import { agregarPago, crearPago, getPagos, quitarPago } from '../utils/salePayments';
+import { getActiveSessionUser } from '../services/userService';
+import { addSystemLog } from '../utils/logger';
 
 interface SpreadsheetGridProps {
   sales: Sale[];
@@ -79,6 +83,7 @@ export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
     clienteNombre: true,
     productoNombre: true,
     montoTotal: true,
+    estadoPago: true,
     numeroFactura: true,
     metodoPago: true,
     canal: true,
@@ -98,6 +103,36 @@ export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
 
   // Copy feedback
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // Libro de pagos (FEAT-PAY-001). Se guarda el ID, no la venta, para que el modal
+  // siempre refleje el estado actualizado del libro.
+  const [paymentsSaleId, setPaymentsSaleId] = useState<string | null>(null);
+  const paymentsSale = useMemo(() => sales.find((s) => s.id === paymentsSaleId) ?? null, [sales, paymentsSaleId]);
+
+  const handleAddPayment = (input: NuevoPagoForm) => {
+    if (!paymentsSale) return;
+    const usuario = getActiveSessionUser()?.username ?? 'sistema';
+    const pago = crearPago({ ...input, registradoPor: usuario }, getPagos(paymentsSale));
+    const actualizada = agregarPago(paymentsSale, pago);
+    onUpdateInlineSale(paymentsSale.id, { pagos: actualizada.pagos });
+    addSystemLog(
+      'INFO',
+      'Pagos',
+      `Pago registrado en venta ${paymentsSale.numeroFactura || paymentsSale.id}: ${formatCurrency(pago.monto)} (${pago.medio}) por ${usuario}`
+    );
+  };
+
+  const handleRemovePayment = (pagoId: string) => {
+    if (!paymentsSale) return;
+    if (!window.confirm('¿Eliminar este pago? El saldo de la venta se recalcula.')) return;
+    const actualizada = quitarPago(paymentsSale, pagoId);
+    onUpdateInlineSale(paymentsSale.id, { pagos: actualizada.pagos });
+    addSystemLog(
+      'WARN',
+      'Pagos',
+      `Pago eliminado de venta ${paymentsSale.numeroFactura || paymentsSale.id}: ${pagoId}`
+    );
+  };
 
   // Andreani Sync Handling
   const [isSyncingAndreani, setIsSyncingAndreani] = useState(false);
@@ -399,6 +434,12 @@ export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
                 </th>
               )}
 
+              {visibleColumns.estadoPago && (
+                <th className="p-2.5 whitespace-nowrap min-w-[150px]">
+                  <span>Estado de pago</span>
+                </th>
+              )}
+
               {visibleColumns.numeroFactura && (
                 <th
                   onClick={() => handleSort('numeroFactura')}
@@ -493,6 +534,7 @@ export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
                   onEditSale={onEditSale}
                   onDeleteSale={onDeleteSale}
                   onPrintRemito={onPrintRemito}
+                  onOpenPayments={(s) => setPaymentsSaleId(s.id)}
                 />
               ))
             )}
@@ -530,6 +572,16 @@ export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
           </span>
         </div>
       </div>
+
+      {paymentsSale && (
+        <SalePaymentsModal
+          sale={paymentsSale}
+          onClose={() => setPaymentsSaleId(null)}
+          onAdd={handleAddPayment}
+          onRemove={handleRemovePayment}
+          readOnly={effectiveReadOnly}
+        />
+      )}
     </div>
   );
 };

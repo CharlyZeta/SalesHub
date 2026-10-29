@@ -1,4 +1,5 @@
 import { Sale } from '../types';
+import { ESTADO_PAGO_LABEL, getEstadoPago, getSaldo, getTotalCobrado } from './salePayments';
 
 /**
  * Formats a number to Argentine Pesos / local currency ($ 1.250.000,00 or $ 1.250.000)
@@ -210,6 +211,9 @@ export function exportSalesToCSV(sales: Sale[], filename = 'ventas_exportadas.cs
     'Apellido Cliente',
     'Productos',
     'Monto Total',
+    'Total Cobrado',
+    'Saldo Pendiente',
+    'Estado de Pago',
     'Nº Factura',
     'Método de Pago',
     'Canal',
@@ -230,6 +234,9 @@ export function exportSalesToCSV(sales: Sale[], filename = 'ventas_exportadas.cs
       sale.clienteApellido || '',
       productSummary,
       sale.montoTotal,
+      getTotalCobrado(sale),
+      getSaldo(sale),
+      ESTADO_PAGO_LABEL[getEstadoPago(sale)],
       sale.numeroFactura || '',
       sale.metodoPago || '',
       sale.canal || '',

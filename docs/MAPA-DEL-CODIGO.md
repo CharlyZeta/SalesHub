@@ -4,24 +4,25 @@
 > Es el índice que conviene leer **antes** de abrir archivos: una fila por módulo
 > con su responsabilidad y sus exports principales.
 
-**Resumen:** 67 archivos · 20.284 líneas.
+**Resumen:** 70 archivos · 20.800 líneas.
 
 | Directorio | Archivos | Líneas |
 |:--|--:|--:|
 | `scripts/` | 5 | 563 |
-| `src/` | 3 | 1.075 |
-| `src/components/` | 21 | 9.257 |
+| `src/` | 3 | 1.104 |
+| `src/components/` | 21 | 9.343 |
 | `src/components/budget/` | 3 | 976 |
 | `src/components/common/` | 1 | 35 |
 | `src/components/config/` | 2 | 661 |
 | `src/components/encargos/` | 2 | 1.220 |
-| `src/components/grid/` | 3 | 841 |
+| `src/components/grid/` | 3 | 862 |
+| `src/components/payments/` | 2 | 258 |
 | `src/components/sales/` | 3 | 706 |
 | `src/config/` | 1 | 145 |
 | `src/data/` | 1 | 364 |
 | `src/hooks/` | 6 | 877 |
 | `src/services/` | 4 | 966 |
-| `src/utils/` | 12 | 2.598 |
+| `src/utils/` | 13 | 2.720 |
 
 ## `scripts/`
 
@@ -39,7 +40,7 @@
 |:--|--:|:--|:--|
 | `App.tsx` | 758 | Orquestador principal: estado global, persistencia, efectos de sync y montaje de modales | (default) |
 | `main.tsx` | 11 | Punto de entrada de React (render del árbol en #root) | — |
-| `types.ts` | 306 | Modelo de dominio tipado (Sale, Budget, Customer, CatalogProduct, AppConfig, seguridad) | SaleProductItem, Sale, Customer, CatalogProduct, WooCommerceConfig, ColumnMapping, DateFilterRange, BudgetItem, Budget, AppUser, RolePermissions, SecurityPolicyConfig, SecurityConfig, BackupConfig, CompanyConfig, GoogleMapsUsage, AppConfig, EncargoItem, SaleChannel, PaymentMethod, ShippingMethod, ShippingStatus, InvoiceType, UserRole, AuthMode, PermissionLevel, ToolResourceId, ResourcePermissionMap, EncargoTipo, EncargoEstado |
+| `types.ts` | 335 | Modelo de dominio tipado (Sale, Budget, Customer, CatalogProduct, AppConfig, seguridad) | SaleProductItem, SalePayment, Sale, Customer, CatalogProduct, WooCommerceConfig, ColumnMapping, DateFilterRange, BudgetItem, Budget, AppUser, RolePermissions, SecurityPolicyConfig, SecurityConfig, BackupConfig, CompanyConfig, GoogleMapsUsage, AppConfig, EncargoItem, SaleChannel, PaymentMethod, ShippingMethod, ShippingStatus, InvoiceType, PaymentStatus, UserRole, AuthMode, PermissionLevel, ToolResourceId, ResourcePermissionMap, EncargoTipo, EncargoEstado |
 
 ## `src/components/`
 
@@ -60,10 +61,10 @@
 | `KpiSummary.tsx` | 327 | Banner de KPIs mensuales, filtro por mes/canal y configuración de tarjetas visibles | KpiSummary |
 | `ProductSearchPicker.tsx` | 238 | Buscador autocompletable de productos del catálogo | ProductSearchPicker, ProductSearchPickerProps |
 | `RemitoModal.tsx` | 534 | Remito de entrega/despacho: datos de empresa, transporte, PDF e impresión | RemitoModal |
-| `SaleFormModal.tsx` | 653 | Alta/edición de ventas: cliente, ítems con descuento, facturación, envío y borrador autoguardado | SaleFormModal |
+| `SaleFormModal.tsx` | 687 | Alta/edición de ventas: cliente, ítems con descuento, facturación, envío y borrador autoguardado | SaleFormModal |
 | `SaleLocationMap.tsx` | 270 | Mapa Leaflet/OSM con geocodificación Nominatim y pin arrastrable | SaleLocationMap |
 | `SendBudgetModal.tsx` | 373 | Envío omnicanal de presupuestos por WhatsApp (wa.me) y correo (mailto) | SendBudgetModal |
-| `SpreadsheetGrid.tsx` | 536 | Planilla interactiva de ventas: edición inline, filtros, paginación y tracking Andreani | SpreadsheetGrid |
+| `SpreadsheetGrid.tsx` | 588 | Planilla interactiva de ventas: edición inline, filtros, paginación y tracking Andreani | SpreadsheetGrid |
 | `SystemLogsModal.tsx` | 425 | Consola de auditoría: filtros por nivel/categoría/fecha y exportación | SystemLogsModal |
 | `WooCommerceModal.tsx` | 863 | Sincronización WooCommerce: credenciales, catálogo, clientes y programación | WooCommerceModal |
 
@@ -100,8 +101,15 @@
 | Archivo | Líneas | Responsabilidad | Exports |
 |:--|--:|:--|:--|
 | `GridPagination.tsx` | 82 | — | GridPagination, GridPaginationProps |
-| `GridRow.tsx` | 520 | Helper badge color for sales channel | GridRow, GridVisibleColumns, GridRowProps |
+| `GridRow.tsx` | 541 | Helper badge color for sales channel | GridRow, GridVisibleColumns, GridRowProps |
 | `GridToolbar.tsx` | 239 | — | GridToolbar, GridToolbarProps |
+
+## `src/components/payments/`
+
+| Archivo | Líneas | Responsabilidad | Exports |
+|:--|--:|:--|:--|
+| `PaymentStatusBadge.tsx` | 43 | — | PaymentStatusBadge |
+| `SalePaymentsModal.tsx` | 215 | — | SalePaymentsModal, NuevoPagoForm, SalePaymentsModalProps |
 
 ## `src/components/sales/`
 
@@ -152,10 +160,11 @@
 | `backupService.ts` | 333 | Backups en IndexedDB y disco (API /api/backup) con rotación | IDB_RETENTION, saveToIndexedDb, listFromIndexedDb, getFromIndexedDb, deleteFromIndexedDb, pruneIndexedDbBackups, saveToBackend, listFromBackend, getFromBackend, runBackup, listAllBackups, restoreBackup, checkAndTriggerAutoBackup, FullAppState, BackupItem |
 | `budgetDelivery.ts` | 156 | Plantillas de envío de presupuestos (WhatsApp/correo) y normalización de teléfonos | formatWhatsAppPhone, generateBudgetWhatsAppText, generateBudgetEmailSubject, generateBudgetEmailBody, openWhatsAppForBudget, openEmailForBudget |
 | `customerIndex.ts` | 53 | — | buildSalesCustomerIndex, filterCustomers, CustomerSalesSummary |
-| `formatters.ts` | 486 | Formateo ARS/fechas, validaciones de venta, IDs y sanitización de CSV | ARGENTINE_PROVINCES, DEFAULT_PROVINCE, ARGENTINE_PROVINCE_CODES, formatCurrency, formatDate, parseDateToISO, parseAmountString, validateRequiredSaleFields, getCurrentMonthISO, generateSaleId, getMonthYearLabel, exportSalesToCSV, normalizePersonName, resolveArgentineProvince, parseCombinedAddress, parseCustomerIdentityFromWoo, RecordValidationResult |
+| `formatters.ts` | 493 | Formateo ARS/fechas, validaciones de venta, IDs y sanitización de CSV | ARGENTINE_PROVINCES, DEFAULT_PROVINCE, ARGENTINE_PROVINCE_CODES, formatCurrency, formatDate, parseDateToISO, parseAmountString, validateRequiredSaleFields, getCurrentMonthISO, generateSaleId, getMonthYearLabel, exportSalesToCSV, normalizePersonName, resolveArgentineProvince, parseCombinedAddress, parseCustomerIdentityFromWoo, RecordValidationResult |
 | `googleMapsService.ts` | 319 | — | getCurrentMonthKey, getGoogleMapsUsageInfo, checkGoogleMapsQuota, recordGoogleMapsRequest, resetGoogleMapsUsage, getStoredAppConfig, saveStoredAppConfig, incrementStoredGoogleMapsUsage, checkStoredGoogleMapsQuota, testGoogleMapsApiKey, GoogleMapsTestResult, GoogleMapsUsageInfo |
 | `logger.ts` | 129 | Motor de auditoría (localStorage + eventos) con filtros y exportación | getSystemLogs, addSystemLog, clearSystemLogs, filterSystemLogs, exportLogsJSON, exportLogsCSV, LogEntry, LogFilterOptions, LogLevel |
 | `numberToWords.ts` | 104 | Conversión de importes a texto (para comprobantes) | numberToWordsSpanish |
+| `salePayments.ts` | 115 | — | ESTADO_PAGO_LABEL, round2, esVentaHistorica, getPagos, getTotalCobrado, getSaldo, getEstadoPago, validarPago, generatePaymentId, crearPago, agregarPago, quitarPago, PaymentValidationResult, NuevoPagoInput |
 | `security.ts` | 107 | Hash de PIN (SHA-256), verificación retrocompatible y escalada de bloqueo | PIN_SALT, PASSWORD_SALT, isHashedPin, authLockWaitMs, hashPin, verifyPin, hashPassword, verifyPassword |
 | `securityAccess.ts` | 37 | — | canManageSecurity, hayAdminConCredencialesSeguras, AdminCredencialInput |
 | `wooCommerceApi.ts` | 554 | Cliente REST de WooCommerce: productos y clientes paginados | buildWooApiUrl, transformWooProduct, transformWooCustomer, fetchWithCorsProxy, fetchWooCommerceProducts, fetchWooCommerceCustomers, WooProductDTO, WooCustomerDTO |

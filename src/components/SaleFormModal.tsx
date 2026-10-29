@@ -24,6 +24,7 @@ import { addSystemLog } from '../utils/logger';
 import { SaleCustomerSection } from './sales/SaleCustomerSection';
 import { SaleProductsSection } from './sales/SaleProductsSection';
 import { SaleBillingSection } from './sales/SaleBillingSection';
+import { crearPago } from '../utils/salePayments';
 
 /** Clave del borrador autoguardado de la venta en curso (sobrevive recargas). */
 const SALE_DRAFT_KEY = 'app_sale_draft_v1';
@@ -118,6 +119,9 @@ const SaleFormModalInner: React.FC<SaleFormModalProps> = ({
   const [numeroSeguimiento, setNumeroSeguimiento] = useState(existingSale?.numeroSeguimiento || '');
   const [estadoEnvio, setEstadoEnvio] = useState<ShippingStatus>(existingSale?.estadoEnvio || 'Entregado');
   const [notas, setNotas] = useState(existingSale?.notas || '');
+  // FEAT-PAY-001: en mostrador la venta se cobra en el acto. Si se destilda, la
+  // venta queda Pendiente de pago y se registran entregas parciales después.
+  const [cobradaEnElActo, setCobradaEnElActo] = useState(true);
 
   const [envioDomicilioDiferente, setEnvioDomicilioDiferente] = useState(
     existingSale?.envioDomicilioDiferente || false
@@ -418,6 +422,14 @@ const SaleFormModalInner: React.FC<SaleFormModalProps> = ({
         entregaProvincia: envioDomicilioDiferente ? entregaProvincia.trim() || DEFAULT_PROVINCE : '',
         entregaCoordenadas: envioDomicilioDiferente ? entregaCoordenadas : undefined,
         notas,
+        // Libro de pagos: una venta existente conserva su libro tal cual (incluido
+        // `undefined` en ventas históricas, que siguen contando como pagadas).
+        // Una venta nueva arranca con el cobro en el acto o vacío (= pendiente).
+        pagos: existingSale
+          ? existingSale.pagos
+          : cobradaEnElActo
+            ? [crearPago({ monto: montoTotalCalculado, medio: metodoPago, nota: 'Cobro en el acto' })]
+            : [],
         creadoEn: existingSale ? existingSale.creadoEn : new Date().toISOString(),
       };
 
@@ -590,6 +602,28 @@ const SaleFormModalInner: React.FC<SaleFormModalProps> = ({
                 setNotas={setNotas}
                 generateDefaultInvoiceNumber={generateDefaultInvoiceNumber}
               />
+
+              {/* Cobro en el acto (FEAT-PAY-001) */}
+              {!existingSale && (
+                <div className="bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900 rounded-xl p-3 space-y-1.5">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={cobradaEnElActo}
+                      onChange={(e) => setCobradaEnElActo(e.target.checked)}
+                      className="w-4 h-4 text-emerald-600 rounded"
+                    />
+                    <span className="font-semibold text-slate-700 dark:text-slate-300 text-xs">
+                      Cobrada en el acto (registra el pago por el total)
+                    </span>
+                  </label>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    {cobradaEnElActo
+                      ? 'La venta queda Pagada con el medio de pago elegido.'
+                      : 'La venta queda Pendiente de pago. Después registrá las entregas parciales desde el ícono de billetera en la planilla.'}
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Mapa (Right panel) */}

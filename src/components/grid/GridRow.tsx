@@ -19,10 +19,13 @@ import {
   MessageSquare,
   Instagram,
   Phone,
+  Wallet,
 } from 'lucide-react';
 import { Sale, PaymentMethod, SaleChannel } from '../../types';
 import { formatCurrency, formatDate, validateRequiredSaleFields } from '../../utils/formatters';
 import { getAndreaniStatusConfig } from '../../utils/andreaniStatusMapper';
+import { getEstadoPago, getSaldo } from '../../utils/salePayments';
+import { PaymentStatusBadge } from '../payments/PaymentStatusBadge';
 
 export interface GridVisibleColumns {
   fecha: boolean;
@@ -30,6 +33,7 @@ export interface GridVisibleColumns {
   clienteNombre: boolean;
   productoNombre: boolean;
   montoTotal: boolean;
+  estadoPago: boolean;
   numeroFactura: boolean;
   metodoPago: boolean;
   canal: boolean;
@@ -55,6 +59,7 @@ export interface GridRowProps {
   onEditSale: (sale: Sale) => void;
   onDeleteSale: (id: string) => void;
   onPrintRemito: (sale: Sale) => void;
+  onOpenPayments?: (sale: Sale) => void;
 }
 
 // Helper badge color for sales channel
@@ -204,6 +209,7 @@ export const GridRow: React.FC<GridRowProps> = React.memo(
     onEditSale,
     onDeleteSale,
     onPrintRemito,
+    onOpenPayments,
   }) => {
     const firstProduct = sale.productos[0];
     const productCount = sale.productos.length;
@@ -309,6 +315,13 @@ export const GridRow: React.FC<GridRowProps> = React.memo(
                 {formatCurrency(sale.montoTotal)}
               </span>
             )}
+          </td>
+        )}
+
+        {/* Estado de pago (FEAT-PAY-001): píldora discreta, nunca fila pintada */}
+        {visibleColumns.estadoPago && (
+          <td className="p-2.5 whitespace-nowrap">
+            <PaymentStatusBadge status={getEstadoPago(sale)} saldo={getSaldo(sale)} />
           </td>
         )}
 
@@ -487,6 +500,14 @@ export const GridRow: React.FC<GridRowProps> = React.memo(
                 title="Imprimir Remito Oficial"
               >
                 <Printer className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => onOpenPayments?.(sale)}
+                className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 rounded transition-colors"
+                title="Pagos y saldo de la venta"
+              >
+                <Wallet className="w-3.5 h-3.5" />
               </button>
               {!readOnly && (
                 <>
