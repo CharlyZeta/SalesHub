@@ -368,7 +368,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-3xl rounded-xl shadow-2xl overflow-hidden flex flex-col my-auto max-h-[92vh]">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-6xl rounded-xl shadow-2xl overflow-hidden flex flex-col my-auto max-h-[92vh]">
         {/* Header */}
         <div className="bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 px-5 py-3.5 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
@@ -391,7 +391,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({
         </div>
 
         {/* Tab Navigation */}
-        <div className="bg-slate-100 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 px-5 py-1.5 flex gap-2 overflow-x-auto">
+        <div className="bg-slate-100 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 px-5 py-2 flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={() => setActiveTab('general')}
