@@ -1,8 +1,11 @@
 name: CI/CD Pipeline - SalesHub
 
 on:
-  push:
-    branches: [master, main]
+  # Desarrollo local sin despliegue (FIX-CI-001): el workflow NO se dispara en
+  # cada push, para no generar un run ni una notificación por commit. El badge
+  # conserva el último resultado verde. Se ejecuta a mano o al abrir un PR.
+  # Si el proyecto se publica, volver a agregar `push: branches: [master, main]`.
+  workflow_dispatch:
   pull_request:
     branches: [master, main]
 
