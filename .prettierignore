@@ -21,3 +21,10 @@ docs/MAPA-DEL-CODIGO.md
 # metodología. Mismo criterio que el mapa del código: lo generado/estructurado no
 # se reformatea. Ver FIX-CI-003.
 contracts/
+
+# Salida y memoria de docu (FIX-DOC-001): son documentos generados, igual
+# criterio que el mapa del código. Reformatearlos haría divergir lo generado de
+# lo que la herramienta vuelve a escribir en cada corrida.
+docs/generated/
+.docu/
+PROBAR-CON-OTRO-AGENTE.md

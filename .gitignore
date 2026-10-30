@@ -38,6 +38,15 @@ scratch/
 # Archivos temporales de mensajes de commit
 commit-msg*.txt
 commit-message*.txt
+
+# docu: documentación generada y memoria de frescura (FIX-DOC-001).
+# No son fuente del proyecto: se regeneran con `docu gen` y alimentan el MCP.
+docs/generated/
+.docu/
+
+# Copia local de la guía de Docu usada para probarlo en este repo.
+# La copia canónica vive en E:\Propios\Docu\.
+PROBAR-CON-OTRO-AGENTE.md
 # Internal AI agent cache/logs
 graphify-out/
 .metadata.json
