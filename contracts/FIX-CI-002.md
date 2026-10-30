@@ -67,12 +67,24 @@ aborta con un mensaje que explica qué falló y cómo saltearlo.
 - [x] _¿Instalarlo a mano o por script?_ Por `install-hooks.mjs`, para que un clon nuevo lo tenga
       sin pasos extra (el `prepare` ya corre en `npm install`).
 
+## Evidencia de verificación (2026-10-30)
+
+Los dos caminos de escape se probaron **sin ensuciar el repo real**: el bypass contra un remoto
+bare de descarte en `%TEMP%`, y el clon sin dependencias en un repo git vacío aparte.
+
+| AC     | Prueba                                                  | Resultado                                                                        |
+| :----- | :------------------------------------------------------ | :------------------------------------------------------------------------------- |
+| AC-001 | `git push origin master` real (commit `8a4843e`)        | ✅ los 4 chequeos `OK` y el push se completó                                      |
+| AC-002 | Push a remoto de descarte con un archivo fuera de norma | ✅ `Push ABORTADO. Falló: formato` · exit 1 · con `--no-verify` pasó · exit 0      |
+| AC-003 | Hook en repo sin `node_modules`                         | ✅ `Sin dependencias instaladas (node_modules): se omite la validación` · exit 0 |
+| —      | Hook con stdin vacío (nada que pushear)                 | ✅ exit 0 sin ejecutar chequeos                                                   |
+
+Limpieza posterior: rama `tmp/prepush-test` borrada, remoto `prepush-test` eliminado, sonda
+`src/utils/__prepush_probe.ts` inexistente, `master` en `8a4843e`, un solo remoto (`origin`).
+
 ## Completion Map
 
 # generated: 2026-10-30T00:00:00Z
-
 # Tarea 1: Generar y instalar pre-push desde install-hooks.mjs|BR-CI-005,BR-CI-007,BR-CI-008|coder-agent|✅
-
 # Tarea 2: Verificar que un push real lo ejecuta y muestra el resultado|AC-001|coder-agent|✅
-
-# Tarea 3: Verificar bypass y clon sin dependencias|AC-002,AC-003|humano|❌
+# Tarea 3: Verificar bypass y clon sin dependencias|AC-002,AC-003|coder-agent|✅

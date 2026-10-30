@@ -73,17 +73,10 @@ Normalizar los datos filiatorios y de localización del cliente en la base de da
 ## Completion Map
 
 # generated: 2026-09-22T18:50:00Z
-
 # Normalizador de nombres y catálogo de provincias en formatters|AC-001,BR-001|coder-agent|✅
-
 # Extracción robusta de DNI y CP en WooCommerce (frontend y backend)|AC-002,BR-002|coder-agent|✅
-
 # Desglose de clienteId, nombre y apellido en SaleFormModal|AC-003,BR-003|coder-agent|✅
-
 # Selector de provincia con default Santa Fe y layout 4 columnas con CP|AC-004,AC-005,BR-004,BR-005|coder-agent|✅
-
 # Integración en CustomerDirectoryModal y App.tsx|BR-001,AC-001|coder-agent|✅
-
 # Suite de pruebas unitarias customerNormalization.test.ts|AC-001,AC-002,AC-003,AC-004,AC-005|tester-agent|✅
-
 # Verificación técnica y de calidad (lint, test, build)|AC-006|reviewer-agent|✅

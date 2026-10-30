@@ -81,15 +81,9 @@ Reemplazar el esquema de PIN único global con auto-selección de rol por un sis
 ## Completion Map
 
 # generated: 2026-10-17T10:00:00Z
-
 # Tarea 1: Modelado de tipos AppUser, AuthPolicy y sesión en src/types.ts|BR-AUTH-001,BR-AUTH-002|coder-agent|✅
-
 # Tarea 2: Servicio desacoplado userService.ts (CRUD usuarios, hashing, persistencia app_users_v1)|BR-AUTH-001,BR-AUTH-003,BR-AUTH-005|coder-agent|✅
-
 # Tarea 3: Rediseño de AuthModal.tsx con soporte dual (PIN rápido vs Usuario/Password) y detección de rol|AC-AUTH-002,AC-AUTH-003,AC-AUTH-005|coder-agent|✅
-
 # Tarea 4: Hook de autobloqueo mejorado useSecurityRole.ts y vinculación con username en logs|BR-AUTH-004,BR-AUTH-006,AC-AUTH-004|coder-agent|✅
-
 # Tarea 5: Pestaña visual de Gestión de Usuarios y Políticas en ConfigModal|AC-AUTH-001|coder-agent|✅
-
 # Tarea 6: Suite de pruebas automatizadas src/**tests**/userService.test.ts|AC-AUTH-006|tester-agent|✅

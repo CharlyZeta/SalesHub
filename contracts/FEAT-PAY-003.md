@@ -94,15 +94,9 @@ extracto de qué pagó y cuándo. Hoy esa pregunta se responde sumando a mano en
 ## Completion Map
 
 # generated: 2026-10-24T00:00:00Z
-
 # Tarea 1: Utilidades de agrupación y totales por cliente|BR-PAY-016,BR-PAY-018|coder-agent|✅
-
 # Tarea 2: Modal de cuenta corriente con encabezado de totales|AC-001,AC-002,AC-003,AC-005|coder-agent|✅
-
 # Tarea 3: Extracto PDF vectorial sin datos de contacto|BR-PAY-019,BR-PAY-020,AC-004|coder-agent|✅
-
 # Tarea 4: Acceso desde cobros pendientes (directorio queda pendiente)|AF-03|coder-agent|◐
-
 # Tarea 5: Gating RBAC y lazy load|BR-PAY-021|coder-agent|✅
-
 # Tarea 6: Tests de agrupación, totales y extracto|AC-006|coder-agent|✅

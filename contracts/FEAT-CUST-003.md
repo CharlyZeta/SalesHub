@@ -68,13 +68,8 @@ Resolver el problema de clientes importados o sincronizados desde WooCommerce qu
 ## Completion Map
 
 # generated: 2026-09-22T19:15:00Z
-
 # Funciones parseCustomerIdentityFromWoo y parseCombinedAddress con mapa de provincias|AC-001,AC-002,AC-003,AC-004,BR-001,BR-002,BR-003,BR-004|coder-agent|✅
-
 # Integración en transformWooCustomer en frontend|AC-001,AC-002,AC-003|coder-agent|✅
-
 # Integración en mapCustomer en server-woo.js backend|AC-001,AC-002,AC-003|coder-agent|✅
-
 # Cobertura de tests unitarios en customerNormalization.test.ts|AC-001,AC-002,AC-003,AC-004|tester-agent|✅
-
 # Verificación técnica integral (lint, test, build)|AC-005|reviewer-agent|✅

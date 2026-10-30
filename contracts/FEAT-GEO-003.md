@@ -77,13 +77,8 @@ Implementar un sistema de gobernanza y control de cuota mensual para las solicit
 ## Completion Map
 
 # generated: 2026-10-07T17:28:00Z
-
 # Tarea 1: Extensión de tipos y utilidades de cuota mensual en googleMapsService|AC-001,AC-002,AC-004|coder-agent|✅
-
 # Tarea 2: Integración de UI de límite, barra de progreso y reset en ConfigGeneralTab|AC-001,AC-005|coder-agent|✅
-
 # Tarea 3: Verificación de cuota e incremento en SaleLocationMap|AC-002,AC-003|coder-agent|✅
-
 # Tarea 4: Tests unitarios de cuota mensual (googleMapsUsage.test.ts)|AC-001,AC-002,AC-003,AC-004,AC-005|tester-agent|✅
-
 # Tarea 5: Verificación integral de calidad (lint, tests, circular, build)|AC-006|reviewer-agent|✅

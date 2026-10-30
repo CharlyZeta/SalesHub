@@ -4,11 +4,11 @@
 > Es el índice que conviene leer **antes** de abrir archivos: una fila por módulo
 > con su responsabilidad y sus exports principales.
 
-**Resumen:** 77 archivos · 21.903 líneas.
+**Resumen:** 78 archivos · 21.948 líneas.
 
 | Directorio | Archivos | Líneas |
 |:--|--:|--:|
-| `scripts/` | 5 | 647 |
+| `scripts/` | 6 | 692 |
 | `src/` | 3 | 1.162 |
 | `src/components/` | 22 | 9.593 |
 | `src/components/budget/` | 3 | 976 |
@@ -29,6 +29,7 @@
 | Archivo | Líneas | Responsabilidad | Exports |
 |:--|--:|:--|:--|
 | `check-sdd-version.mjs` | 79 | 1. Verificar instalación / repositorio local del protocolo | — |
+| `fix-completion-maps.mjs` | 45 | Repara los "Completion Map" de contracts/*.md dejando las tareas en líneas | — |
 | `generate-code-map.mjs` | 204 | Generador de este mapa (npm run map / map:check) | — |
 | `graph-doctor.mjs` | 116 | Diagnóstico del grafo de conocimiento y de los hooks (npm run graph:doctor) | — |
 | `install-hooks.mjs` | 183 | Instalación automática de hooks de git (npm install / npm run hooks:install) | — |

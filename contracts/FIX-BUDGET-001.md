@@ -54,9 +54,6 @@ Resolver el error de consola y bloqueo de renderizado `Uncaught TypeError: Canno
 ## Completion Map
 
 # generated: 2026-10-07T17:05:00Z
-
 # Resiliencia y soporte de props en ProductSearchPicker|AC-001|coder-agent|✅
-
 # Estandarización de props en BudgetEditorTab|AC-002|coder-agent|✅
-
 # Verificación de lint, tests y build de producción|AC-003|reviewer-agent|✅

@@ -66,11 +66,7 @@ Incorporar un mecanismo de validación interactiva y prueba en vivo ("Probar Cla
 ## Completion Map
 
 # generated: 2026-10-06T17:55:00Z
-
 # Etapa 1: Servicio utilitario de prueba de API Key Google Geocoding|AC-001,AC-002,AC-003|coder-agent|✅
-
 # Etapa 2: UI en ConfigGeneralTab con botón, spinner, toggle de visualización y badges de estado|AC-001,AC-004|coder-agent|✅
-
 # Etapa 3: Tests unitarios para el validador de clave|AC-005|tester-agent|✅
-
 # Etapa 4: Verificación lint, tests y build|AC-005|tester-agent|✅

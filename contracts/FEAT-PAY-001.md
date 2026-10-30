@@ -124,21 +124,12 @@ pagos })`. Se usan las utilidades puras para construir el libro nuevo.
 ## Completion Map
 
 # generated: 2026-10-24T00:00:00Z
-
 # Tarea 1: Tipos PaymentStatus, SalePayment y Sale.pagos|coder-agent|✅
-
 # Tarea 2: Utilidades puras de saldo, estado y validación|BR-PAY-002,BR-PAY-003,BR-PAY-004,AC-001|coder-agent|✅
-
 # Tarea 3: Operaciones de alta/baja de pago (vía handleUpdateInlineSale)|BR-PAY-006|coder-agent|✅
-
 # Tarea 4: Modal de registro de pago con validación viva|AC-001,AC-003|coder-agent|✅
-
 # Tarea 5: Historial de pagos de la venta con borrado auditado|BR-PAY-005,AC-004|coder-agent|✅
-
 # Tarea 6: Píldora de estado en la planilla (acento diferido)|BR-PAY-008,AC-003|coder-agent|✅
-
 # Tarea 7: Retrocompatibilidad de ventas históricas|BR-PAY-001,AC-005,AC-006|coder-agent|✅
-
 # Tarea 8: CSV con estado y saldo|BR-PAY-007,AC-006|coder-agent|✅
-
 # Tarea 9: Tests de derivación, validación y migración|AC-002,AC-007|coder-agent|✅

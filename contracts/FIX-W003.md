@@ -54,9 +54,6 @@ Persistir automáticamente los ajustes de conexión y programación de WooCommer
 ## Completion Map
 
 # generated: 2026-09-22T11:05:00Z
-
 # Resolver colisión TS2451 publishConfigToServer en WooCommerceModal|AC-003|coder-agent|✅
-
 # Validar flujo de autoguardado y unmount seguro|AC-001,AC-002|coder-agent|✅
-
 # Verificación de lint y suite completa de tests|AC-003|reviewer-agent|✅

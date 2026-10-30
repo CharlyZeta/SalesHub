@@ -160,15 +160,9 @@ correcto. Debe corregirse para que el modal de alta quede siempre por encima.
 ## Completion Map
 
 # generated: 2026-10-24T00:00:00Z
-
 # Tarea 1: Pasar la sesión real a ConfigModal y reescribir el gate|BR-AUTH-007,BR-AUTH-008,AC-001,AC-004|coder-agent|✅
-
 # Tarea 2: Eliminar rolActual de SecurityConfig y su lectura|BR-AUTH-007,AC-001|coder-agent|✅
-
 # Tarea 3: Retirar el campo de PIN legado en ConfigSecurityTab con derivación a usuarios|BR-AUTH-009,AC-005|coder-agent|✅
-
 # Tarea 4: Corregir z-60 → z-[60] en el modal de alta|BR-AUTH-011,AC-006|coder-agent|✅
-
 # Tarea 5: Tests de gate de rol y de cambio efectivo de PIN|AC-002,AC-003,AC-007|tester-agent|✅
-
 # Tarea 6: Verificación manual del flujo completo (crear usuario y cambiarlo de PIN)|AC-002,AC-003|humano|❌

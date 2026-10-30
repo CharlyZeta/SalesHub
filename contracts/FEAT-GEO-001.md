@@ -106,7 +106,5 @@ Incrementar la precisión de geolocalización de direcciones de clientes reempla
 | Verificar lint, typecheck, tests y build sin warnings                                          | AC-006                 | coder-agent  | ✅     |
 | Test manual de geocodificación con direcciones problemáticas                                   | AC-001, AC-002         | tester-agent | ✅     |
 | Actualización de CHANGELOG.md                                                                  | —                      | coder-agent  | ✅     |
-
 # generated: 2026-09-27
-
 # After human approval: status → APPROVED, mode → LOOP

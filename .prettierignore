@@ -13,3 +13,11 @@ package-lock.json
 # `map:check` lo compara byte a byte contra el generador: si Prettier lo
 # reformatea, el step "Mapa del código actualizado" del CI falla.
 docs/MAPA-DEL-CODIGO.md
+
+# Los contratos SDD-GL no se formatean con Prettier.
+# Su bloque "## Completion Map" es legible por máquina (`# Tarea ...|agente|✅`,
+# una por línea, consecutivas). Prettier interpreta esas líneas como headings y
+# mete líneas en blanco entre ellas, rompiendo el formato que consume la
+# metodología. Mismo criterio que el mapa del código: lo generado/estructurado no
+# se reformatea. Ver FIX-CI-003.
+contracts/

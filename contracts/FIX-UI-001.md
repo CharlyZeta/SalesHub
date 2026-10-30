@@ -61,9 +61,6 @@ acomodan en una segunda en lugar de exigir scroll horizontal.
 ## Completion Map
 
 # generated: 2026-10-24T00:00:00Z
-
 # Tarea 1: Ensanchar el panel a max-w-6xl|BR-UI-001,AC-001|coder-agent|✅
-
 # Tarea 2: Barra de pestañas con flex-wrap, sin overflow horizontal|BR-UI-002,AC-002|coder-agent|✅
-
 # Tarea 3: Verificación visual en escritorio y ventana angosta|AC-001,AC-002,AC-003|humano|❌

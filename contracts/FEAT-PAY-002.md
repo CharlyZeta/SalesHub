@@ -116,17 +116,10 @@ la planilla y (b) un **listado de cobros pendientes que ignora el mes en curso**
 ## Completion Map
 
 # generated: 2026-10-24T00:00:00Z
-
 # Tarea 1: Utilidades puras de selección de deuda y totales|BR-PAY-009,BR-PAY-010,BR-PAY-011|coder-agent|✅
-
 # Tarea 2: Filtro por estado de pago en la planilla y su toolbar|AC-001|coder-agent|✅
-
 # Tarea 3: Modal de cobros pendientes cross-mes con resumen|AC-002,AC-003,AC-005|coder-agent|✅
-
 # Tarea 4: Export PDF vectorial con membrete, tabla paginada y totales|BR-PAY-012,BR-PAY-013,AC-004|coder-agent|✅
-
 # Tarea 5: Botón en Header con gating RBAC y lazy load (con contador)|BR-PAY-014,AC-006|coder-agent|✅
-
 # Tarea 6: Tests de filtrado, cross-mes, totales y armado de filas|AC-007|coder-agent|✅
-
 # Tarea 7: Verificación visual del listado y del PDF en claro/oscuro|AC-004|humano|❌

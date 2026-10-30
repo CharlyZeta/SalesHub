@@ -59,9 +59,6 @@ verde.
 ## Completion Map
 
 # generated: 2026-10-30T00:00:00Z
-
 # Tarea 1: Reemplazar los disparadores por workflow_dispatch + pull_request|BR-CI-001,BR-CI-002,AC-001|coder-agent|✅
-
 # Tarea 2: Verificar que un push ya no dispara el workflow|AC-001|coder-agent|✅
-
 # Tarea 3: Verificar ejecución manual en verde|AC-002,AC-003|humano|❌

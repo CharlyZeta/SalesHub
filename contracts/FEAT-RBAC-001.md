@@ -95,15 +95,9 @@ Implementar un sistema modular de **Control de Acceso Basado en Roles y Herramie
 ## Completion Map
 
 # generated: 2026-10-17T10:00:00Z
-
 # Tarea 1: Registro maestro toolRegistry.ts y tipos de permisos en src/types.ts|BR-RBAC-001,BR-RBAC-002|✅
-
 # Tarea 2: Servicio permissionService.ts con resolución de permisos y defaults seguros|BR-RBAC-002,BR-RBAC-004|✅
-
 # Tarea 3: Hook usePermissions.ts y componente wrapper PermissionGate.tsx|AC-RBAC-001,AC-RBAC-002|✅
-
 # Tarea 4: Pestaña visual ConfigPermissionsTab.tsx con matriz interactiva en ConfigModal|AC-RBAC-003,BR-RBAC-005|✅
-
 # Tarea 5: Adaptación de Header.tsx y componentes principales con soporte isReadOnly|AC-RBAC-001,AC-RBAC-002,BR-RBAC-003|✅
-
 # Tarea 6: Pruebas unitarias en src/**tests**/permissionService.test.ts y validación|AC-RBAC-005|✅

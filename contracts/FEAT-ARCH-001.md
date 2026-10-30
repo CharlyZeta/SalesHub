@@ -74,17 +74,10 @@ Modernizar la arquitectura de SalesHub para reducir la carga de código inicial,
 ## Completion Map
 
 # generated: 2026-09-24T22:45:00Z
-
 # Etapa 1: Rollup manualChunks en vite.config.ts y Lazy loading en App.tsx|AC-001,AC-002,BR-001|coder-agent|✅
-
 # Etapa 2.1: Descomposición de BudgetModal en submódulos y useBudgetCalculation|AC-003,BR-003,BR-005|coder-agent|✅
-
 # Etapa 2.2: Descomposición de SaleFormModal en submódulos de venta|AC-004,BR-004,BR-005|coder-agent|✅
-
 # Etapa 2.3: Optimización de SpreadsheetGrid con GridRow memoizado|AC-004,BR-002,BR-005|coder-agent|✅
-
 # Etapa 3: Extracción de custom hooks de dominio y adelgazamiento de App.tsx|AC-004,BR-004|coder-agent|✅
-
 # Etapa 4: Abstracción de Storage Repository Pattern|AC-004,BR-004|coder-agent|✅
-
 # Etapa 5: Verificación de tests, lint, circular deps y bundle build|AC-001,AC-005,AC-006|tester-agent|✅
