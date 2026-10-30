@@ -4,11 +4,11 @@
 > Es el índice que conviene leer **antes** de abrir archivos: una fila por módulo
 > con su responsabilidad y sus exports principales.
 
-**Resumen:** 77 archivos · 21.819 líneas.
+**Resumen:** 77 archivos · 21.903 líneas.
 
 | Directorio | Archivos | Líneas |
 |:--|--:|--:|
-| `scripts/` | 5 | 563 |
+| `scripts/` | 5 | 647 |
 | `src/` | 3 | 1.162 |
 | `src/components/` | 22 | 9.593 |
 | `src/components/budget/` | 3 | 976 |
@@ -31,7 +31,7 @@
 | `check-sdd-version.mjs` | 79 | 1. Verificar instalación / repositorio local del protocolo | — |
 | `generate-code-map.mjs` | 204 | Generador de este mapa (npm run map / map:check) | — |
 | `graph-doctor.mjs` | 116 | Diagnóstico del grafo de conocimiento y de los hooks (npm run graph:doctor) | — |
-| `install-hooks.mjs` | 99 | Instalación automática de hooks de git (npm install / npm run hooks:install) | — |
+| `install-hooks.mjs` | 183 | Instalación automática de hooks de git (npm install / npm run hooks:install) | — |
 | `mock-woo-server.mjs` | 65 | Servidor falso que imita la API REST de WooCommerce (solo para probar el merge). | — |
 
 ## `src/`
