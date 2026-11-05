@@ -77,15 +77,6 @@ export const SalePaymentsModal: React.FC<SalePaymentsModalProps> = ({ sale, onCl
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => setRecibo({})}
-              className="p-1 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 cursor-pointer"
-              title="Recibo de la venta"
-              aria-label="Recibo de la venta"
-            >
-              <Printer className="w-4 h-4" />
-            </button>
-            <button
-              type="button"
               onClick={onClose}
               className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
               aria-label="Cerrar"

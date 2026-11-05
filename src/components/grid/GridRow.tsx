@@ -20,7 +20,6 @@ import {
   Instagram,
   Phone,
   Wallet,
-  Receipt,
 } from 'lucide-react';
 import { Sale, PaymentMethod, SaleChannel } from '../../types';
 import { formatCurrency, formatDate, validateRequiredSaleFields } from '../../utils/formatters';
@@ -61,7 +60,6 @@ export interface GridRowProps {
   onDeleteSale: (id: string) => void;
   onPrintRemito: (sale: Sale) => void;
   onOpenPayments?: (sale: Sale) => void;
-  onOpenReceipt?: (sale: Sale) => void;
 }
 
 // Helper badge color for sales channel
@@ -212,7 +210,6 @@ export const GridRow: React.FC<GridRowProps> = React.memo(
     onDeleteSale,
     onPrintRemito,
     onOpenPayments,
-    onOpenReceipt,
   }) => {
     const firstProduct = sale.productos[0];
     const productCount = sale.productos.length;
@@ -511,14 +508,6 @@ export const GridRow: React.FC<GridRowProps> = React.memo(
                 title="Pagos y saldo de la venta"
               >
                 <Wallet className="w-3.5 h-3.5" />
-              </button>
-              <button
-                type="button"
-                onClick={() => onOpenReceipt?.(sale)}
-                className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-teal-600 dark:hover:text-teal-400 rounded transition-colors"
-                title="Recibo de pago de la venta"
-              >
-                <Receipt className="w-3.5 h-3.5" />
               </button>
               {!readOnly && (
                 <>
