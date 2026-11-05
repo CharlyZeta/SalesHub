@@ -15,6 +15,8 @@ data/
 # Logs
 *.log
 andreani_error.log
+# Errores no controlados del servidor (FIX-ROBUST-001)
+logs/
 
 # WordPress plugins or local vendor mirrors
 andreani-shipping/

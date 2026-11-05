@@ -4,15 +4,15 @@
 > Es el índice que conviene leer **antes** de abrir archivos: una fila por módulo
 > con su responsabilidad y sus exports principales.
 
-**Resumen:** 81 archivos · 22.441 líneas.
+**Resumen:** 82 archivos · 22.577 líneas.
 
 | Directorio | Archivos | Líneas |
 |:--|--:|--:|
 | `scripts/` | 6 | 692 |
-| `src/` | 3 | 1.162 |
+| `src/` | 3 | 1.193 |
 | `src/components/` | 22 | 9.593 |
 | `src/components/budget/` | 3 | 976 |
-| `src/components/common/` | 1 | 35 |
+| `src/components/common/` | 2 | 140 |
 | `src/components/config/` | 2 | 661 |
 | `src/components/encargos/` | 2 | 1.220 |
 | `src/components/grid/` | 3 | 892 |
@@ -40,7 +40,7 @@
 | Archivo | Líneas | Responsabilidad | Exports |
 |:--|--:|:--|:--|
 | `App.tsx` | 816 | Orquestador principal: estado global, persistencia, efectos de sync y montaje de modales | (default) |
-| `main.tsx` | 11 | Punto de entrada de React (render del árbol en #root) | — |
+| `main.tsx` | 42 | Punto de entrada de React (render del árbol en #root) | — |
 | `types.ts` | 335 | Modelo de dominio tipado (Sale, Budget, Customer, CatalogProduct, AppConfig, seguridad) | SaleProductItem, SalePayment, Sale, Customer, CatalogProduct, WooCommerceConfig, ColumnMapping, DateFilterRange, BudgetItem, Budget, AppUser, RolePermissions, SecurityPolicyConfig, SecurityConfig, BackupConfig, CompanyConfig, GoogleMapsUsage, AppConfig, EncargoItem, SaleChannel, PaymentMethod, ShippingMethod, ShippingStatus, InvoiceType, PaymentStatus, UserRole, AuthMode, PermissionLevel, ToolResourceId, ResourcePermissionMap, EncargoTipo, EncargoEstado |
 
 ## `src/components/`
@@ -82,6 +82,7 @@
 
 | Archivo | Líneas | Responsabilidad | Exports |
 |:--|--:|:--|:--|
+| `ErrorBoundary.tsx` | 105 | El proyecto no tiene `@types/react` instalado, así que `React.Component` llega | ErrorBoundary |
 | `PermissionGate.tsx` | 35 | — | PermissionGate, PermissionGateProps |
 
 ## `src/components/config/`

@@ -24,6 +24,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { handleApiRequest } from './api-handlers.js';
 import { createWooService } from './server-woo.js';
+import { crearRegistradorErrores } from './server-error-log.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -35,6 +36,27 @@ const BACKUPS_DIR = path.join(__dirname, 'backups');
 const ANDREANI_LOG_FILE = path.join(__dirname, 'andreani_error.log');
 /** Datos del servidor (config/estado/snapshot de WooCommerce). Excluido de git. */
 const DATA_DIR = process.env.DATA_DIR ? path.resolve(__dirname, process.env.DATA_DIR) : path.join(__dirname, 'data');
+/** Errores no controlados del proceso (FIX-ROBUST-001). Excluido de git. */
+const LOGS_DIR = path.join(__dirname, 'logs');
+
+const registrarErrorServidor = crearRegistradorErrores({ dir: LOGS_DIR });
+
+// ---------------------------------------------------------------------------
+// Red de contención del proceso (FIX-ROBUST-001)
+//
+// El sistema es de uso local y se prefiere disponibilidad: un error aislado se
+// registra en logs/server-error.log y el proceso sigue atendiendo. El limitador
+// interno evita que un error repetido llene el disco.
+// ---------------------------------------------------------------------------
+process.on('uncaughtException', (err) => {
+  registrarErrorServidor('uncaughtException', err);
+  console.error('[server] Excepción no controlada (el servidor sigue vivo):', err?.message || err);
+});
+
+process.on('unhandledRejection', (reason) => {
+  registrarErrorServidor('unhandledRejection', reason);
+  console.error('[server] Promesa rechazada sin manejar (el servidor sigue vivo):', reason?.message || reason);
+});
 
 /**
  * Servicio de sincronización de WooCommerce (W2/Fix E). Una única instancia compartida
@@ -141,7 +163,30 @@ function serveStatic(req, res) {
     return;
   }
 
-  fs.createReadStream(filePath).pipe(res);
+  // El stream puede fallar después de que `statSync` dio OK: el archivo se
+  // reemplazó en un rebuild, quedó bloqueado por otro proceso o el cliente cortó.
+  // Sin estos listeners, ese `error` es una excepción no controlada (BR-005).
+  const stream = fs.createReadStream(filePath);
+
+  stream.on('error', (err) => {
+    registrarErrorServidor('static', err);
+    console.error('[server] Error leyendo archivo estático:', err?.message || err);
+    if (!res.headersSent) {
+      res.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end('Internal Server Error');
+      return;
+    }
+    res.destroy();
+  });
+
+  res.on('error', () => {
+    // El cliente cortó la conexión: se libera el descriptor y no es un fallo del server.
+    stream.destroy();
+  });
+
+  req.on('aborted', () => stream.destroy());
+
+  stream.pipe(res);
 }
 
 // ---------------------------------------------------------------------------
