@@ -1,9 +1,10 @@
 import React, { useMemo, useState } from 'react';
-import { X, Wallet, Trash2, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { X, Wallet, Trash2, AlertCircle, CheckCircle2, Printer } from 'lucide-react';
 import { Sale } from '../../types';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import { getEstadoPago, getPagos, getSaldo, getTotalCobrado, validarPago } from '../../utils/salePayments';
 import { PaymentStatusBadge } from './PaymentStatusBadge';
+import { ReciboPagoModal } from './ReciboPagoModal';
 
 export interface NuevoPagoForm {
   monto: number;
@@ -30,6 +31,8 @@ export const SalePaymentsModal: React.FC<SalePaymentsModalProps> = ({ sale, onCl
   const [medio, setMedio] = useState('Efectivo');
   const [nota, setNota] = useState('');
   const [error, setError] = useState('');
+  // Recibo (FEAT-PAY-004): {} = recibo de la venta; { pagoId } = recibo de ese pago.
+  const [recibo, setRecibo] = useState<{ pagoId?: string } | null>(null);
 
   const pagos = getPagos(sale);
   const saldo = getSaldo(sale);
@@ -71,14 +74,25 @@ export const SalePaymentsModal: React.FC<SalePaymentsModalProps> = ({ sale, onCl
               </p>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
-            aria-label="Cerrar"
-          >
-            <X className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setRecibo({})}
+              className="p-1 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 cursor-pointer"
+              title="Recibo de la venta"
+              aria-label="Recibo de la venta"
+            >
+              <Printer className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+              aria-label="Cerrar"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         <div className="p-4 space-y-4 overflow-y-auto text-xs">
@@ -194,16 +208,27 @@ export const SalePaymentsModal: React.FC<SalePaymentsModalProps> = ({ sale, onCl
                           {p.nota ? ` · ${p.nota}` : ''}
                         </div>
                       </div>
-                      {!readOnly && (
+                      <div className="flex items-center gap-1">
                         <button
                           type="button"
-                          onClick={() => onRemove(p.id)}
-                          className="p-1 text-slate-400 hover:text-rose-600 cursor-pointer"
-                          title="Eliminar pago"
+                          onClick={() => setRecibo({ pagoId: p.id })}
+                          className="p-1 text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 cursor-pointer"
+                          title="Recibo de este pago"
+                          aria-label="Recibo de este pago"
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          <Printer className="w-3.5 h-3.5" />
                         </button>
-                      )}
+                        {!readOnly && (
+                          <button
+                            type="button"
+                            onClick={() => onRemove(p.id)}
+                            className="p-1 text-slate-400 hover:text-rose-600 cursor-pointer"
+                            title="Eliminar pago"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
                     </li>
                   ))}
               </ul>
@@ -211,6 +236,8 @@ export const SalePaymentsModal: React.FC<SalePaymentsModalProps> = ({ sale, onCl
           </div>
         </div>
       </div>
+
+      {recibo && <ReciboPagoModal sale={sale} pagoId={recibo.pagoId} onClose={() => setRecibo(null)} />}
     </div>
   );
 };

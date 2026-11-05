@@ -47,6 +47,13 @@ docs/generated/
 # Copia local de la guía de Docu usada para probarlo en este repo.
 # La copia canónica vive en E:\Propios\Docu\.
 PROBAR-CON-OTRO-AGENTE.md
+
+# SDD-GL: se versiona la configuración (.sdd/config.json), no el estado local
+# (telemetría de uso, métricas, runs y estado por criterio).
+.sdd/usage.json
+.sdd/metrics.json
+.sdd/state/
+.sdd/runs/
 # Internal AI agent cache/logs
 graphify-out/
 .metadata.json

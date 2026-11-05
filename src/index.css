@@ -6,7 +6,8 @@
    both when printing and when capturing the PDF (html-to-image renders this
    node, so it must keep its on-screen layout). */
 #print-area-budget,
-#print-area-remito {
+#print-area-remito,
+#print-area-recibo {
   position: fixed;
   left: 0;
   top: 0;
@@ -19,7 +20,8 @@
   pointer-events: none;
 }
 #print-area-budget #budget-pdf-content,
-#print-area-remito #remito-pdf-content {
+#print-area-remito #remito-pdf-content,
+#print-area-recibo #recibo-pdf-content {
   max-width: none;
   width: 100%;
   margin: 0;
@@ -28,7 +30,8 @@
   box-shadow: none;
 }
 #print-area-budget #budget-pdf-content *,
-#print-area-remito #remito-pdf-content * {
+#print-area-remito #remito-pdf-content *,
+#print-area-recibo #recibo-pdf-content * {
   -webkit-print-color-adjust: exact;
   print-color-adjust: exact;
 }
@@ -38,11 +41,13 @@
    fixed/overflow/backdrop ancestors cannot clip the sheet). */
 @media print {
   body.printing-budget > *:not(#print-area-budget),
-  body.printing-remito > *:not(#print-area-remito) {
+  body.printing-remito > *:not(#print-area-remito),
+  body.printing-recibo > *:not(#print-area-recibo) {
     display: none !important;
   }
   body.printing-budget #print-area-budget,
-  body.printing-remito #print-area-remito {
+  body.printing-remito #print-area-remito,
+  body.printing-recibo #print-area-recibo {
     display: block !important;
     position: static !important;
     width: auto;

@@ -8,6 +8,7 @@ import { GridToolbar } from './grid/GridToolbar';
 import { GridPagination } from './grid/GridPagination';
 import { usePermissions } from '../hooks/usePermissions';
 import { SalePaymentsModal, NuevoPagoForm } from './payments/SalePaymentsModal';
+import { ReciboPagoModal } from './payments/ReciboPagoModal';
 import { cumpleFiltroEstadoPago } from '../utils/cobrosPendientes';
 import { useSalePaymentActions } from '../hooks/useSalePaymentActions';
 
@@ -109,6 +110,9 @@ export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
   // siempre refleje el estado actualizado del libro.
   const [paymentsSaleId, setPaymentsSaleId] = useState<string | null>(null);
   const paymentsSale = useMemo(() => sales.find((s) => s.id === paymentsSaleId) ?? null, [sales, paymentsSaleId]);
+  // Recibo de pago de la venta (FEAT-PAY-004), abierto desde la fila.
+  const [reciboSaleId, setReciboSaleId] = useState<string | null>(null);
+  const reciboSale = useMemo(() => sales.find((s) => s.id === reciboSaleId) ?? null, [sales, reciboSaleId]);
 
   const { addPayment, removePayment } = useSalePaymentActions(onUpdateInlineSale);
 
@@ -531,6 +535,7 @@ export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
                   onDeleteSale={onDeleteSale}
                   onPrintRemito={onPrintRemito}
                   onOpenPayments={(s) => setPaymentsSaleId(s.id)}
+                  onOpenReceipt={(s) => setReciboSaleId(s.id)}
                 />
               ))
             )}
@@ -578,6 +583,7 @@ export const SpreadsheetGrid: React.FC<SpreadsheetGridProps> = ({
           readOnly={effectiveReadOnly}
         />
       )}
+      {reciboSale && <ReciboPagoModal sale={reciboSale} onClose={() => setReciboSaleId(null)} />}
     </div>
   );
 };

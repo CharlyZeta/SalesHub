@@ -4,25 +4,25 @@
 > Es el índice que conviene leer **antes** de abrir archivos: una fila por módulo
 > con su responsabilidad y sus exports principales.
 
-**Resumen:** 78 archivos · 21.948 líneas.
+**Resumen:** 81 archivos · 22.467 líneas.
 
 | Directorio | Archivos | Líneas |
 |:--|--:|--:|
 | `scripts/` | 6 | 692 |
 | `src/` | 3 | 1.162 |
-| `src/components/` | 22 | 9.593 |
+| `src/components/` | 22 | 9.599 |
 | `src/components/budget/` | 3 | 976 |
 | `src/components/common/` | 1 | 35 |
 | `src/components/config/` | 2 | 661 |
 | `src/components/encargos/` | 2 | 1.220 |
-| `src/components/grid/` | 3 | 892 |
-| `src/components/payments/` | 3 | 470 |
+| `src/components/grid/` | 3 | 903 |
+| `src/components/payments/` | 4 | 764 |
 | `src/components/sales/` | 3 | 706 |
 | `src/config/` | 1 | 145 |
 | `src/data/` | 1 | 364 |
 | `src/hooks/` | 7 | 910 |
 | `src/services/` | 4 | 966 |
-| `src/utils/` | 17 | 3.156 |
+| `src/utils/` | 19 | 3.364 |
 
 ## `scripts/`
 
@@ -66,7 +66,7 @@
 | `SaleFormModal.tsx` | 687 | Alta/edición de ventas: cliente, ítems con descuento, facturación, envío y borrador autoguardado | SaleFormModal |
 | `SaleLocationMap.tsx` | 270 | Mapa Leaflet/OSM con geocodificación Nominatim y pin arrastrable | SaleLocationMap |
 | `SendBudgetModal.tsx` | 373 | Envío omnicanal de presupuestos por WhatsApp (wa.me) y correo (mailto) | SendBudgetModal |
-| `SpreadsheetGrid.tsx` | 584 | Planilla interactiva de ventas: edición inline, filtros, paginación y tracking Andreani | SpreadsheetGrid |
+| `SpreadsheetGrid.tsx` | 590 | Planilla interactiva de ventas: edición inline, filtros, paginación y tracking Andreani | SpreadsheetGrid |
 | `SystemLogsModal.tsx` | 425 | Consola de auditoría: filtros por nivel/categoría/fecha y exportación | SystemLogsModal |
 | `WooCommerceModal.tsx` | 863 | Sincronización WooCommerce: credenciales, catálogo, clientes y programación | WooCommerceModal |
 
@@ -103,7 +103,7 @@
 | Archivo | Líneas | Responsabilidad | Exports |
 |:--|--:|:--|:--|
 | `GridPagination.tsx` | 82 | — | GridPagination, GridPaginationProps |
-| `GridRow.tsx` | 541 | Helper badge color for sales channel | GridRow, GridVisibleColumns, GridRowProps |
+| `GridRow.tsx` | 552 | Helper badge color for sales channel | GridRow, GridVisibleColumns, GridRowProps |
 | `GridToolbar.tsx` | 269 | — | GridToolbar, GridToolbarProps |
 
 ## `src/components/payments/`
@@ -112,7 +112,8 @@
 |:--|--:|:--|:--|
 | `CuentaCorrienteModal.tsx` | 208 | — | CuentaCorrienteModal, CuentaCorrienteModalProps |
 | `PaymentStatusBadge.tsx` | 43 | — | PaymentStatusBadge |
-| `SalePaymentsModal.tsx` | 219 | — | SalePaymentsModal, NuevoPagoForm, SalePaymentsModalProps |
+| `ReciboPagoModal.tsx` | 267 | — | ReciboPagoModal, ReciboPagoModalProps |
+| `SalePaymentsModal.tsx` | 246 | — | SalePaymentsModal, NuevoPagoForm, SalePaymentsModalProps |
 
 ## `src/components/sales/`
 
@@ -170,8 +171,10 @@
 | `googleMapsService.ts` | 319 | — | getCurrentMonthKey, getGoogleMapsUsageInfo, checkGoogleMapsQuota, recordGoogleMapsRequest, resetGoogleMapsUsage, getStoredAppConfig, saveStoredAppConfig, incrementStoredGoogleMapsUsage, checkStoredGoogleMapsQuota, testGoogleMapsApiKey, GoogleMapsTestResult, GoogleMapsUsageInfo |
 | `logger.ts` | 129 | Motor de auditoría (localStorage + eventos) con filtros y exportación | getSystemLogs, addSystemLog, clearSystemLogs, filterSystemLogs, exportLogsJSON, exportLogsCSV, LogEntry, LogFilterOptions, LogLevel |
 | `numberToWords.ts` | 104 | Conversión de importes a texto (para comprobantes) | numberToWordsSpanish |
+| `paymentReceipt.ts` | 148 | — | SIN_DATO, fechaHoyISO, numeroRecibo, armarReciboPago, ReciboProducto, ReciboCliente, ReciboParcialidad, ReciboPago |
 | `pdfCobros.ts` | 137 | — | exportarCobrosPendientesPDF |
 | `pdfCuentaCorriente.ts` | 149 | — | exportarCuentaCorrientePDF |
+| `pdfReciboPago.ts` | 60 | — | exportarReciboPagoPDF |
 | `salePayments.ts` | 113 | — | ESTADO_PAGO_LABEL, round2, esVentaHistorica, getPagos, getTotalCobrado, getSaldo, getEstadoPago, validarPago, generatePaymentId, crearPago, agregarPago, quitarPago, PaymentValidationResult, NuevoPagoInput |
 | `security.ts` | 107 | Hash de PIN (SHA-256), verificación retrocompatible y escalada de bloqueo | PIN_SALT, PASSWORD_SALT, isHashedPin, authLockWaitMs, hashPin, verifyPin, hashPassword, verifyPassword |
 | `securityAccess.ts` | 37 | — | canManageSecurity, hayAdminConCredencialesSeguras, AdminCredencialInput |
