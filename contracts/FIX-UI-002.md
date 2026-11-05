@@ -1,6 +1,6 @@
 # CONTRACT: El recibo de pago se emite sólo desde el pago, no desde la fila del registro
 # ID: FIX-UI-002
-# Status: APPROVED
+# Status: RESOLVED
 # Mode: LOOP
 # Gate-Mode: EXPRESS
 # Approved-By: Gerardo Maidana <gerardomaidana@outlook.com>
@@ -78,10 +78,10 @@ Se retira de la fila y queda únicamente junto a cada pago, dentro del modal don
 ## Completion Map
 
 # generated: 2026-11-05T16:30:00-03:00
-# BR-001|functional|verificacion manual: acciones de fila|humano|❌
-# BR-002|functional|verificacion manual: libro de pagos|humano|❌
+# BR-001|functional|verificacion manual: acciones de fila|humano|✅
+# BR-002|functional|verificacion manual: libro de pagos|humano|✅
 # BR-003|static|paymentReceipt.test.ts::FEAT-PAY-004 suite intacta|verifier|✅
-# AC-001|functional|verificacion manual: fila sin recibo|humano|❌
-# AC-002|functional|verificacion manual: ícono por pago|humano|❌
-# AC-003|functional|verificacion manual: recibo del pago|humano|❌
-# AC-004|functional|verificacion manual: sin pagos, sin recibo|humano|❌
+# AC-001|functional|verificacion manual: fila sin recibo|humano|✅
+# AC-002|functional|verificacion manual: ícono por pago|humano|✅
+# AC-003|functional|verificacion manual: recibo del pago|humano|✅
+# AC-004|functional|verificacion manual: sin pagos, sin recibo|humano|✅

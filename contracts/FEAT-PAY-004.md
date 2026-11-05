@@ -1,6 +1,6 @@
 # CONTRACT: Recibo de pago de una venta y de un pago parcial
 # ID: FEAT-PAY-004
-# Status: APPROVED
+# Status: RESOLVED
 # Mode: LOOP
 # Gate-Mode: STRICT
 # Approved-By: Gerardo Maidana <gerardomaidana@outlook.com>
@@ -128,7 +128,7 @@ saldo. Se deriva del libro de pagos existente: no crea estado nuevo.
 # AC-003|functional|paymentReceipt.test.ts::AC-003 recibo pendiente|tester|✅
 # AC-004|functional|paymentReceipt.test.ts::AC-004 recibo histórico|tester|✅
 # AC-005|functional|paymentReceipt.test.ts::AC-005 pago N de M|tester|✅
-# AC-006|functional|verificacion manual: impresión|humano|❌
-# AC-007|functional|verificacion manual: PDF|humano|❌
+# AC-006|functional|verificacion manual: impresión|humano|✅
+# AC-007|functional|verificacion manual: PDF|humano|✅
 # AC-008|functional|paymentReceipt.test.ts::AC-008 determinismo|tester|✅
 # static|static|npm run lint|verifier|✅

@@ -4,7 +4,7 @@ Documento de **handoff**: qué se hizo, cómo quedó el repositorio y qué sigue
 Pensado para retomar el trabajo en cualquier momento (o para que otra persona entienda
 el punto exacto en el que está el desarrollo).
 
-**Última actualización:** 2026-10-19
+**Última actualización:** 2026-11-05
 **Versión del proyecto:** 0.0.33
 **Commit de cierre:** el último de `master` (`git log -1 --oneline`)
 **Repositorio:** https://github.com/CharlyZeta/SalesHub (rama `master`)
@@ -115,6 +115,33 @@ documentado, con lint/CI reales y con arquitectura modularizada y optimizada**.
 - **Servicio de Validación**: `src/utils/googleMapsService.ts` ejecuta geocodificación de prueba contra Google Geocoding API y reporta estados (`OK`, `REQUEST_DENIED`, `OVER_QUERY_LIMIT`, etc.).
 - **Toggle de Visibilidad**: Revelar/ocultar caracteres de la clave mediante icono de ojo.
 - **Tests Unitarios**: 7 casos de prueba en `src/__tests__/googleMapsService.test.ts` (140 tests totales).
+
+### 2.10 Cobros: libro de pagos parciales, cuenta corriente y recibo de pago ✅
+
+Cuatro contratos SDD-GL entregados y verificados en uso real:
+
+- **FEAT-PAY-001 — libro de pagos.** `Sale.pagos` como libro de movimientos (fecha, monto, medio,
+  nota, quién lo registró). `pagado`, `saldo` y `estadoPago` se **derivan** y nunca se persisten.
+  Retrocompatible sin migrar datos: `pagos === undefined` ⇒ venta histórica ⇒ pagada; `pagos === []`
+  ⇒ venta nueva ⇒ pendiente. Altas y bajas de pago quedan en auditoría.
+- **FEAT-PAY-002 — cobros pendientes.** Filtro por estado de pago en la planilla y listado de deuda
+  **cross-mes** (ignora el mes en curso) con totales y exportación a PDF vectorial.
+- **FEAT-PAY-003 — cuenta corriente.** Extracto por cliente con deuda total, antigüedad, ventas con
+  saldo y pagos; PDF sin datos de contacto. Agrupa ventas viejas sin `clienteId` por nombre.
+- **FEAT-PAY-004 — recibo de pago.** Comprobante de un pago concreto: cliente, productos, condición
+  de pago, parcialidad ("pago 2 de 3"), pagado acumulado y saldo. Numeración determinística
+  `REC-<venta>-<pago>`, impresión y PDF (FIX-UI-002 lo dejó **sólo** desde el libro de pagos, no
+  desde la fila del registro).
+
+También en esta tanda: **FIX-AUTH-003** (el panel de usuarios quedaba inalcanzable porque el gate
+leía `rolActual`, un campo que nadie escribía), **FIX-CI-001/002** (CI manual + hook `pre-push`) y
+**FIX-UI-001/002**.
+
+**Metodología:** SDD-GL pasó de v0.3.0 a **v0.6.1**. Los contratos nuevos usan el formato vigente
+(`## User Story` con un solo objetivo, presupuesto 7 BR / 8 AC / 5 AF / 9 pasos, `## Inferred
+Assumptions`, mapa por capas) y se validan/aprueban con el CLI: `sdd validate`, `sdd approve`,
+`sdd review`. `.sdd/config.json` declara `test_dirs: ["src/__tests__"]` para que la cobertura
+encuentre los tests.
 
 ---
 
